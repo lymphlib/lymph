@@ -1,0 +1,204 @@
+/*! \page page_TutorialHeat Heat equation
+
+\tableofcontents
+
+\section sec_Heat Heat equation 
+
+This is a simple tutorial to solve the parabolic diffusion-reaction problem provided in the <tt>Physics/Heat</tt> folder:
+\f[\frac{\partial u}{\partial t} - \nabla \cdot (\mu \nabla u) + \sigma u = f, \quad   {\rm in}  \; \Omega \times (0,T],
+\f]
+  
+As an application of the presented PolydG method, we solve the wave propagation problem presented in  \cite quarteroni2009numerical. It considers the heat equation with \f$\mu=0.1\f$, \f$\sigma=0\f$, and homogeneous forcing term $f=0$. The domain \f$\Omega\f$ is composed by two circles of radius 0.5 and center \f$(-0.5,0)\f$ and \f$(0.5,0)\f$ respectively. The initial condition is set to be \f$u=1\f$ if \f$x>0\f$, and \f$u=0\f$ if \f$x<0\f$.
+
+\section secTutPar1 Setup the input data
+   
+We set up these data in \b InputData/DataTestCasePaper.m script. We consider:
+    - the number of the element mesh \f$N_{el} = 250 \f$; \n
+    - the polynomial approximation degree \f$\ell_\kappa=5\f$ for any \f$\kappa \in \mathcal{T}_h\f$; \n
+    - the penalty constant \f$C_\alpha = 10 \f$, \n
+    - the final time \f$T = 1 \f$, \n
+    - time integration step \f$\Delta t = 0.025 \f$, \n
+
+
+We report here for completeness a sample of the script.
+
+\verbatim
+%% InputData/DataTestCasePaper.m 
+%% Patch test for Heat equation
+Data.name = 'TestCase';
+Data.TagElLap = 1;         % Element tag
+Data.TagBcLap = [2 3 4 5]; % Boundary tag
+Data.LabBcLap = 'DDDD';    % Dirichlet/Neumann/Abso
+Data.TagApplyBCs = 1;      % Skip the assembling of BCs if not necessary
+%% Geometrical properties
+Data.domain             = [-1.5 1.5 -1 1];
+Data.N                  = 250;                    % Number of mesh elements
+Data.MeshFromFile       = false;
+Data.FolderName         = 'Meshes';
+Data.VTKMeshFileName    = 'Mesh.vtk';
+Data.meshfileseq        = 'DataTestDCLap_250_el'; % Names of mesh files
+%% Material properties 
+Data.mu          = {@(x,y) 0.1+0.*x};     % Diffusion parameter
+Data.sigma       = {@(x,y) 0+0.*x};       % Reaction parameter
+% Forcing Term
+Data.homog_source_f = true;
+Data.source_f   = {@(x,y,t) 0.*x};
+% Boundary Conditions
+Data.DirBC    =  @(x,y,t) (x>=0);
+% Exact Solution (if any)
+Data.c_ex     =  @(x,y,t) (x>=0);
+...
+%% Discretization properties
+%% Time integration
+Data.t0     = 0;
+Data.T      = 1;
+Data.dt     = 2.5e-2;
+Data.theta  = 0.5;
+%% Space discretization
+Data.degree        = 5;          % Polynomial degree
+Data.penalty_coeff = 10;         % Penalty coefficient
+...
+\endverbatim
+
+Nex, we define the following option in the \b RunSetup.m file.
+
+\verbatim
+
+    %% RunSetup.m
+    ...
+    % Plot polygonal mesh y/n
+    Setup.isPlotMesh = 0;
+
+    % Save VTK polygonal mesh y/n
+    Setup.isSaveVTKMesh = 0;
+
+    % Plot solution y/n
+    Setup.isPlotSolution = 1;
+    
+    % Save solution y/n -> .mat file
+    Setup.isSaveSolution = 1;
+    Setup.OutFolder = 'Output';
+
+    % Additional solution output y/n -> .csv file
+    Setup.isSaveCSV = 1;
+
+    % Additional solution output y/n -> .vtk file
+    Setup.isSaveVTK = 0;
+    Setup.OutFolderVTK = 'OutputVTK';
+    
+    % Compute errors y/n
+    Setup.isError = 1;
+
+\endverbatim
+
+ 
+\section secTutPar2 Simulation run
+
+We run the specific simulation using the script \b RunMainHeat.m, 
+which calls the main algorithm, contained in \b MainFunctions/MainHeat.m.
+
+\verbatim
+%% File RunMainHeat.m
+run("../ImportLymphPaths.m")
+MyPhysicsPath = pwd;
+addpath(genpath(fullfile(MyPhysicsPath,'Assembly')));
+addpath(genpath(fullfile(MyPhysicsPath,'Error')));
+addpath(genpath(fullfile(MyPhysicsPath,'InputData')));
+addpath(genpath(fullfile(MyPhysicsPath,'InputMesh')));
+addpath(genpath(fullfile(MyPhysicsPath,'MainFunctions')));
+addpath(genpath(fullfile(MyPhysicsPath,'PostProcessing')));
+addpath(genpath(fullfile(MyPhysicsPath,'TimeIntegration')));
+%% Simulation - Setup
+run("../RunSetup.m")
+%% Input Data - Boundary conditions - Forcing term
+DataTestCasePaper;
+%% Mesh Generation
+if Data.MeshFromFile
+    % Load an existing mesh
+    Data.meshfile = fullfile(Data.FolderName, Data.meshfileseq);
+else
+    Data.meshfile = MakeMeshDoubleCircle(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'laplacian');
+end
+%% Main 
+[Error] = MainHeat(Data,Setup)
+\endverbatim 
+ 
+The script contains different calls, among which one is devoted to the mesh construction, i.e., \b MakeMeshDoubleCircles.m
+that is contained in \b lymph/MeshGeneration.
+\verbatim
+Data.meshfile = MakeMeshDoubleCircle(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'laplacian');
+\endverbatim 
+The function \b MakeMeshDoubleCircle.m calls the PolyMesher program \cite talischi2012polymesher to generate the polygonal mesh for the considered domain. The mesh structure is saved in \b Data.meshfile.
+ 
+
+\section secTutPar3 Outputs
+
+
+As the output of the run we obtain the plots in Figure 1 showing the
+constructed mesh (left), the obtained numerical solution (right).
+
+@image html MeshHeat.png "Figure 1: Constructed mesh for the resolution of the test case."
+@image html SolHeat.png "Figure 2: Obtained numerical solution of the test case."
+
+Moreover, the output structure \b Error contains the following fields: 
+    - \b nel = 250 \f$\rightarrow\f$ number of mesh elements,
+    - \b h = 0.2268 \f$\rightarrow\f$ mesh size,
+    - \b err_c_L2 \f$\rightarrow\f$ \f$L^2\f$-norm of the error for the velocity, namely \f$\| \frac{\partial \mathbf{u}_{ex}}{\partial t} - \frac{\partial \mathbf{u}_{h}}{\partial t}\|_{L^2(\Omega)}\f$,
+    - \b err_c_dG \f$\rightarrow\f$ \f$dG\f$-norm of the error, namely \f$\| \mathbf{u}_{ex} - \mathbf{u}_h\|_{dG}\f$.
+    - \b err_Energy \f$\rightarrow\f$ Energy-norm of the error.
+We do not report the numerical values, beacuse the absence of an exact analytical solution make the error computation not meaningful.
+
+Other outputs of the simulation are contained in the folder \b SavedSolutions 
+    - \b Solution_40.csv \f$\rightarrow\f$ csv containing the simulation solution in the quadrature nodes at final time. 
+    
+and in the folder \b OutputVTK 
+    - \b Mesh.vtk \f$\rightarrow\f$ mesh in .vtk format
+
+\section secTutPar4 Convergence tests with respect to mesh refinement
+
+To verify the convergence rates of the PolydG solution \f$\mathbf{u}_h\f$ with respect to the mesh refinement we use \b RunhConvergenceHeat.m. We set up the data in the external script \b InputData/DatahConvergenceTest.m. 
+With respect to the previous case, four meshes with decreasing granularity \f$h\f$ are provided in input. 
+
+\verbatim
+%% InputData/DatahConvergenceTest.m 
+...
+Data.meshfileseq  = ["UnitSquare_30_el.mat","UnitSquare_100_el.mat", ...
+                     "UnitSquare_300_el.mat","UnitSquare_1000_el.mat"];  %filename for mesh 
+...
+\endverbatim
+
+As the output of the aforementioned scripts we obtain the plots in Figure 3. In particular, we can observe the convergence of the PolydG solution obtained with \f$\ell_\kappa=1\f$ for any \f$\kappa \in \mathcal{T}_h\f$ with respect to the \f$L^2\f$-, \f$dG\f$-, and \f$Energy\f$-norms.
+
+@image html hConvergence.png "Figure 3. \b Error.error_energy, \b Error.error_dG and \b Error.error_L2_d as a function of the mesh size h by fixing the polynomial degree equal to 1, time step equal to 0.00001 and final time 0.0001."
+ 
+\section secTutParConv Convergence test with respect to the polynomial degree
+
+To verify the convergence rates of the PolydG solution \f$\mathbf{u}_h\f$ with respect to the polynomial degree we use the script \b RunpConvergenceHeat.m. We set up the data in the external script \b InputData/DatapConvergenceTest.m. 
+With respect to the previous cases, eight polynomial degrees are provided in input. 
+
+\verbatim
+%% InputData/DatapConvergenceTest.m 
+...
+Data.degree  = [1, 2, 3, 4, 5, 6, 7, 8];  
+...
+\endverbatim
+
+As the output of the aforementioned script we obtain the plot in Figure 4. The exponential convergence with respect to the polynomial degree \f$\ell\f$ is shown by fixing \f$N_{el} = 30\f$.
+
+@image html pConvergence.png "Figure 4. \b Error.error_energy, \b Error.error_dG and \b Error.error_L2_d as a function of the polynomial degree by fixing the number of mesh elements equal to 30."
+ 
+     
+\section secTutParBC Boundary conditions
+ Other boundary conditions with respect to the Dirichlet ones can be used in the model.
+ For elastic wave propagation problems a tipical choice is the following:
+ \b free \b surface condition on the top of the domain \f$ \Gamma_N \f$, i.e.  ,  
+ 
+ \f[
+         \nabla u \cdot \mathbf{n}   =   0,  \;  \Gamma_N \times (0,T], 
+ \f]
+
+where \f$\mathbf{n}\f$ is the outward pointing unit normal. The above conditions can be sselected in \c InputData/DataTest* files by using letters 'N' in the \c Data.LabBcLap field.
+
+
+*/
+

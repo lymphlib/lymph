@@ -1,0 +1,95 @@
+/*! \page page_UserguideLaplacian Poisson problem
+
+ \tableofcontents
+ 
+\section secUGL1 Setup and Configuration
+
+  A single simulation in lymph use the following MATLAB scripts:
+  - \b RunSetup.m   : setup and configuration
+  - \b DataTestLap.m: data input file 
+  - \b RunMainLaplacian.m : run simulation 
+
+   Other secondary scripts are:
+  - \b RunhConvergenceLaplacian.m: verification test for h convergence (see \ref secTutLapConv)
+  - \b RunpConvergenceLaplacian.m: verification test for p convergence (see \ref secTutLapConv)
+
+
+\subsection subUGL1 Simulation Setup
+
+The users can configure or customize the code for their specific needs.
+In particular, \b RunSetup.m defines the  simulation setup and contains the following fields:
+    \verbatim
+    - isPlotMesh    : 1/0 to plot the polygonal mesh
+    - isSaveVTKMesh : 1/0 to save the polygonal mesh in the VTK format
+    - isPlotSolution: 1/0 to visualize the numerical solution in Matlab
+    - isSaveSolution: 1/0 to save the solution in the .mat format
+    - OutFolder     : folder name for the output (e.g. Output)
+    - isSaveCSV     : 1/0 to save the solution in the .csv format
+    - isSaveVTK     : 1/0 to save the solution in the .vtk format
+    - OutFolderVTK  : folder name for the VTK-output
+    - isError       : 1/0 to compute the error (e.g. OutputVTK)
+    \endverbatim
+
+\subsection subUGL2 Input data files
+
+To define the input data for the specific simulation you can use a MATLAB script (e.g. \b InputData/DataTestLap.m).
+You can set up the number of the element mesh, the polynomial approximation degree, the penalty constant,
+boundary conditions, forcing terms and analystical solution (if needed). 
+
+ \verbatim
+%% InputData/DataTestLap.m 
+%% Poisson problem in [0,1]^2 with Dirichlet conditions
+Data.name = 'ConvTestLapDir'; %Name of the example
+Data.TagElLap = 1;         % Element tag
+Data.TagBcLap = [2 3 4 5]; % Boundary tags (bottom/right/top/left)
+Data.LabBcLap = 'DDDD';    % D-Dirichlet/N-Neumann (bottom/right/top/left)
+%% Geometrical properties 
+Data.domain       = [0 1 0 1]; % domain bounds for a new mesh
+Data.N            = 30;        % number of elements for a new mesh
+Data.MeshFromFile = false;     % read mesh from file
+...
+%% Space discretization
+Data.degree  = 3;   % Polynomial degree
+Data.penalty_coeff = 10; % Penalty coefficient
+...
+%% Material properties 
+Data.mu       = {@(x,y) 1.*x.^0.*y.^0};
+%% Forcing Term
+Data.source   = {@(x,y) 2*(4*pi^2)*sin(2*pi*x).*cos(2*pi*y)};
+%% Boundary Conditions
+Data.DirBC    = {@(x,y) sin(2*pi*x).*cos(2*pi*y)};
+%% Exact Solution (if any)
+Data.u_ex     =  {@(x,y) sin(2*pi*x).*cos(2*pi*y)};
+...                  
+\end{lstlisting}
+\endverbatim
+
+\subsection subUGL3 Run a simulation
+
+With the file \b RunMainLap.m you can run the specific simulation. 
+
+\verbatim
+%% RunMainLaplacian.m
+%% Simulation - Path
+ImportLymphPaths;
+%% Inizialization
+Header;
+%% Simulation - Setup
+RunSetup;
+%% Input Data - Boundary conditions - Forcing term
+DataTestLap;
+%% Mesh Generation
+if Data.MeshFromFile
+    % Load existing mesh
+    Data.meshfile = fullfile(Data.FolderName, Data.meshfileseq);
+else
+    % Create a new mesh with Polymesher
+    Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','laplacian');
+end
+%% Main
+[Error] = MainLaplacian(Data,Setup);
+\endverbatim
+
+
+
+*/

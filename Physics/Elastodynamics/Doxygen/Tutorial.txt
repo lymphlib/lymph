@@ -1,0 +1,243 @@
+/*! \page page_TutorialElastodynamics Elastodynamics
+
+\tableofcontents
+
+\section sec_Elastodynamics Elastodynamics problem 
+	
+This is a simple tutorial to solve the Elastodynamics problem:
+
+\f[\begin{cases}
+       \rho \frac{\partial^2\mathbf{u}}{\partial t^2} - \nabla \cdot  \sigma (\mathbf{u}) =  \mathbf{f}, &   \Omega \times (0,T] ,\\
+         \mathbf{u}  =   \mathbf{g}, &   \partial \Omega \times (0,T], \\
+         (\mathbf{u},\frac{\partial\mathbf{u}}{\partial t})  =   (\mathbf{u}_0, \mathbf{v}_0) &    \Omega \times {0},    
+  \end{cases}\f]
+where
+\f[
+\sigma (\mathbf{u}) =  2\rho c_s^2  \epsilon(\mathbf{u}) + \rho(c_p^2-2c_s^2) tr( \epsilon(\mathbf{u}) )I. 
+\f] 
+
+  
+We consider \f$\Omega = (0,1)^2 \f$, \f$ T = 1 \f$ and the following data:
+
+\f{eqnarray*}{
+ \bullet \;  \rho(x,y) & = & 1, \; c_s(x,y)  =  1, \; c_p(x,y)  =  2, \\ 
+ \bullet \; \mathbf{f}(x,y,t) & = & \sin(\sqrt{2}\pi t) \begin{bmatrix}  2\pi^2\cos(\pi y)\sin(\pi y)(4\cos(2\pi x) - (2\cos(2\pi x))/2 - 1) \\  -2\pi^2\cos(\pi x)\sin(\pi x) (4\cos(2\pi y) - (2\cos(2\pi y))/2 - 1) \end{bmatrix}, 
+ \\ \bullet \; \mathbf{g}(x,y,t) & = & \sin(\sqrt{2}\pi t) \begin{bmatrix} -\sin(\pi x)^2  \sin(2\pi y)  \\   \sin(\pi y)^2 \sin(2\pi x) \end{bmatrix},\\
+ \f}
+ 
+and exact solution is \f[ \mathbf{u}(x,y,t) = \sin(\sqrt{2}\pi t) \begin{bmatrix} -\sin(\pi x)^2  \sin(2\pi y)  \\   \sin(\pi y)^2 \sin(2\pi x) \end{bmatrix}. \f]
+Initial conditions are set accordingly.
+
+\section secTutEl1 Setup the input data 
+   
+We set up these data in \b InputData/Elastic/DataTestEla.m script. We consider:
+    - the number of the element mesh \f$N_{el} = 100 \f$; \n
+    - the polynomial approximation degree \f$\ell_\kappa=1\f$ for any \f$\kappa \in \mathcal{T}_h\f$; \n
+    - the penalty constant \f$C_\alpha = 10 \f$, \n
+    - the final time \f$T = 1 \f$, \n
+    - time integration step \f$\Delta t = 0.01 \f$, \n
+
+
+We report here for completeness a sample of the script.
+
+\verbatim
+%% InputData/DataTestEla.m 
+%% Elastodynamics problem in [0,1]^2 x (0,T] with Dirichlet conditions
+Data.name = 'DataTestEla';
+Data.TagElEla   = 1;         % Element tag
+Data.TagBcEla   = [2 3 4 5]; % Boundary tag
+Data.LabBcEla   = 'DDDD';    % (D)irichlet/(N)eumann/(A)bso
+%% Geometrical properties 
+Data.domain       = [0 1 0 1]; % domain bounds for a new mesh
+Data.N            = 100;        % number of elements for a new mesh
+Data.MeshFromFile = false;      % read mesh from file
+...
+%% Time integration
+Data.t0 = 0;
+Data.T  =  1;
+Data.dt = 0.01;
+...
+%% Space discretization
+Data.degree  = 3;   % Polynomial degree
+Data.penalty_coeff = 10; % Penalty coefficient
+...
+%% Properties elastic material
+Data.rho_el    = {@(x,y) 1 + 0.*x.*y};
+Data.vs_el     = {@(x,y) 1 + 0.*x.*y};
+Data.vp_el     = {@(x,y) 2 + 0.*x.*y};
+...
+% Forcing term elastic media
+Data.source_ue   = {@(x,y)  2*pi^2*cos(pi*y).*sin(pi*y).*(4*cos(2*pi*x) - (2*cos(2*pi*x))/2 - 1); ...
+                    @(x,y) -2*pi^2*cos(pi*x).*sin(pi*x).*(4*cos(2*pi*y) - (2*cos(2*pi*y))/2 - 1)};
+Data.source_ue_t = {@(t) sin(sqrt(2)*pi*t)};
+...
+% Dirichlet BC
+Data.DirBCEla  = {@(x,y) (-sin(pi*x).^2 .* sin(2*pi*y)); ...
+                  @(x,y) ( sin(pi*y).^2 .* sin(2*pi*x))};
+% Exact solution --> used to compute the initial conditions
+Data.ue_ex    =  {@(x,y) (-sin(pi*x).^2 .* sin(2*pi*y)); ...
+                  @(x,y) ( sin(pi*y).^2 .* sin(2*pi*x))};
+Data.ue_t_ex  =  {@(t) sin(sqrt(2)*pi*t)};
+Data.due_t_ex =  {@(t) sqrt(2)*pi*cos(sqrt(2)*pi*t)};
+...
+\endverbatim
+
+Nex, we define the following option in the \b RunSetup.m file.
+
+\verbatim
+
+    %% RunSetup.m
+    ...
+    % Plot polygonal mesh y/n
+    Setup.isPlotMesh = 0;
+
+    % Save VTK polygonal mesh y/n
+    Setup.isSaveVTKMesh = 0;
+
+    % Plot solution y/n
+    Setup.isPlotSolution = 1;
+    
+    % Save solution y/n -> .mat file
+    Setup.isSaveSolution = 1;
+    Setup.OutFolder = 'Output';
+
+    % Additional solution output y/n -> .csv file
+    Setup.isSaveCSV = 0;
+
+    % Additional solution output y/n -> .vtk file
+    Setup.isSaveVTK = 1;
+    Setup.OutFolderVTK = 'OutputVTK';
+    
+    % Compute errors y/n
+    Setup.isError = 1;
+
+\endverbatim
+
+ 
+\section secTutEl2 Simulation run
+
+We run the specific simulation using the script \b RunMainEla.m, 
+which calls the main algorithm, contained in \b MainFunctions/MainEla.m.
+
+\verbatim
+%% RunMainEla.m
+run("../ImportLymphPaths.m")
+MyPhysicsPath = pwd;
+addpath(genpath(fullfile(MyPhysicsPath,'Assembly')));
+addpath(genpath(fullfile(MyPhysicsPath,'Error')));
+addpath(genpath(fullfile(MyPhysicsPath,'InputData')));
+addpath(genpath(fullfile(MyPhysicsPath,'InputMesh')));
+addpath(genpath(fullfile(MyPhysicsPath,'MainFunctions')));
+addpath(genpath(fullfile(MyPhysicsPath,'PostProcessing')));
+addpath(genpath(fullfile(MyPhysicsPath,'TimeIntegration')));
+%% Simulation - Setup
+run("../RunSetup.m")
+%% Input Data - Boundary conditions - Forcing term
+DataTestEla;
+%% Mesh Generation
+if Data.MeshFromFile
+    % Load existing mesh
+    Data.meshfile = fullfile(Data.FolderName, Data.meshfileseq);
+else
+    % Create a new mesh with PolyMesher
+    Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
+end
+%% Main
+[Error] = MainEla(Data,Setup);
+\endverbatim 
+ 
+The script contains different calls, among which one is devoted to the mesh construction, i.e., \b MakeMeshMonodomain.m
+that is contained in \b lymph/MeshGeneration.
+\verbatim
+Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','ela');
+\endverbatim 
+The function \b MakeMeshMonodomain.m calls the PolyMesher program  \cite talischi2012polymesher to generate the polygonal mesh for the considered domain.
+The mesh structure is saved in \b Data.meshfile.
+ 
+
+\section secTutEl3 Outputs 
+
+
+As the output of the run we obtain the plots in Figure 1 showing the
+computed solution (left), the analytical solution (center), and the arithmetic difference between the two (right).
+
+@image html ux_t1.png
+@image html uy_t1.png
+@image html duxdt_t1.png
+@image html duydt_t1.png "Figure 2. Left column: computed PolydG solution using a polygonal mesh with 100 elements, and polynomial degree equal to 3. Center column: analytical solution. Right column: the difference between numerical and analytical solutions."
+
+Moreover, the output structure \b Error contains the following fields: 
+    - \b nel = 100 \f$\rightarrow\f$ number of mesh elements,
+    - \b h = 0.1805 \f$\rightarrow\f$ mesh size,
+    - \b p = 3 \f$\rightarrow\f$ polynomial approximation degree \f$\ell=3\f$,
+    - \b error_L2_v = 0.0010 \f$\rightarrow\f$ \f$L^2\f$-norm of the error for the velocity, namely \f$\| \frac{\partial \mathbf{u}_{ex}}{\partial t} - \frac{\partial \mathbf{u}_{h}}{\partial t}\|_{L^2(\Omega)}\f$,
+    - \b error_L2_d = 2.7456e-04 \f$\rightarrow\f$ \f$L^2\f$-norm of the error for the displacement, namely \f$\| \mathbf{u}_{ex}- \mathbf{u}_{h} \|_{L^2(\Omega)}\f$,
+    - \b error_dG = 0.0689 \f$\rightarrow\f$ \f$dG\f$-norm of the error, namely \f$\| \mathbf{u}_{ex} - \mathbf{u}_h\|_{dG}\f$.
+    - \b error_energy = 0.0689 \f$\rightarrow\f$ \f$Energy\f$-norm of the error,  cf. \cite AM2017.
+
+
+Other outputs of the simulation are contained in the folder \b Ouput 
+    - \b DataTestEla_50.mat, \b DataTestEla_100.mat \f$\rightarrow\f$ Matlab structure containing the simulation info and solutions at time \f$ t =0.5 \f$ and \f$ t = 1\f$. 
+    - \b *.csv \f$\rightarrow\f$ solutions in .csv format at time \f$ t =0.5 \f$ and \f$ t = 1\f$.
+    
+and in the folder \b OutputVTK 
+    - \b *.vtk \f$\rightarrow\f$  solution in .vtk format
+    - \b Mesh.vtk \f$\rightarrow\f$ mesh in .vtk format
+
+\section secTutElConv Convergence tests
+
+To verify the convergence rates of the PolydG solution \f$\mathbf{u}_h\f$  we use two different scripts: \b RunhConvergenceElastodynamics.m and \b RunpConvergenceElastodynamics.m accounting for the \f$h\f$- convergence (mesh size) and the \f$\ell\f$-convergence (polynomial degree) respectively.
+We set up the data in the external script \b InputData/Elastic/DataConvTestEla.m. 
+With respect to the previous case, four meshes with decreasing granularity \f$h\f$ are provided in input. 
+
+\verbatim
+%% InputData/Elastic/DataConvTestEla.m 
+...
+Data.meshfileseq  = ["UnitSquare_50_el.mat","UnitSquare_100_el.mat", ...
+                     "UnitSquare_200_el.mat","UnitSquare_400_el.mat"];  %filename for mesh 
+...
+\endverbatim
+
+As the output of the aforementioned scripts we obtain the plots in Figure 2. In particular, we can observe the convergence of the PolydG solution obtained with \f$\ell_\kappa=3\f$ for any \f$\kappa \in \mathcal{T}_h\f$ with respect to the \f$L^2\f$-, \f$dG\f$-, and \f$Energy\f$-norms, confirming the theoretical results \cite AM2017.
+In Figure 3 the exponential convergence with respect to the polynomial degree \f$\ell\f$ is also shown by fixing \f$N_{el} = 50\f$.
+
+@image html convhtutorials.png "Figure 3. \b Error.error_energy, \b Error.error_dG and \b Error.error_L2_d as a function of the mesh size h by fixing the polynomial degree equal to 3, time step equal to 0.001 and  final time T=1."
+
+@image html convptutorials.png "Figure 4. \b Error.error_energy, \b Error.error_dG and \b Error.error_L2_d as a function of the polynomial degree by fixing the number of mesh elements equal to 50."
+ 
+     
+ 
+\section secTutElDamping Damping
+  
+For modelling visco-elastic media within the framework of discrete grid time domain we use the following modification of the equation of motion
+ \f[
+       \rho \frac{\partial^2\mathbf{u}}{\partial t^2} + 2\rho\xi \frac{\partial\mathbf{u}}{\partial t} + \rho \xi^2 \mathbf{u} - \nabla \cdot  \sigma (\mathbf{u}) =  \mathbf{f}, \;   \Omega \times (0,T] ,
+  \f]
+
+where \f$ \xi \f$ is a suitable decay factor \f$[s^{-1}]\f$, defined in the sequel. 
+It can be shown \cite mazzieri2013speed that, with such replacement, all frequency components are equally attenuated, resulting in a frequency proportional quality factor
+\f$ Q = Q_0 \frac{f}{f_0} \f$ where \f$ Q_0 = \pi f_0 /\xi \f$, with \f$ \xi \f$ being the decay factor and \f$ f_0 \f$ a reference value representative of the frequency range to be propagated.  
+  
+
+ 
+ \section secTutElBC Boundary conditions
+ Ohter boundary conditions with respect to the Dirichlet ones can be used in the model. 
+ For elastic wave propagation problems a tipical choice is the following:
+ \b free \b surface condition on the top of the domain \f$ \Gamma_N \f$, i.e.  ,  
+ 
+ \f[
+         \sigma (\mathbf{u}) \mathbf{n}   =   \mathbf{0},  \;  \Gamma_N \times (0,T], 
+ \f]
+
+where \f$\mathbf{n}\f$ is the outward pointing unit normal, and \b transparent \b conditions on the lateral sides \f$ \Gamma_A \f$, i.e.,  
+
+\f[
+         \sigma (\mathbf{u}) \mathbf{n}   =  \rho (c_p-c_s)(\mathbf{u} \cdot \mathbf{n}) \mathbf{n} + \rho c_s \mathbf{u}_t, \;  \Gamma_A \times (0,T].  
+ \f]
+
+We refer the reader to  \cite mazzieri2013speed for the details. The above conditions can be sselected in \c InputData/Elastic/DataTest* files by using letters 'N' and 'A', respectively in the \c Data.LabBcEla field.
+  
+
+
+*/
+

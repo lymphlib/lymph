@@ -1,0 +1,108 @@
+/*! \page page_UserguideHeat Heat equation
+
+ \tableofcontents
+ 
+\section secUGH1 Setup and Configuration
+
+  A single simulation in lymph use the following MATLAB scripts:
+  - \b RunSetup.m   : setup and configuration
+  - \b DataTestCasePaper.m: data input file 
+  - \b RunMainHeat.m : run simulation 
+
+   Other secondary scripts are:
+  - \b RunhConvergenceHeat.m: verification test for h convergence (see \ref secTutParConv)
+  - \b RunpConvergenceHeat.m: verification test for p convergence (see \ref secTutParConv)
+
+
+\subsection subUGH1 Simulation Setup
+
+The users can configure or customize the code for their specific needs.
+In particular, \b RunSetup.m defines the  simulation setup and contains the following fields:
+\verbatim
+- isPlotMesh    : 1/0 to plot the polygonal mesh
+- isSaveVTKMesh : 1/0 to save the polygonal mesh in the VTK format
+- isPlotSolution: 1/0 to visualize the numerical solution in Matlab
+- isSaveSolution: 1/0 to save the solution in the .mat format
+- OutFolder     : folder name for the output (e.g. Output)
+- isSaveCSV     : 1/0 to save the solution in the .csv format
+- isSaveVTK     : 1/0 to save the solution in the .vtk format
+- OutFolderVTK  : folder name for the VTK-output
+- isError       : 1/0 to compute the error (e.g. OutputVTK)
+\endverbatim
+
+\subsection subUGH2 Input data files
+
+To define the input data for the specific simulation you can use a MATLAB script (e.g. \b InputData/Elastic/DataTestHeat.m).
+You can set up the number of the element mesh, the polynomial approximation degree, the penalty constant, final time, time step, time integration scheme, 
+boundary conditions, forcing terms and analystical solution (if needed). 
+
+ \verbatim
+%% InputData/DataTestHeat.m 
+%% Heat equation in double circular mesh with Dirichlet conditions
+Data.name = 'TestCase';
+Data.TagElLap = 1;         % Element tag
+Data.TagBcLap = [2 3 4 5]; % Boundary tag
+Data.LabBcLap = 'DDDD';    % Dirichlet/Neumann/Abso
+Data.TagApplyBCs = 1;      % Skip the assembling of BCs if not necessary
+%% Geometrical properties 
+Data.domain             = [-1.5 1.5 -1 1];
+Data.N                  = 30;                     % Number of mesh elements
+Data.MeshFromFile       = true;
+Data.FolderName         = 'Meshes';
+Data.VTKMeshFileName    = 'Mesh.vtk';
+Data.meshfileseq        = "DataTestDCLap_250_el.mat"; % Names of mesh files
+%% Material properties 
+Data.mu          = {@(x,y) 0.1+0.*x};     % Diffusion parameter
+Data.sigma       = {@(x,y) 0+0.*x};       % Reaction parameter
+% Forcing Term
+Data.homog_source_f = true;
+Data.source_f   = {@(x,y,t) 0.*x};
+% Boundary Conditions
+Data.DirBC    =  @(x,y,t) (x>=0);
+% Exact Solution (if any)
+Data.c_ex     =  @(x,y,t) (x>=0);
+% Gradient of the Exact Solution
+Data.dc_dx_ex =  @(x,y,t) 0.*x;
+Data.dc_dy_ex =  @(x,y,t) 0.*x;
+Data.dc_dt_ex =  @(x,y,t) 0.*x;
+%% Discretization properties
+%% Time integration
+Data.t0     = 0;
+Data.T      = 1;
+Data.dt     = 2.5e-2;
+Data.theta  = 0.5;
+%% Space discretization
+Data.degree        = 1;          % Polynomial degree
+Data.penalty_coeff = 20;         % Penalty coefficient
+...                  
+\end{lstlisting}
+\endverbatim
+
+\subsection subUGH3 Run a simulation
+With the file \b RunMainHeat.m you can run the specific simulation. 
+
+\verbatim
+%% RunMainHeat.m
+%% Simulation - Path
+ImportLymphPaths;
+%% Inizialization
+Header;
+%% Simulation - Setup
+RunSetup;
+%% Input Data - Boundary conditions - Forcing term
+DataTestCasePaper;
+%% Mesh Generation
+if Data.MeshFromFile
+    % Load existing mesh
+    Data.meshfile = fullfile(Data.FolderName, Data.meshfileseq);
+else
+    % Create a new mesh
+    Data.meshfile = MakeMeshDoubleCircle(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'laplacian');
+end
+%% Main
+[Error] = MainHeat(Data,Setup);
+\endverbatim
+
+
+
+*/

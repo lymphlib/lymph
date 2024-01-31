@@ -1,0 +1,11 @@
+/*! \page page_Tutorial Tutorials
+
+Tutorials on how to solve differential problems in <tt>lymph</tt>:
+
+- \subpage page_TutorialHeat
+- \subpage page_TutorialLaplacian
+- \subpage page_TutorialElastodynamics
+
+The solvers for these problems are provided in the \c Physics folder: see \ref page_Userguides.
+
+*/

@@ -1,0 +1,9 @@
+/*! \page page_Userguides User guide
+
+User guides for the solvers provided with the current release of <tt>lymph</tt>:
+
+- \subpage page_UserguideHeat
+- \subpage page_UserguideLaplacian
+- \subpage page_UserguideElastodynamics
+
+*/

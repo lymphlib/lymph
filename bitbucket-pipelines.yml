@@ -1,0 +1,38 @@
+## ---------------------------------------------------------------------
+## Copyright (C) 2023 by the lymph authors.
+##
+## This file is part of lymph.
+##
+## lymph is free software; you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## lymph is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+## Lesser General Public License for more details.
+##
+## You should have received a copy of the GNU Lesser General Public License
+## along with lymph.  If not, see <http://www.gnu.org/licenses/>.
+## ---------------------------------------------------------------------
+
+# Author: Ivan Fumagalli <ivan.fumagalli@polimi.it>.
+
+image: greenbone/doxygen
+
+pipelines:
+  default:
+    - parallel:
+      - step:
+          name: 'Generate documentation'
+          script:
+            - doxygen
+
+    # The following deployment steps will be executed for each pipeline run. To configure your steps and conditionally deploy see https://support.atlassian.com/bitbucket-cloud/docs/configure-bitbucket-pipelinesyml/
+    - step:
+        name: 'Deployment to Production'
+        deployment: production
+        trigger: 'manual'
+        script:
+          - echo "Your deployment to production script goes here..."

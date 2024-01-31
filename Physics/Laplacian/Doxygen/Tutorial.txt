@@ -1,0 +1,188 @@
+/*! \page page_TutorialLaplacian Poisson problem
+
+\tableofcontents
+
+\section sec_Poisson Poisson's problem 
+	
+This is a simple tutorial to solve the Poisson problem 
+
+\f[\begin{cases}
+        - \nabla \cdot (\mu \nabla u) = f, &  x \in \Omega,\\
+        u  =  g, &  x \in \partial \Omega,
+  \end{cases}\f]
+  
+in \f$\Omega =(0,1)^2 \f$ with the following data:
+
+\f{eqnarray*}{
+ \bullet \; \mu(x,y) & = & 1, \\
+ \bullet \; f(x,y) & = & 8\pi^2\sin(2\pi x)\cos(2\pi y),\\
+ \bullet \; g(x,y) & = & \sin(2\pi x)\cos(2\pi y),\\
+ \f}
+ 
+whose exact solution is \f$ u(x) = \sin(2\pi x)\cos(2\pi y)\f$.
+
+\section secTutLap1 Setup the input data
+   
+We set up these data in \b InputData/DataTestDCLap.m script. We consider:
+    - the number of the element mesh \f$N_{el} = 30 \f$; \n
+    - the polynomial approximation degree \f$\ell_\kappa=3\f$ for any \f$\kappa \in \mathcal{T}_h\f$; \n
+    - the penalty constant \f$C_\alpha = 10 \f$. \n
+
+We report here for completeness a sample of the script.
+
+\verbatim
+%% InputData/DataTestLap.m 
+%% Poisson problem in [0,1]^2 with Dirichlet conditions
+Data.name = 'ConvTestLapDir'; %Name of the example
+Data.TagElLap = 1;         % Element tag
+Data.TagBcLap = [2 3 4 5]; % Boundary tag
+Data.LabBcLap = 'DDDD';    % D-Dirichlet/N-Neumann (bottom/right/top/left)
+%% Geometrical properties 
+Data.domain       = [0 1 0 1]; % domain bounds for a new mesh
+Data.N            = 30;        % number of elements for a new mesh
+Data.MeshFromFile = false;     % read mesh from file
+...
+%% Space discretization
+Data.degree  = 3;   % Polynomial degree
+Data.penalty_coeff = 10; % Penalty coefficient
+...
+%% Material properties 
+Data.mu       = {@(x,y) 1.*x.^0.*y.^0};
+%% Forcing Term
+Data.source   = {@(x,y) 2*(4*pi^2)*sin(2*pi*x).*cos(2*pi*y)};
+%% Boundary Conditions
+Data.DirBC    = {@(x,y) sin(2*pi*x).*cos(2*pi*y)};
+%% Exact Solution (if any)
+Data.u_ex     =  {@(x,y) sin(2*pi*x).*cos(2*pi*y)};
+...                  
+\endverbatim
+
+Nex, we define the following option in the \b RunSetup.m file.
+
+\verbatim
+
+    %% RunSetup.m
+    ...
+    % Plot polygonal mesh y/n
+    Setup.isPlotMesh = 1;
+
+    % Save VTK polygonal mesh y/n
+    Setup.isSaveVTKMesh = 1;
+
+    % Plot solution y/n
+    Setup.isPlotSolution = 1;
+    
+    % Save solution y/n -> .mat file
+    Setup.isSaveSolution = 1;
+    Setup.OutFolder = 'Output';
+
+    % Additional solution output y/n -> .csv file
+    Setup.isSaveCSV = 1;
+
+    % Additional solution output y/n -> .vtk file
+    Setup.isSaveVTK = 1;
+    Setup.OutFolderVTK = 'OutputVTK';
+    
+    % Compute errors y/n
+    Setup.isError = 1;
+
+\endverbatim
+
+ 
+\section secTutLap2 Simulation run
+
+We run the specific simulation using the script \b RunMainLaplacian.m, 
+which calls the main algorithm, contained in \b MainFunctions/MainLaplacian.m.
+
+\verbatim
+%% RunMainLaplacian.m
+%% Import lymph and paths of folders related to this problem
+run("../ImportLymphPaths.m")
+MyPhysicsPath = pwd;
+addpath(genpath(fullfile(MyPhysicsPath,'Assembly')));
+addpath(genpath(fullfile(MyPhysicsPath,'Error')));
+addpath(genpath(fullfile(MyPhysicsPath,'InputData')));
+addpath(genpath(fullfile(MyPhysicsPath,'InputMesh')));
+addpath(genpath(fullfile(MyPhysicsPath,'MainFunctions')));
+addpath(genpath(fullfile(MyPhysicsPath,'PostProcessing')));
+%% Simulation - Setup
+run("../RunSetup.m")
+%% Input Data - Boundary conditions - Forcing term
+DataTestLap;
+%% Mesh Generation
+if Data.MeshFromFile
+    % Load existing mesh
+    Data.meshfile = fullfile(Data.FolderName, Data.meshfileseq);
+else
+    % Create a new mesh with PolyMesher
+    Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','laplacian');
+end
+%% Main
+[Error] = MainLaplacian(Data,Setup);
+\endverbatim 
+ 
+The script contains different calls, among which one is devoted to the mesh construction, i.e., \b MakeMeshMonodomain.m
+that is contained in \b lymph/MeshGeneration.
+\verbatim
+Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','laplacian');
+\endverbatim 
+The function \b MakeMeshMonodomain.m calls the PolyMesher program  \cite talischi2012polymesher to generate the polygonal mesh for the considered domain.
+The mesh structure is saved in \b Data.meshfile.
+ 
+
+\section secTutLap3 Outputs
+
+
+As the output of the run we obtain first the plots of the polygonal mesh \f$\mathcal{T}_h\f$, shown in Figure 1
+
+@image html Mesh.png "Figure 1. Polygonal mesh obatined with the \b Polymesher library included in the package." 
+
+and the plots in Figure 2 showing the
+computed solution \f$u_h\f$ (left), the analytical solution \f$u_{ex}\f$ (center), and the arithmetic difference between the two (right).
+
+@image html Solution.png "Figure 2. Left: computed PolydG solution using a polygonal mesh with 30 elements, and polynomial degree equal to 3. Center: analytical solution. Right: the difference between numerical and analytical solutions."
+
+Moreover, the output structure \b Error contains the following fields: 
+    - \b Error.Nel = 30 \f$\rightarrow\f$ number of mesh elements,
+    - \b Error.h = 0.3235 \f$\rightarrow\f$ mesh size,
+    - \b Error.p = 3 \f$\rightarrow\f$ polynomial approximation degree \f$\ell=3\f$,
+    - \b Error.L2 = 0.0027 \f$\rightarrow\f$ \f$L^2\f$-norm of the error, namely \f$\| u_{ex} - u_h\|_{L^2(\Omega)}\f$,
+    - \b Error.dG = 0.3349 \f$\rightarrow\f$ \f$dG\f$-norm of the error, namely \f$\| u_{ex} - u_h\|_{dG}\f$.
+
+
+Other outputs of the simulation are contained in the folder \b Ouput 
+    - \b ConvTestLapDir.mat \f$\rightarrow\f$ Matlab structure containing the simulation info 
+    - \b uh.csv \f$\rightarrow\f$ approximated solution in .csv format 
+    
+and in the folder \b OutputVTK 
+    - \b ConvTestLapDir_uh_1.vtk \f$\rightarrow\f$  solution in .vtk format
+    - \b Mesh.vtk \f$\rightarrow\f$ mesh in .vtk format
+
+\section secTutLapConv Convergence tests
+
+To verify the convergence rates of the PolydG solution \f$u_h\f$  we use two different scripts: \b RunhConvergenceLaplacian.m and \b RunpConvergenceLaplacian.m accounting for the \f$h\f$- convergence (mesh size) and the \f$\ell\f$-convergence (polynomial degree) respectively.
+We set up the data in the external script \b InputData/DataConvTestLap.m. 
+With respect to the previous case, four meshes with decreasing granularity \f$h\f$ are provided in input. 
+
+\verbatim
+%% InputData/DataConvTestLap.m 
+...
+Data.meshfileseq  = ["Lap_100_el.mat","Lap_200_el.mat", ... 
+                     "Lap_400_el.mat","Lap_800_el.mat"];  %filename for mesh 
+...
+\endverbatim
+
+As the output of the aforementioned scripts we obtain the plots in Figure 3. In particular, we can observe the convergence of the PolydG solution obtained with \f$\ell_\kappa=4\f$ for any \f$\kappa \in \mathcal{T}_h\f$ with respect to the \f$L^2\f$- and \f$dG\f$-norms, confirming the theoretical results.
+In Figure 4 the exponential convergence with respect to the polynomial degree \f$\ell\f$ is also shown by fixing \f$N_{el} = 100\f$.
+
+@image html Convergence_h_p4.png "Figure 3. \b Error.dG and \b Error.L2 as a function of the mesh size h by fixing the polynomial degree equal to 4."
+
+@image html Convergence_p_100el.png "Figure 4. \b Error.dG and \b Error.L2 as a function of the polynomial degree by fixing the number of mesh elements equal to 100."
+ 
+     
+ 
+ 
+ 
+
+*/
+

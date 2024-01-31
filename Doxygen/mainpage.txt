@@ -1,0 +1,144 @@
+/**
+@mainpage Documentation
+
+<a href="https://bitbucket.org/lymph/"><tt>lymph</tt></a> (discontinuous po<b>LY</b>topal methods for <b>M</b>ulti-<b>PH</b>ysics) is an open-source Matlab code for the simulation of multiphyisics differential problems. <tt>lymph</tt> is developed at <a href="http://mox.polimi.it">MOX</a> (The Laboratory for Modeling and Scientific Computing, Department of Mathematics) at Politecnico di Milano.
+
+\tableofcontents
+
+
+\section maintainers Maintainers
+
+- Stefano Bonetti <stefano.bonetti@polimi.it>
+- Michele Botti <michele.botti@polimi.it>
+- Mattia Corti <mattia.corti@polimi.it>
+- Ivan Fumagalli <ivan.fumagalli@polimi.it>
+- Ilario Mazzieri <ilario.mazzieri@polimi.it>
+
+
+\section sec1 Installation
+
+1. Download and install the <a href="https://it.mathworks.com/products/matlab.html">MATLAB</a> software. \n
+  
+2. Clone the lymph repository from <a href="https://bitbucket.org/lymph/lymph/">here</a> 
+  or alternatively use the git-command  
+  \verbatim
+  clone git@bitbucket.org:lymph/lymph.git
+  \endverbatim
+
+3. Run the script \c ImportLymphPaths.m contained in the lymph folder.  
+
+The source code and additional information can be found <a href="https://bitbucket.org/lymph/lymph/">here</a>.
+
+     
+\section structure Library structure
+
+- \c Core
+    Contains common tools for discontinuous Galerkin methods on polygonal grids.
+    - \c FEspace
+            Dof maps and evaluation of basis functions on quadrature points.
+    - \c MeshGeneration
+        - \c PolyMesh
+            Generation of a polytopal mesh based on <a href="http://paulino.princeton.edu/software.html">PolyMesher</a> and functions to compute neigboring elements/faces.
+    - \c PostProcessing
+            Post-processing tools, to plot and export output.
+    - \c Quadrature
+            Quadrature rules.
+    - \c Utilities
+            Functions used extensively throughout the library.
+- \c Physics
+    Contains code to set-up and discretize specific PDE models.
+    - \c ImportLymphPaths.m
+        Set up the environment paths to use <tt>lymph</tt>: call \c ImportLymphPaths in your <tt>Run*.m</tt> file (see below).
+    - One folder for each specific PDE model (named \c MYPHYSICS below), all sharing the following structure (see the \c Heat folder for an example):
+        - <tt>Run*MYPHYSICS.m</tt>
+            Callable script(s) to initialize <tt>lymph</tt>, set up the I/O parameters of the simulation, and launch the execution of a simulation (see also next point).
+            Multiple files with such name can be present, e.g. to run single simulations, convergence analysis, etc.
+            This/these file(s) **must include the following lines**:
+\verbatim
+%% Import lymph and add path related to this physics.
+run("../ImportLymphPaths.m")
+MyPhysicsPath = pwd;
+addpath(genpath(fullfile(ProblemPath,'Assembly')));
+addpath(genpath(fullfile(ProblemPath,'InputData')));
+... and same for all other directories related to MYPHYSICS ...
+
+%% Simulation - Setup
+run("../RunSetup.m")
+\endverbatim
+        - \c MainFunctions
+            Folder with actual main function of a simulation, launched by <tt>Run*MYPHYSICS.m</tt>.
+        - \c Assembly
+            Folder with functions to assemble the system of interest.
+        - \c Error
+            Folder with functions ompute error w.r.t. an exact solution (given in <tt>InputData</tt>).
+        - \c InputData
+            Folder with parameters of the model and of its discretization.
+        - \c PostProcessing
+            Folder with physics-specific functions for post-processing: see also <tt>../Core/PostProcessing</tt> for physics-independent functions (e.g. conversion to VTK format).
+        - Other folders containing utilities and functions to address specific issues of a physics solver.
+        - The folders related to <tt>lymph</tt> tutorials distributed with the current release contain also a \c Doxygen folder with their own documentation.
+    - \c RunSetup.m
+        To configure speficic run. In particular one can select the following options:
+\verbatim
+% Plot polygonal mesh
+Setup.isPlotMesh = 0;
+
+% Save VTK polygonal mesh
+Setup.isSaveVTKMesh = 0;
+
+% Plot solution
+Setup.isPlotSolution = 0;
+
+% Save solution in .mat format
+Setup.isSaveSolution = 0;
+Setup.OutFolder = 'Output';
+
+% Save solution for Paraview in .csv or .vtk format
+Setup.isSaveCSV    = 0;
+Setup.isSaveVTK    = 0;
+Setup.OutFolderVTK = 'OutputVTK';
+
+% Compute errors
+Setup.isError = 1;
+\endverbatim
+
+
+\section sec1000 License
+    <ul style="padding-bottom:20px">
+    <li>
+    You can cite <tt>lymph</tt> by this documentation site (https://lymph.bitbucket.io/) and the following preprint:
+
+    P.F. Antonietti, S. Bonetti, M. Botti, M. Corti, I. Fumagalli, I. Mazzieri (2024).
+    <em>lymph: discontinuous poLYtopal methods for Multi-PHysics differential problems.</em>
+    arXiv preprint arXiv:2401.13376. [https://doi.org/10.48550/arXiv.2401.13376](https://doi.org/10.48550/arXiv.2401.13376)
+
+    <tt>lymph</tt> is free software; you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. <tt>lymph</tt> is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with <tt>lymph</tt>. If not, see http://www.gnu.org/licenses/.
+
+    <li>
+    Mesh generation in <tt>lymph</tt> is based on <tt>PolyMesher</tt> (version v1.1), a library available at <a href="http://paulino.princeton.edu/software.html">http://paulino.princeton.edu/software.html</a> for educational or academic use only. All rights of reproduction or distribution of <tt>PolyMesher</tt> in any form are reserved. The release paper of <tt>PolyMesher</tt> is the following:<br>
+    C. Talischi, G.H. Paulino, A. Pereira, I.F.M. Menezes (2012). "PolyMesher: A general-purpose mesh generator for polygonal elements written in Matlab",
+    Structural and Multidisciplinary Optimization, DOI: <a href="https://doi.org/10.1007/s00158-011-0706-z">10.1007/s00158-011-0706-z</a>
+
+    <li>
+    <a href="https://www.doxygen.nl/">Doxygen</a>-based documentation was possible thanks to <a href="https://it.mathworks.com/matlabcentral/fileexchange/25925-using-doxygen-with-matlab">m2cpp.pl</a>, available as<br>
+    Fabrice (2023). "Using Doxygen with Matlab" (<a href="https://www.mathworks.com/matlabcentral/fileexchange/25925-using-doxygen-with-matlab">https://www.mathworks.com/matlabcentral/fileexchange/25925-using-doxygen-with-matlab</a>), MATLAB Central File Exchange. Retrieved November 24, 2023.<br>
+    Copyright (c) 2009, Fabrice. All rights reserved.
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+    <ul>
+    <li> Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+    <li> Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+    </ul>
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+    </ul>
+
+The developers of <tt>lymph</tt> acknowledge the partial support of the ERC Synergy Grant
+<br>
+<a href="https://erc-nemesis.eu">NEMESIS: NEw generation MEthods for numerical SImulationS</a>.
+
+<table>
+<tr><img src="Doxygen/logo.png" height=50></tr>
+<tr><img src="Doxygen/logoMOX.png" height=50></tr>
+<tr><img src="Doxygen/logoERC.png" height=50></tr>
+</table>
+*/
