@@ -113,7 +113,7 @@ function [penalty] = PenaltyCoefficient(femregion, Data, ie, neighedges_ie, neig
     end
     %> @TODO check the cases neigh_ie<-1 and introduce comments to explain the choice
     % penalty = (neigh_ie > 0)'.*max([p_ie p_ie_n],[],2) + (neigh_ie == -1)'.*penalty_dir;
-    penalty = (neigh_ie > 0)'.*penalty + (neigh_ie == -1)'.*penalty_dir;
+    penalty = (neigh_ie > 0)'.*penalty + (neigh_ie < 0)'.*penalty_dir;
 
 end
 
