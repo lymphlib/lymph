@@ -1,0 +1,235 @@
+/*! \page page_TutorialStokesPS Stokes 
+
+\tableofcontents
+
+\section sec_StokesPS Unsteady Stokes problem in pseudo-stress formulation
+	
+This is a simple tutorial to solve the problem:
+
+
+\f[\begin{cases}
+    \mu^{-1}\partial_t  {\rm dev}(\mathbf{\sigma}) - \nabla\left(\nabla\cdot\mathbf{\sigma}\right) =  \mathbf{F}, &   \Omega \times (0,T] ,\\
+  \nabla\cdot\mathbf{\sigma} = \mathbf{g}_D, &   \Gamma_D \times (0,T], \\
+  \mathbf{\sigma}\cdot\mathbf{n} = \mathbf{g}_N, & \Gamma_N \times (0,T], \\
+\mathbf{\sigma}(\cdot,t=0) = \mathbf{\sigma}_0 &    \Omega.  
+  \end{cases}\f]
+where
+\f$ \Gamma_D \cup \Gamma_N = \partial \Omega \f$ and \f$ \Gamma_D \cap \Gamma_N = \emptyset \f$.
+  
+We consider \f$\Omega = (0,1)^2 \f$, \f$ T = 1 \f$ and the following data:
+
+\f{eqnarray*}{
+ \bullet \mu(x,y) & = & 1, \\ 
+ \bullet \mathbf{F}(x,y,t) & = & \sin(2t) \begin{bmatrix} 
+-3 & 0 \\ 0 & 0 \end{bmatrix} + 2\cos(2t) \begin{bmatrix} 
+\frac{1}{2}x^2 + \frac{1}{4}y^2 & xy \\ xy & -\frac{1}{2}x^2 - \frac{1}{4}y^2 \end{bmatrix}, 
+ \f}
+ 
+and exact solution is \f[ \mathbf{\sigma}(x,y,t) = \sin(2t) \begin{bmatrix} x^2 & xy \\ xy & -\frac{1}{2}y^2 \end{bmatrix}. \f]
+Initial and boundary conditions are set accordingly.
+
+\section secTutStokesPS1 Setup the input data 
+   
+We set up these data in \b InputData/DataTestFluid.m script. We consider:
+    - the number of the element mesh \f$N_{el} = 50 \f$; \n
+    - the polynomial approximation degree \f$\ell_\kappa=1\f$ for any \f$\kappa \in \mathcal{T}_h\f$; \n
+    - the penalty constant \f$C_\alpha = 10 \f$, \n
+    - the final time \f$T = 1 \f$, \n
+    - time integration step \f$\Delta t = 0.01 \f$, \n
+
+
+We report here for completeness a sample of the script.
+
+\verbatim
+%% InputData/DataTestFluid.m 
+%% Unsteady Stokes problem in [0 1]^2 with mixed conditions
+
+Data.name = 'DataTestFluid';
+Data.TagElFluid   = 1;         % Element tag
+Data.TagBcFluid   = [2 3 4 5]; % Boundary tag
+Data.LabBcFluid   = 'NDDN';    % (D)irichlet (N)eumann
+%% Geometrical properties 
+Data.domain       = [0 1 0 1]; % domain bounds for a new mesh
+Data.N            = 100;        % number of elements for a new mesh
+Data.MeshFromFile = false;      % read mesh from file
+...
+%% Discretization properties                            
+%% Time integration
+Data.t0 = 0;
+Data.T  =  1;
+Data.dt = 0.01;
+Data.timeint   = 'CN';
+%% Space discretization
+Data.degree  = 1;   % Polynomial degree
+Data.penalty_coeff = 10; % Penalty coefficient
+...
+%% Properties fluid material
+Data.mu_f  = {@(x,y) 1 + 0.*x.*y};
+...
+%% Forcing term elastic media
+% Forcing term fluid media sigma_11, sigma_12, sigma_21, sigma_22
+Data.source_sigma   = {@(x,y) (-3 + 0.*x.*y); 
+                       @(x,y)  0.*x.*y;
+                       @(x,y)  0.*x.*y;
+                       @(x,y)  0.*x.*y};
+Data.source_sigma_t = {@(t) sin(2*t)};
+...
+% Dirichlet BC
+Data.DirBCsigma      = {@(x,y)  x.^2;
+                        @(x,y)  x.*y;
+                        @(x,y)  x.*y;
+                        @(x,y)  - 0.5*y.^2};                     
+% Neumann BC
+Data.NeuBCsigma_x  = {@(x,y)   2*x; 
+                      @(x,y)   y;
+                      @(x,y)   y;
+                      @(x,y)   0.*x.*y};
+ 
+Data.NeuBCsigma_y  = {@(x,y)   0.*x.*y; 
+                      @(x,y)   x;
+                      @(x,y)   x;
+                      @(x,y)   -y};
+
+% exact solution --> used to compute the initial conditions
+Data.sigma_ex    = {@(x,y)   x.^2;
+                    @(x,y)   x.*y;
+                    @(x,y)   x.*y;
+                    @(x,y)   - 0.5*y.^2};
+Data.sigma_t_ex  = {@(t) sin(2*t)}; 
+Data.sigma_dt_ex = {@(t) 2*cos(2*t)};
+...                  
+\end{lstlisting}
+\endverbatim
+
+Nex, we define the following option in the \b RunSetup.m file.
+
+\verbatim
+
+    %% RunSetup.m
+    ...
+    % Plot polygonal mesh y/n
+    Setup.isPlotMesh = 0;
+
+    % Save VTK polygonal mesh y/n
+    Setup.isSaveVTKMesh = 0;
+
+    % Plot solution y/n
+    Setup.isPlotSolution = 1;
+    
+    % Save solution y/n -> .mat file
+    Setup.isSaveSolution = 1;
+    Setup.OutFolder = 'Output';
+
+    % Additional solution output y/n -> .csv file
+    Setup.isSaveCSV = 0;
+
+    % Additional solution output y/n -> .vtk file
+    Setup.isSaveVTK = 1;
+    Setup.OutFolderVTK = 'OutputVTK';
+    
+    % Compute errors y/n
+    Setup.isError = 1;
+
+\endverbatim
+
+ 
+\section secTutStokesPS2 Simulation run
+
+We run the specific simulation using the script \b RunMainStokesPS.m, 
+which calls the main algorithm, contained in \b MainFunctions/MainStokesPS.m.
+
+\verbatim
+%% RunMainStokePS.m
+%% Import lymph and paths of folders related to this problem
+run("../ImportLymphPaths.m")
+MyPhysicsPath = pwd;
+addpath(genpath(fullfile(MyPhysicsPath,'Assembly')));
+addpath(genpath(fullfile(MyPhysicsPath,'Error')));
+addpath(genpath(fullfile(MyPhysicsPath,'InputData')));
+addpath(genpath(fullfile(MyPhysicsPath,'InputMesh')));
+addpath(genpath(fullfile(MyPhysicsPath,'MainFunctions')));
+addpath(genpath(fullfile(MyPhysicsPath,'PostProcessing')));
+addpath(genpath(fullfile(MyPhysicsPath,'TimeIntegration')));
+addpath(genpath(fullfile(MyPhysicsPath,'Utilities')));
+%% Simulation - Setup
+run("../RunSetup.m")
+%% Input Data - Boundary conditions - Forcing term
+DataTestFluid;
+% DataTestVelRecFluid;
+% DataTestFACFluid;
+%% Mesh Generation
+if Data.MeshFromFile
+    % Load existing mesh
+    Data.meshfile = fullfile(Data.FolderName, Data.meshfileseq);
+else
+    % Create a new mesh
+    Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','stokes');
+end
+[Error] = MainStokesPS(Data,Setup);
+\endverbatim 
+ 
+The script contains different calls, among which one is devoted to the mesh construction, i.e., \b MakeMeshMonodomain.m
+that is contained in \b lymph/MeshGeneration.
+\verbatim
+Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','stokes');
+\endverbatim 
+The function \b MakeMeshMonodomain.m calls the PolyMesher program  \cite talischi2012polymesher to generate the polygonal mesh for the considered domain.
+The mesh structure is saved in \b Data.meshfile.
+ 
+
+\section secTutStokesPS3 Outputs 
+
+
+As the output of the run we obtain the plots in Figure 1 showing the
+computed solution (left), the analytical solution (center), and the arithmetic difference between the two (right).
+
+@image html s11.png
+@image html s12.png
+@image html s21.png
+@image html s22.png 
+@image html pressure.png  "Figure 1. Left column: computed PolydG solution at T=1 using a polygonal mesh with 100 elements, and polynomial degree equal to 1. Center column: analytical solution. Right column: the difference between numerical and analytical solutions."
+
+Moreover, the output structure \b Error contains the following fields: 
+    - \b nel = 100 \f$\rightarrow\f$ number of mesh elements,
+    - \b h = 0.1805 \f$\rightarrow\f$ mesh size,
+    - \b p = 1 \f$\rightarrow\f$ polynomial approximation degree \f$\ell=1\f$,
+    - \b error_L2_v = 0.0238 \f$\rightarrow\f$ \f$L^2\f$-norm of the error for the deviatoric part of \f$\mathbf{\sigma} \f$, namely \f$\| dev(\mathbf{\sigma}_{ex}) - dev(\mathbf{\sigma}_{h}) \|_{L^2(\Omega)}\f$,
+    - \b error_L2_d = 0.0279 \f$\rightarrow\f$ \f$L^2\f$-norm of the error for \f$\mathbf{\sigma} \f$, namely \f$\| \mathbf{\sigma}_{ex} - \mathbf{\sigma}_{h} \|_{L^2(\Omega)}\f$,
+    - \b error_dG = 0.0047 \f$\rightarrow\f$ \f$dG\f$-norm of the error, namely \f$\| \mathbf{\sigma}_{ex} - \mathbf{\sigma}_h\|_{dG}\f$.
+    - \b error_Energy = 0.0727 \f$\rightarrow\f$ \f$Energy\f$-norm of the error.
+
+
+Other outputs (if selected in RunSetup.m) of the simulation are contained in the folder \b Ouput 
+    - \b DataTestFluid_50.mat, \b DataTestFluid_100.mat \f$\rightarrow\f$ Matlab structure containing the simulation info and solutions at time \f$ t =0.5 \f$ and \f$ t = 1\f$. 
+    - \b *.csv \f$\rightarrow\f$ solutions in .csv format at time \f$ t =0.5 \f$ and \f$ t = 1\f$.
+    
+and in the folder \b OutputVTK 
+    - \b *.vtk \f$\rightarrow\f$  solution in .vtk format
+    - \b Mesh.vtk \f$\rightarrow\f$ mesh in .vtk format
+
+\section secTutStokesPSConv Convergence tests
+
+To verify the convergence rates of the PolydG solution \f$\mathbf{\sigma}_h\f$  we use two different scripts: \b RunhConvergenceStokesPS.m and \b RunpConvergenceStokesPS.m accounting for the \f$h\f$- convergence (mesh size) and the \f$\ell\f$-convergence (polynomial degree) respectively.
+We set up the data in the external script \b InputData/DataConvTestFluid.m. 
+With respect to the previous case, four meshes with decreasing granularity \f$h\f$ are provided in input. 
+
+\verbatim
+%% InputData/DataConvTestFluid.m 
+...
+Data.meshfileseq  = ["UnitSquareMixed_50_el", "UnitSquareMixed_100_el", ...
+                     "UnitSquareMixed_200_el", "UnitSquareMixed_400_el"]; %filename for mesh 
+...
+\endverbatim
+
+As the output of the aforementioned scripts we obtain the plots in Figure 2. In particular, we can observe the convergence of the PolydG solution obtained with \f$\ell_\kappa=1\f$ for any \f$\kappa \in \mathcal{T}_h\f$ with respect to the \f$Energy\f$-norm.
+In Figure 3 the exponential convergence with respect to the polynomial degree \f$\ell\f$ is also shown by fixing \f$N_{el} = 50\f$.
+
+@image html convhtutorialsStPS.png "Figure 2. \b Error.error_energy, as a function of the mesh size h by fixing the polynomial degree equal to 1, time step equal to 0.001 and  final time T = 1."
+
+@image html convptutorialsStPS.png "Figure 3. \b Error.error_energy, as a function of the polynomial degree by fixing the number of mesh elements equal to 50. The plateau is given by the time step."
+ 
+     
+
+
+*/
+

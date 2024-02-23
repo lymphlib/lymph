@@ -1,0 +1,127 @@
+/*! \page page_UserguideStokesPS Stokes in pseudo-stress formulation
+
+ \tableofcontents
+ 
+\section secUGStokesPS1 Setup and Configuration
+
+  A single simulation in lymph use the following MATLAB scripts:
+  - \b RunSetup.m   : setup and configuration
+  - \b DataTestFluid.m: data input file 
+  - \b RunMainStokesPS.m : run simulation 
+
+   Other secondary scripts are:
+  - \b RunhConvergenceStokesPS.m: verification test for h convergence (see \ref secTutStokesPSConv)
+  - \b RunpConvergenceStokesPS.m: verification test for p convergence (see \ref secTutStokesPSConv)
+
+
+\subsection subUGStokesPS1 Simulation Setup
+
+The users can configure or customize the code for their specific needs.
+In particular, \b RunSetup.m defines the  simulation setup and contains the following fields:
+    \verbatim
+    - isPlotMesh    : 1/0 to plot the polygonal mesh
+    - isSaveVTKMesh : 1/0 to save the polygonal mesh in the VTK format
+    - isPlotSolution: 1/0 to visualize the numerical solution in Matlab
+    - isSaveSolution: 1/0 to save the solution in the .mat format
+    - OutFolder     : folder name for the output (e.g. Output)
+    - isSaveCSV     : 1/0 to save the solution in the .csv format
+    - isSaveVTK     : 1/0 to save the solution in the .vtk format
+    - OutFolderVTK  : folder name for the VTK-output
+    - isError       : 1/0 to compute the error (e.g. OutputVTK)
+    \endverbatim
+
+\subsection subUGStokesPS2 Input data files
+
+To define the input data for the specific simulation you can use a MATLAB script (e.g. \b InputData/DataTestFluid.m).
+You can set up the number of the element mesh, the polynomial approximation degree, the penalty constant, final time, time step, time integration scheme, 
+boundary conditions, forcing terms and analystical solution (if needed). 
+
+ \verbatim
+%% InputData/DataTestFluid.m 
+%% Unsteady Stokes problem in [0 1]^2 with mixed conditions
+
+Data.name = 'DataTestFluid';
+Data.TagElFluid   = 1;         % Element tag
+Data.TagBcFluid   = [2 3 4 5]; % Boundary tag
+Data.LabBcFluid   = 'NDDN';    % (D)irichlet (N)eumann
+%% Geometrical properties 
+Data.domain       = [0 1 0 1]; % domain bounds for a new mesh
+Data.N            = 50;        % number of elements for a new mesh
+Data.MeshFromFile = false;      % read mesh from file
+...
+%% Discretization properties                            
+%% Time integration
+Data.t0 = 0;
+Data.T  =  1;
+Data.dt = 0.01;
+Data.timeint   = 'CN';
+%% Space discretization
+Data.degree  = 1;   % Polynomial degree
+Data.penalty_coeff = 10; % Penalty coefficient
+...
+%% Properties fluid material
+Data.mu_f  = {@(x,y) 1 + 0.*x.*y};
+...
+%% Forcing term elastic media
+% Forcing term fluid media sigma_11, sigma_12, sigma_21, sigma_22
+Data.source_sigma   = {@(x,y) (-3 + 0.*x.*y); 
+                       @(x,y)  0.*x.*y;
+                       @(x,y)  0.*x.*y;
+                       @(x,y)  0.*x.*y};
+Data.source_sigma_t = {@(t) sin(2*t)};
+...
+% Dirichlet BC
+Data.DirBCsigma      = {@(x,y)  x.^2;
+                        @(x,y)  x.*y;
+                        @(x,y)  x.*y;
+                        @(x,y)  - 0.5*y.^2};                     
+% Neumann BC
+Data.NeuBCsigma_x  = {@(x,y)   2*x; 
+                      @(x,y)   y;
+                      @(x,y)   y;
+                      @(x,y)   0.*x.*y};
+ 
+Data.NeuBCsigma_y  = {@(x,y)   0.*x.*y; 
+                      @(x,y)   x;
+                      @(x,y)   x;
+                      @(x,y)   -y};
+
+% exact solution --> used to compute the initial conditions
+Data.sigma_ex    = {@(x,y)   x.^2;
+                    @(x,y)   x.*y;
+                    @(x,y)   x.*y;
+                    @(x,y)   - 0.5*y.^2};
+Data.sigma_t_ex  = {@(t) sin(2*t)}; 
+Data.sigma_dt_ex = {@(t) 2*cos(2*t)};
+...                  
+\end{lstlisting}
+\endverbatim
+
+\subsection subUGStokesPS3 Run a simulation
+
+With the file \b RunMainStokesPS.m you can run the specific simulation. 
+
+\verbatim
+%% RunMainStokesPS.m
+%% Import lymph and paths of folders related to this problem
+run("../ImportLymphPaths.m")
+...
+%% Simulation - Setup
+run("../RunSetup.m")
+%% Input Data - Boundary conditions - Forcing term
+DataTestFluid;
+%% Mesh Generation
+if Data.MeshFromFile
+    % Load existing mesh
+    Data.meshfile = fullfile(Data.FolderName, Data.meshfileseq);
+else
+    % Create a new mesh
+    Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','stokes');
+end
+
+[Error] = MainStokesPS(Data,Setup);
+\endverbatim
+
+
+
+*/
