@@ -9,7 +9,7 @@
 %> @brief Global assembly of the matrices for the elastic problem \cite AM2017
 %
 %> @param A   Struct with Global matrices
-%> @retval El Struct with local matrices 
+%> @param El Struct with local matrices 
 %> @param index  mapping from local to global indeces
 %
 %> @retval A   Struct with Global matrices

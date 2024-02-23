@@ -11,9 +11,11 @@
 %
 %> @param M          Matrix to be assembled
 %> @param row        Indeces of the current rows
+%> @param neight     Indeces of the neighbouring elements
 %> @param M1         Local matrix of the neighboring element
 %> @param nln        Number of basis functions
-%> @param nE         Number of elements
+%> @param nS         Number of starting element
+%> @param nE         Number of total elements
 %
 %> @retval M         Matrix assembles
 %>

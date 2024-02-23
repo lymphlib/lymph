@@ -9,7 +9,7 @@
 %> @brief Allocation of local volume matrices for the elastic domain 
 %
 %> @param nbases Number of basis function
-%> @param nedges_ie Number of edges of the polygonal element
+%> @param nedges_ie_unq Number of edges of the polygonal element
 %
 %> @retval Edge  Struct with local edge matrices 
 %>

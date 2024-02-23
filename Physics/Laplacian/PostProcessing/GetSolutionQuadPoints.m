@@ -4,12 +4,13 @@
 %> @brief Compute the solution at quadrature nodes.
 %>
 %==========================================================================
-%> @section classLaplacianGetSolutionQuadPoints Class description
+%> @section classGetSolutionQuadPoints Class description
 %==========================================================================
 %> @brief  Compute the solution at quadrature nodes.
 %>
 %> @param Data        Struct with problem's data
 %> @param femregion   Struct for finite elements data
+%> @param neighbor    Struct for neighboring elements data
 %> @param Solutions   Struct with modal solutions
 %>
 %> @retval U   Solution array having the following structure

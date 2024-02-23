@@ -37,7 +37,6 @@ fprintf(['Number of Polygonal Elements: ', num2str(mesh.region.ne)]);
 fprintf(['\nMesh size: ', num2str(Data.h)]);
 fprintf('\n\n------------------------------------------------------------------\n')
 
-
 % checking tags for elements
 for i = 1 : length(mesh.region.id)
     
