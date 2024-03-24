@@ -2,7 +2,14 @@
 @mainpage Documentation
 
 <a href="https://bitbucket.org/lymph/"><tt>lymph</tt></a> (discontinuous po<b>LY</b>topal methods for <b>M</b>ulti-<b>PH</b>ysics) is an open-source Matlab code for the simulation of multiphyisics differential problems. <tt>lymph</tt> is developed at <a href="http://mox.polimi.it">MOX</a> (The Laboratory for Modeling and Scientific Computing, Department of Mathematics) at Politecnico di Milano.
-The development of <tt>lymph</tt> is part of the activities of the project <a href="https://erc-nemesis.eu">NEMESIS</a> (P.I.\@PoliMI <a href="https://antonietti.faculty.polimi.it/">Paola F. Antonietti</a>).
+The development of <tt>lymph</tt> is part of the activities of the project <a href="https://erc-nemesis.eu">NEMESIS</a> (<a href="https://erc-nemesis.eu">https://erc-nemesis.eu</a>, P.I.\@PoliMI <a href="https://antonietti.faculty.polimi.it/">Paola F. Antonietti</a>) and involves the following research group:
+
+- Paola F. Antonietti (P.I.) <paola.antonietti@polimi.it>
+- Stefano Bonetti <stefano.bonetti@polimi.it>
+- Michele Botti <michele.botti@polimi.it>
+- Mattia Corti <mattia.corti@polimi.it>
+- Ivan Fumagalli <ivan.fumagalli@polimi.it>
+- Ilario Mazzieri <ilario.mazzieri@polimi.it>
 
 
 
@@ -136,8 +143,8 @@ Setup.isError = 1;
     </ul>
 
 The developers of <tt>lymph</tt> acknowledge the support of
+- ERC Synergy Grant n. 101115663 <a href="https://erc-nemesis.eu">NEMESIS: NEw generation MEthods for numerical SImulationS</a>
 - <a href="https://www.supercomputing-icsc.it/">ICSC--Centro Nazionale di Ricerca in High Performance Computing, Big Data, and Quantum Computing</a> funded by European Union--NextGenerationEU
-- ERC Synergy Grant <a href="https://erc-nemesis.eu">NEMESIS: NEw generation MEthods for numerical SImulationS</a>
 
 <table>
 <tr><img src="Doxygen/logo.png" height=50></tr>

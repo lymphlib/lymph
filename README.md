@@ -5,6 +5,16 @@ This repository contains a common interface for MATLAB packages using PolyDG met
 
 The full documentation of **lymph** is at [https://lymph.bitbucket.io/](https://lymph.bitbucket.io/).
 
+**lymph** is developed at [MOX](http://mox.polimi.it) (The Laboratory for Modeling and Scientific Computing, Department of Mathematics) at Politecnico di Milano.
+The development of **lymph** is part of the activities of the project **NEMESIS** ([https://erc-nemesis.eu](https://erc-nemesis.eu"), P.I.@PoliMI Paola F. Antonietti) and involves the following research group:
+
+- Paola F. Antonietti (P.I.) <paola.antonietti@polimi.it>
+- Stefano Bonetti <stefano.bonetti@polimi.it>
+- Michele Botti <michele.botti@polimi.it>
+- Mattia Corti <mattia.corti@polimi.it>
+- Ivan Fumagalli <ivan.fumagalli@polimi.it>
+- Ilario Mazzieri <ilario.mazzieri@polimi.it>
+
 ### Maintainers ###
 
 * Stefano Bonetti <stefano.bonetti@polimi.it>
@@ -77,3 +87,11 @@ The submodule is itself a git repository: in ``OUTER_REPO/lymph`` you can code, 
 * [git](https://git-scm.com/) ([Pro Git book](https://git-scm.com/book/en/v2), [cheat sheet](https://training.github.com/downloads/github-git-cheat-sheet/), [visual cheat sheet](https://ndpsoftware.com/git-cheatsheet.html))
 * [git submodules](https://www.atlassian.com/git/tutorials/git-submodule)
 * Text editors: [Vim](https://www.vim.org/) (often opened by default at ``git commit``; [cheat sheet](https://devhints.io/vim)), [nano](https://www.nano-editor.org/) ([cheat sheet](https://www.nano-editor.org/dist/latest/cheatsheet.html))
+
+
+### Acknowledgments ###
+
+The developers of **lymph** acknowledge the support of
+
+* ERC Synergy Grant n. 101115663 [NEMESIS: NEw generation MEthods for numerical SImulationS](https://erc-nemesis.eu)
+* [ICSC--Centro Nazionale di Ricerca in High Performance Computing, Big Data, and Quantum Computing](https://www.supercomputing-icsc.it/) funded by European Union--NextGenerationEU
