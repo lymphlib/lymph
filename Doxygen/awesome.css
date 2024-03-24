@@ -2146,7 +2146,7 @@ div.qindex {
     border-bottom: 0;
     box-shadow: 0 0.75px 0 var(--separator-color);
     font-size: var(--navigation-font-size);
-    min-height: 70px;
+    min-height: 50px;
 }
 
 img.footer {

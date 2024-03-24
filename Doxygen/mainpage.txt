@@ -2,6 +2,9 @@
 @mainpage Documentation
 
 <a href="https://bitbucket.org/lymph/"><tt>lymph</tt></a> (discontinuous po<b>LY</b>topal methods for <b>M</b>ulti-<b>PH</b>ysics) is an open-source Matlab code for the simulation of multiphyisics differential problems. <tt>lymph</tt> is developed at <a href="http://mox.polimi.it">MOX</a> (The Laboratory for Modeling and Scientific Computing, Department of Mathematics) at Politecnico di Milano.
+The development of <tt>lymph</tt> is part of the activities of the project <a href="https://erc-nemesis.eu">NEMESIS</a> (P.I.\@PoliMI <a href="https://antonietti.faculty.polimi.it/">Paola F. Antonietti</a>).
+
+
 
 \tableofcontents
 
@@ -103,7 +106,7 @@ Setup.isError = 1;
 \endverbatim
 
 
-\section sec1000 License
+\section sec1000 License and Funding
     <ul style="padding-bottom:20px">
     <li>
     You can cite <tt>lymph</tt> by this documentation site (https://lymph.bitbucket.io/) and the following preprint:
@@ -132,13 +135,14 @@ Setup.isError = 1;
     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </ul>
 
-The developers of <tt>lymph</tt> acknowledge the partial support of the ERC Synergy Grant
-<br>
-<a href="https://erc-nemesis.eu">NEMESIS: NEw generation MEthods for numerical SImulationS</a>.
+The developers of <tt>lymph</tt> acknowledge the support of
+- <a href="https://www.supercomputing-icsc.it/">ICSC--Centro Nazionale di Ricerca in High Performance Computing, Big Data, and Quantum Computing</a> funded by European Union--NextGenerationEU
+- ERC Synergy Grant <a href="https://erc-nemesis.eu">NEMESIS: NEw generation MEthods for numerical SImulationS</a>
 
 <table>
 <tr><img src="Doxygen/logo.png" height=50></tr>
 <tr><img src="Doxygen/logoMOX.png" height=50></tr>
+<tr><img src="Doxygen/logoICSC1col.png" height=50></tr>
 <tr><img src="Doxygen/logoERC.png" height=50></tr>
 </table>
 */
