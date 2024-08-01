@@ -1,4 +1,4 @@
-%> @file  PlotPolyMesh.m
+%> @file  PlotPolymesh.m
 %> @author The Lymph Team
 %> @date 16 April 2023
 %> @brief Plot of the polygonal mesh

@@ -1,13 +1,20 @@
-%------------------ PolyMesher  version: 1.1 (Aug13) ---------------------%
-% Ref1: C Talischi, GH Paulino, A Pereira, IFM Menezes,                   %
-%      "PolyMesher: A general-purpose mesh generator for polygonal        %
-%      elements written in Matlab", Struct Multidisc Optim, 2012,         %
-%      DOI 10.1007/s00158-011-0706-z                                      %
-%                                                                         %
-% Ref2: A Pereira, C Talischi, GH Paulino, IFM Menezes, MS Carvalho,      %
-%      "Implementation of fluid flow topology optimization in PolyTop",   %
-%      Struct Multidisc Optim, 2013, DOI XX.XXXX/XXXXXX-XXX-XXX-X         %
-%-------------------------------------------------------------------------%
+%> @file  PolyMesher_BiDomain.m
+%> @author Ilario Mazzieri
+%> @brief Modified version of the original PolyMesher main file - version 1.1,
+%> to generate an unstructured grid of a two-way partitioned rectangular domain.
+%>
+%> The original version is taken from http://paulino.princeton.edu/software.html
+%>------------------ PolyMesher  version: 1.1 (Aug13) ---------------------%
+%> Ref1: C Talischi, GH Paulino, A Pereira, IFM Menezes,                   %
+%>      "PolyMesher: A general-purpose mesh generator for polygonal        %
+%>      elements written in Matlab", Struct Multidisc Optim, 2012,         %
+%>      DOI 10.1007/s00158-011-0706-z                                      %
+%>                                                                         %
+%> Ref2: A Pereira, C Talischi, GH Paulino, IFM Menezes, MS Carvalho,      %
+%>      "Implementation of fluid flow topology optimization in PolyTop",   %
+%>      Struct Multidisc Optim, 2013, DOI XX.XXXX/XXXXXX-XXX-XXX-X         %
+%>-------------------------------------------------------------------------%
+
 function [region] = PolyMesher_BiDomain(Domain,NElem,MaxIter,P)
 if ~exist('P','var'), P=PolyMshr_RndPtSet(NElem,Domain); end
 NElem = size(P,1);

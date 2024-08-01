@@ -47,6 +47,12 @@ end
 %% Rectangular domain
 global Dati
 
+if nargin < 7
+    SimType = 'laplacian';
+    Data.TagBcLap = [5, 6, 7, 8, 9, 10, 11, 12];
+    Data.LabBcLap = 'DDDDDDDD';
+end
+
 %xmin<0 xmax>0 ymin<0 ymax>0
 Dati.domain = DomainLimits;
 Data.domain = DomainLimits;
@@ -55,7 +61,7 @@ Data.domain = DomainLimits;
 if (strcmp(MeshType,'P')==1)
     
     % polygonal mesh
-    [region] = PolyMesher_QuadriDomain(@RectangleQD,N,100);
+    [region] = PolyMesher_QuadriDomain(@Rectangle,N,100);
     
 elseif (strcmp(MeshType,'C')==1)
     
@@ -69,7 +75,7 @@ elseif (strcmp(MeshType,'C')==1)
     [X,Y] = meshgrid(ax+dx/2:dx:bx, ay+dy/2:dy:by);
     P = [X(:) Y(:)];
     
-    [region] = PolyMesher_QuadriDomainCartesian(@RectangleQD,N,100,P);
+    [region] = PolyMesher_QuadriDomainCartesian(@Rectangle,N,100,P);
     
 end
 

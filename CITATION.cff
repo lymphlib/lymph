@@ -1,0 +1,54 @@
+cff-version: 1.2.0
+title: lymph
+message: >-
+  discontinuous poLYtopal methods for Multi-PHysics
+type: software
+authors:
+  - given-names: Paola Francesca
+    family-names: Antonietti
+    email: paola.antonietti@polimi.it
+    affiliation: >-
+      MOX, Department of Mathematics, Politecnico di
+      Milano, Italy
+    orcid: 'https://orcid.org/0000-0002-2138-3878'
+  - given-names: Stefano
+    family-names: Bonetti
+    email: stefano.bonetti@polimi.it
+    affiliation: >-
+      MOX, Department of Mathematics, Politecnico di
+      Milano, Italy
+    orcid: 'https://orcid.org/0000-0003-0491-9260'
+  - given-names: Michele
+    family-names: Botti
+    email: michele.botti@polimi.it
+    affiliation: >-
+      MOX, Department of Mathematics, Politecnico di
+      Milano, Italy
+    orcid: 'https://orcid.org/0000-0003-1171-2874'
+  - given-names: Mattia
+    family-names: Corti
+    email: mattia.corti@polimi.it
+    affiliation: >-
+      MOX, Department of Mathematics, Politecnico di
+      Milano, Italy
+    orcid: 'https://orcid.org/0000-0002-7014-972X'
+  - given-names: Ivan
+    family-names: Fumagalli
+    email: ivan.fumagalli@polimi.it
+    affiliation: >-
+      MOX, Department of Mathematics, Politecnico di
+      Milano, Italy
+    orcid: 'https://orcid.org/0000-0001-9256-1398'
+  - given-names: Ilario
+    family-names: Mazzieri
+    email: ilario.mazzieri@polimi.it
+    affiliation: >-
+      MOX, Department of Mathematics, Politecnico di
+      Milano, Italy
+    orcid: 'https://orcid.org/0000-0003-4121-8092'
+repository-code: 'https://bitbucket.org/lymph/lymph/'
+url: 'https://lymph.bitbucket.io/'
+license: AGPL-3.0+
+preferred-citation:
+  collection-doi: 10.48550/arXiv.2401.13376
+  type: generic

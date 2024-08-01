@@ -1,7 +1,7 @@
 /**
 @mainpage Documentation
 
-<a href="https://bitbucket.org/lymph/"><tt>lymph</tt></a> (discontinuous po<b>LY</b>topal methods for <b>M</b>ulti-<b>PH</b>ysics) is an open-source Matlab code for the simulation of multiphyisics differential problems. <tt>lymph</tt> is developed at <a href="http://mox.polimi.it">MOX</a> (The Laboratory for Modeling and Scientific Computing, Department of Mathematics) at Politecnico di Milano.
+<a href="https://bitbucket.org/lymph/"><tt>lymph</tt></a> (discontinuous po<b>LY</b>topal methods for <b>M</b>ulti-<b>PH</b>ysics) \cite lymph is an open-source Matlab code for the simulation of multiphyisics differential problems. <tt>lymph</tt> is developed at <a href="http://mox.polimi.it">MOX</a> (The Laboratory for Modeling and Scientific Computing, Department of Mathematics) at Politecnico di Milano.
 The development of <tt>lymph</tt> is part of the activities of the project <a href="https://erc-nemesis.eu">NEMESIS</a> (<a href="https://erc-nemesis.eu">https://erc-nemesis.eu</a>, P.I.\@PoliMI <a href="https://antonietti.faculty.polimi.it/">Paola F. Antonietti</a>) and involves the following research group:
 
 - Paola F. Antonietti (P.I.) <paola.antonietti@polimi.it>
@@ -122,7 +122,7 @@ Setup.isError = 1;
     <em>lymph: discontinuous poLYtopal methods for Multi-PHysics differential problems.</em>
     arXiv preprint arXiv:2401.13376. [https://doi.org/10.48550/arXiv.2401.13376](https://doi.org/10.48550/arXiv.2401.13376)
 
-    <tt>lymph</tt> is free software; you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. <tt>lymph</tt> is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with <tt>lymph</tt>. If not, see http://www.gnu.org/licenses/.
+    <tt>lymph</tt> is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. <tt>lymph</tt> is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with <tt>lymph</tt>. If not, see http://www.gnu.org/licenses/.
 
     <li>
     Mesh generation in <tt>lymph</tt> is based on <tt>PolyMesher</tt> (version v1.1), a library available at <a href="http://paulino.princeton.edu/software.html">http://paulino.princeton.edu/software.html</a> for educational or academic use only. All rights of reproduction or distribution of <tt>PolyMesher</tt> in any form are reserved. The release paper of <tt>PolyMesher</tt> is the following:<br>
@@ -146,10 +146,4 @@ The developers of <tt>lymph</tt> acknowledge the support of
 - ERC Synergy Grant n. 101115663 <a href="https://erc-nemesis.eu">NEMESIS: NEw generation MEthods for numerical SImulationS</a>
 - <a href="https://www.supercomputing-icsc.it/">ICSC--Centro Nazionale di Ricerca in High Performance Computing, Big Data, and Quantum Computing</a> funded by European Union--NextGenerationEU
 
-<table>
-<tr><img src="Doxygen/logo.png" height=50></tr>
-<tr><img src="Doxygen/logoMOX.png" height=50></tr>
-<tr><img src="Doxygen/logoICSC1col.png" height=50></tr>
-<tr><img src="Doxygen/logoERC.png" height=50></tr>
-</table>
 */

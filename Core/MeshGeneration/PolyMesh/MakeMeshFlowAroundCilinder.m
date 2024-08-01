@@ -40,7 +40,8 @@ if ~exist(FolderName,'dir')
 end
 
 %% RECTANGULAR DOMAIN
-global Dati 
+global Dati
+Dati = struct;
 
 %xmin xmax ymin ymax
 Dati.domain = DomainLimits;

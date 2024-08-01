@@ -48,7 +48,7 @@ Dati.domain = DomainLimits;
 if (strcmp(MeshType,'P')==1)
     
     % polygonal mesh
-    [region] = PolyMesher_BiDomainHor(@RectangleBD,N,100);
+    [region] = PolyMesher_BiDomainHor(@Rectangle,N,100);
     
 elseif (strcmp(MeshType,'C')==1)
     
@@ -62,18 +62,9 @@ elseif (strcmp(MeshType,'C')==1)
     [X,Y] = meshgrid(ax+dx/2:dx:bx, ay+dy/2:dy:by);
     P = [X(:) Y(:)];
     
-    [region] = PolyMesher_BiDomainHorCartesian(@RectangleBD,N,100,P);
+    [region] = PolyMesher_BiDomainHorCartesian(@Rectangle,N,100,P);
     
 end
-
-%% plot polygonal mesh and element numbers
-
-PlotPolyMesh(region);
-
-% hold on;
-% for i = 1 : size(region.coord,1)
-%     text(region.coord(i,1),region.coord(i,2), num2str(i));
-% end
 
 %% CONNECTIVITY - NEIGHBOURS AND BOUNDARY EDGES
 

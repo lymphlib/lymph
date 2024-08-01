@@ -27,7 +27,7 @@ The development of **lymph** is part of the activities of the project **NEMESIS*
 
 If your MATLAB code (``OUTER_REPO`` from now on) is tracked by a git repository, the easiest way to include **lymph** in it (and to keep track of its updates) is by creating a git submodule:
 
-0. If you have not already done it, set up a personal SSH key on your Bitbucket account (instructions [here](https://support.atlassian.com/bitbucket-cloud/docs/set-up-personal-ssh-keys-on-windows/); in most cases, you may start directly from point 3 of such instructions).  
+0. If you have not already done it, set up a personal SSH key on your Bitbucket account (instructions [here](https://support.atlassian.com/bitbucket-cloud/docs/set-up-personal-ssh-keys-on-windows/); in most cases, you may start directly from point 3 of such instructions).
 NB. If you have a Windows system, when generating the keys by `ssh-keygen` you may need to use `.ssh/id_rsa` as `{ssh-key-name}`, that is
     ```bash
     $ ssh-keygen -C "{username@emaildomain.com}" -f 'HOMEPATH/.ssh/id_rsa'
@@ -48,9 +48,9 @@ NB. If you have a Windows system, when generating the keys by `ssh-keygen` you m
     ```MATLAB
     addpath(genpath('lymph'));
     ```
-    If you want to include only one module (e.g., `Core/Mesh_Generation`):
+    If you want to include only one module (e.g., `Core/MeshGeneration`):
     ```MATLAB
-    addpath(genpath('lymph/Core/Mesh_Generation'));
+    addpath(genpath('lymph/Core/MeshGeneration'));
     ```
 4. If you want to keep up-to-date with the last version of **lymph**, from time to time you need to update the submodule. From the root directory ``OUTER_REPO``:
     ```bash

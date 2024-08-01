@@ -15,7 +15,7 @@
 %> @param gradedgeqy  Gradient-y of Basis function at quadrature nodes
 %> @param par       physical parameters 
 %
-%> @param Edge      Struct with local edge matrices
+%> @retval Edge      Struct with local edge matrices
 %>
 %==========================================================================
 

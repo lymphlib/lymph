@@ -47,6 +47,11 @@ global Dati
 Dati.domain = DomainLimits;
 Data.domain = DomainLimits;
 
+if nargin < 7
+    SimType = 'laplacian';
+    Data.TagBcLap = [2, 3, 4, 5];
+    Data.LabBcLap = 'DDDD';
+end
 
 if (strcmp(MeshType,'P')==1)
     

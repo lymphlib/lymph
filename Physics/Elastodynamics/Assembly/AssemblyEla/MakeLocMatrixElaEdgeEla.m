@@ -17,7 +17,7 @@
 %> @param nx,ny       Normal vector compoenete
 %> @param penalty_geom_iedg   Penalty parameters for the current edge
 %
-%> @param Edge      Struct with local edge matrices
+%> @retval Edge      Struct with local edge matrices
 %>
 %==========================================================================
 
