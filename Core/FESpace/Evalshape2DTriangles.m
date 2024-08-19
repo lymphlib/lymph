@@ -48,12 +48,18 @@ function [dphiq, Grad]= Evalshape2DTriangles(femregion, ElemIdx, Nodes)
     s = NodesPhys(:,2);
 
     % Transfer of triangle coordinate from (r,s) to (a,b)
-    a = (s ~= 1).*(2*r./(1-s)-1) - (s == 1);
+    %a = (s ~= 1).*(2*r./(1-s)-1) - (s == 1);
+    a = zeros(size(s));
+    a(s ~= 1) = (2*r(s ~= 1)./(1-s(s ~= 1))-1);
+    a(s == 1) = - s(s == 1);
     b = 2*s-1;
 
     % Basis functions reconstruction
     sk = 1;
 
+    dphiq = zeros(length(a),(N+1)*(N+2)/2);
+    dpsi  = zeros(length(a),(N+1)*(N+2)/2,2);
+    
     for i=0:N
 
         for j=0:N - i

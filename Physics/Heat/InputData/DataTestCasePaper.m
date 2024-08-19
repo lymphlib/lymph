@@ -15,7 +15,7 @@ Data.N                  = 250;                     % Number of mesh elements
 Data.MeshFromFile       = true;
 Data.FolderName         = 'InputMesh';
 Data.VTKMeshFileName    = 'Mesh.vtk';
-Data.meshfileseq        = 'DataTestDCLap_250_el'; % Names of mesh files
+Data.meshfileseq        = 'DataTestDCLap_250_el.mat'; % Names of mesh files
 
 %% Material properties 
 
@@ -43,7 +43,7 @@ Data.du_dt_ex =  @(x,y,t) 0.*x;
 
 Data.t0     = 0;
 Data.T      = 1;
-Data.dt     = 2.5e-2;
+Data.dt     = 2e-3;
 Data.theta  = 0.5;
 
 
@@ -52,12 +52,17 @@ Data.theta  = 0.5;
 Data.degree        = 5;          % Polynomial degree
 Data.penalty_coeff = 10;         % Penalty coefficient
 
+%% Quadrature settings
+
+Data.quadrature = "QF";       % Quadrature type: ST/QF
 
 %% Visualization settings
 
-Data.PlotExact          = false;
+Data.PlotExact          = true;
+Data.PlotIniCond        = true;
 Data.PlotGridSol        = true;
-Data.VisualizationStep  = 1e-1;
+Data.VisualizationStep  = 50;
+Data.NqnVisualization   = 5;        % Data.NqnVisualization must be odd and strictly greater than 1 (see Gauleg.m) 
 
 
 %% Save solution settings

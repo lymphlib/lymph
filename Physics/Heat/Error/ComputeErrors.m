@@ -1,6 +1,6 @@
 %> @file  ComputeErrors.m
 %> @author Mattia Corti
-%> @date 3 October 2023
+%> @date 26 July 2024
 %> @brief Compute errors for convergence analysis
 %>
 %==========================================================================
@@ -37,4 +37,9 @@ function [Errors] = ComputeErrors(Data, Matrices, femregion, u_h, time)
     Errors.err_u_L2 = full(sqrt(err_u_L2));
     Errors.err_u_dG = full(sqrt(err_u_dG));
 
+    % Discretization variables
+    Errors.nel = femregion.nel;
+    Errors.h   = Data.h;
+    Errors.p   = Data.degree;
+    
 end

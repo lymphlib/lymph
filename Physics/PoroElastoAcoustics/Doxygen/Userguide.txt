@@ -1,0 +1,135 @@
+/*! \page page_UserguideMultiWaves Poro-Acoustic-Elastic Wave propagation
+
+ \tableofcontents
+ 
+\section secUGPAE1 Setup and Configuration
+
+  A single simulation in lymph use the following MATLAB scripts:
+  - \b RunSetup.m   : setup and configuration
+  - \b DataTestPoro.m: data input file
+  - \b DataTestAcu.m: data input file 
+  - \b DataTestEla.m: data input file
+  - \b DataTestPoroAcu.m: data input file 
+  - \b DataTestElaAcu.m: data input file 
+  - \b DataTestPoroEla.m: data input file 
+  - \b DataTestPoroAcuEla.m: data input file 
+  - \b RunMainPoroElastoAcoustics.m : run simulation 
+
+   Other secondary scripts are:
+  - \b RunhConvergencePoroElastoAcoustics.m: verification test for h convergence (see \ref secTutElConv)
+  - \b RunpConvergencePoroElastoAcoustics.m: verification test for p convergence (see \ref secTutElConv)
+
+
+\subsection subUGPAE1 Simulation Setup
+
+The users can configure or customize the code for their specific needs.
+In particular, \b RunSetup.m defines the  simulation setup and contains the following fields:
+    \verbatim
+    - isPlotMesh    : 1/0 to plot the polygonal mesh
+    - isSaveVTKMesh : 1/0 to save the polygonal mesh in the VTK format
+    - isPlotSolution: 1/0 to visualize the numerical solution in Matlab
+    - isSaveSolution: 1/0 to save the solution in the .mat format
+    - OutFolder     : folder name for the output (e.g. Output)
+    - isSaveCSV     : 1/0 to save the solution in the .csv format
+    - isSaveVTK     : 1/0 to save the solution in the .vtk format
+    - OutFolderVTK  : folder name for the VTK-output
+    - isError       : 1/0 to compute the error (e.g. OutputVTK)
+    \endverbatim
+
+\subsection subUGPAE2 Input data files
+
+To define the input data for the specific simulation you can use a MATLAB script (e.g. \b InputData/DataTestPoro.m).
+You can set up the number of the element mesh, the polynomial approximation degree, the penalty constant, final time, time step, time integration scheme, 
+boundary conditions, forcing terms and analystical solution (if needed). 
+
+ \verbatim
+%% InputData/DataTestPoro.m 
+%% Poro problem in [-1,1] x [0, 1] with Dirichlet conditions
+Data.name = 'DataTestPoro';
+Data.NPhys = 1;  % Number of physics (1 in this case)
+Data.TagElPoro  = 1; % Element tag
+Data.TagBcPoro  = [2 3 4 5]; % Boundary tag
+Data.LabBcPoro  = 'DDDD'; % (D)irichlet/(N)eumann/(A)bso
+...
+%% Geometrical properties 
+Data.domain       = [-1 0 -1 1]; % domain bounds for a new mesh
+Data.N            = 400;        % number of elements for a new mesh
+Data.MeshFromFile = false;      % read mesh from file
+...
+%% Discretization properties                            
+%% Time integration
+Data.t0 = 0;
+Data.T  =  1;
+Data.dt = 0.01;
+Data.timeint   = 'newmark';
+Data.BetaNM = 0.25;
+Data.GammaNM = 0.5;
+%% Space discretization
+Data.degree  = 2;   % Polynomial degree
+Data.penalty_coeff = 10; % Penalty coefficient
+...
+%% Properties elastic material
+Data.rho_f   = {@(x,y) 1 + 0.*x.*y};
+Data.rho_s   = {@(x,y) 1 + 0.*x.*y};
+Data.phi_por = {@(x,y) 0.5 + 0.*x.*y};
+Data.zetap   = {@(x,y) 0.*x.*y};
+Data.mu      = {@(x,y) 1 + 0.*x.*y};
+Data.lam     = {@(x,y) 1 + 0.*x.*y};
+Data.beta    = {@(x,y) 1 + 0.*x.*y};
+...
+%% Forcing term elastic media
+Data.source_up = {@(x,y) -3*(8*cos((pi*x)/2).^2.*sin((pi*x)/2) + 24*x.*pi.*cos((pi*x)/2).^3 + 2*x.^2.*pi^2.*sin((pi*x)/2) - 16*x.*pi.*cos((pi*x)/2) - 9*x.^2*pi^2.*cos((pi*x)/2).^2.*sin((pi*x)/2))/2'; ...
+                  @(x,y) -  (8*cos((pi*x)/2).^2.*sin((pi*x)/2) + 24*x.*pi.*cos((pi*x)/2).^3 + 2*x.^2.*pi^2.*sin((pi*x)/2) - 16*x.*pi.*cos((pi*x)/2) - 9*x.^2*pi^2.*cos((pi*x)/2).^2.*sin((pi*x)/2))/2};
+Data.source_up_t = {@(t) cos(pi*t*sqrt(2))};
+...
+%% Dirichlet BC
+Data.DirBCPoro_up   = {@(x,y) x.^2.*cos(pi*x/2).*sin(pi*x); ...
+                       @(x,y) x.^2.*cos(pi*x/2).*sin(pi*x)};
+Data.DirBPoro_up_t = {@(t) cos(pi*t*sqrt(2))};
+
+% Exact solution --> used to compute the initial conditions
+Data.up_ex    =  {@(x,y) x.^2.*cos(pi*x/2).*sin(pi*x); ...
+                  @(x,y) x.^2.*cos(pi*x/2).*sin(pi*x)};
+Data.up_t_ex  =  {@(t) cos(pi*t*sqrt(2))};
+Data.dup_t_ex =  {@(t) -sqrt(2)*pi*sin(sqrt(2)*pi*t)};
+...                  
+\end{lstlisting}
+\endverbatim
+
+\subsection subUGPAE3 Run a simulation
+
+With the file \b RunMainPoroElastoAcoustics.m you can run the specific simulation. 
+
+\verbatim
+%% RunMainPoroElastoAcoustics.m
+%% Simulation - Path
+ImportLymphPaths;
+%% Inizialization
+Header;
+%% Simulation - Setup
+RunSetup;
+%% Input Data - Boundary conditions - Forcing term
+DataTestPoro;
+%% Mesh Generation
+if Data.MeshFromFile
+    % Load existing mesh
+    Data.meshfile = fullfile(Data.FolderName, Data.meshfileseq);
+else
+    % Create a new mesh
+    if (Data.NPhys == 1)
+        Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
+    elseif (Data.NPhys == 2)
+        Data.meshfile = MakeMeshBidomainVert(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
+    elseif (Data.NPhys == 3)
+        Data.meshfile = MakeMeshQuadridomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
+    end
+end
+
+
+%% Main
+[Error] = MainPoroAcuEla(Data,Setup);
+\endverbatim
+
+
+
+*/

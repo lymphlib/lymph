@@ -1,0 +1,173 @@
+%> @file  ComputeErrorsPoroAcuEla.m
+%> @author Ilario Mazzieri
+%> @date 28 June 2024
+%> @brief  Compute errors for the poro-elasto-acoustic problem
+%>
+%==========================================================================
+%> @section classComputeErrorsPoroAcuEla Class description
+%> @brief  Compute errors for waves's problem
+%
+%> @param Data       Struct with problem's data
+%> @param neighbor   Neighbor struct (see MakeNeighbor.m)
+%> @param femregion  Finite Element struct (see CreateDOF.m)
+%> @param Matrices   Struct with problem's matrices 
+%> @param Solutions  Struct with solution vectors 
+%
+%> @retval Error     Struct with computed errors
+%>
+%==========================================================================
+
+function [Error] = ComputeErrorsPoroAcuEla(Data, neighbor, femregion, Matrices, Solutions)
+
+%% Compute modal coefficient of the exact solution
+[up0,wp0,phi0,ue0] = ComputeModalSolutionPoroAcuEla(Data,femregion);
+
+T = Data.T;
+
+% compute exact solution U at final time
+up_ex   = up0   * Data.up_t_ex{1}(T);
+wp_ex   = wp0   * Data.wp_t_ex{1}(T);
+phi_ex  = phi0  * Data.phi_t_ex{1}(T);
+ue_ex   = ue0   * Data.ue_t_ex{1}(T);
+
+% Derivative
+dot_up_ex   = up0   * Data.dup_t_ex{1}(T);
+dot_wp_ex   = wp0   * Data.dwp_t_ex{1}(T);
+dot_phi_ex  = phi0  * Data.dphi_t_ex{1}(T);
+dot_ue_ex   = ue0   * Data.due_t_ex{1}(T);
+
+%% Switch from nodal to modal representation of the solution coefficients
+up_ex    = Matrices.Poro.MPrjP\up_ex;
+wp_ex    = Matrices.Poro.MPrjP\wp_ex;
+phi_ex   = Matrices.Acu.MPrjA\phi_ex;
+ue_ex    = Matrices.Ela.MPrjP\ue_ex;
+
+dot_up_ex   = Matrices.Poro.MPrjP\dot_up_ex;
+dot_wp_ex   = Matrices.Poro.MPrjP\dot_wp_ex;
+dot_phi_ex  = Matrices.Acu.MPrjA\dot_phi_ex;
+dot_ue_ex   = Matrices.Ela.MPrjP\dot_ue_ex;
+
+%% Definition of error vector
+error_up       = up_ex  - Solutions.up_h;
+error_wp       = wp_ex  - Solutions.wp_h;
+error_phi      = phi_ex - Solutions.phi_h;
+error_ue       = ue_ex  - Solutions.ue_h;
+
+error_dot_up   = dot_up_ex  - Solutions.dot_up_h;
+error_dot_wp   = dot_wp_ex  - Solutions.dot_wp_h;
+error_dot_phi  = dot_phi_ex - Solutions.dot_phi_h;
+error_dot_ue   = dot_ue_ex  - Solutions.dot_ue_h;
+
+%% DG errors
+
+error_dGep   = error_up'    * Matrices.Poro.DGe * error_up;
+error_dGp    = error_up'    * Matrices.Poro.DGp_beta * error_up + error_wp' * Matrices.Poro.DGp * error_wp;
+error_dGa    = error_phi'   * Matrices.Acu.DGa * error_phi;
+error_dGp_w  = error_wp'    * Matrices.Poro.DGp * error_wp;
+error_dGe    = error_ue'    * Matrices.Ela.DGe * error_ue;
+
+if isempty(error_dGep); error_dGep = 0; end
+if isempty(error_dGp);  error_dGp = 0;  end
+if isempty(error_dGa);  error_dGa = 0;  end
+if isempty(error_dGe);  error_dGe = 0;  end
+    
+error_dG     = error_dGep + error_dGp + error_dGa + error_dGe;
+
+%% L2 velocity errors
+error_L2_dot_up   = error_dot_up'   * (    Matrices.Poro.M_P_rho     ) * error_dot_up;
+error_L2_dot_wp   = error_dot_wp'   * (    Matrices.Poro.M_P_rhow    ) * error_dot_wp;
+error_L2_dot_uwp  = error_dot_wp'   * (2 * Matrices.Poro.M_P_rhof    ) * error_dot_up;
+error_L2_dot_phi  = error_dot_phi'  * (    Matrices.Acu.M_A           ) * error_dot_phi;
+error_L2_dot_ue   = error_dot_ue'   * (    Matrices.Ela.M_P_rho       ) * error_dot_ue;
+
+if isempty(error_L2_dot_up);  error_L2_dot_up = 0;  end
+if isempty(error_L2_dot_wp);  error_L2_dot_wp = 0;  end
+if isempty(error_L2_dot_uwp); error_L2_dot_uwp = 0; end
+if isempty(error_L2_dot_phi); error_L2_dot_phi = 0; end
+if isempty(error_L2_dot_ue);  error_L2_dot_ue = 0;  end
+
+error_L2_vel = error_L2_dot_up + error_L2_dot_wp + error_L2_dot_uwp ...
+                    + error_L2_dot_phi + error_L2_dot_ue;
+
+%% L2 displacement errors                
+                
+error_L2_up   = error_up'   * Matrices.Poro.MPrjP * error_up;
+error_L2_wp   = error_wp'   * Matrices.Poro.MPrjP * error_wp;
+error_L2_phi  = error_phi'  * Matrices.Acu.MPrjA  * error_phi;
+error_L2_ue   = error_ue'   * Matrices.Ela.MPrjP  * error_ue;
+
+if isempty(error_L2_up);  error_L2_up = 0;  end
+if isempty(error_L2_wp);  error_L2_wp = 0;  end
+if isempty(error_L2_phi); error_L2_phi = 0; end
+if isempty(error_L2_ue);  error_L2_ue = 0;  end
+
+error_L2  = error_L2_up + error_L2_wp + error_L2_phi + error_L2_ue;
+
+%% interface errors for poroacoustics
+error_B_wp = error_wp' * (Matrices.Poro.M_P_eta_kper) * error_wp;
+if (Data.tau ~= 0 && Data.tau ~= 1)
+    error_B_interface = ComputeErrorInterfacePA(Data,femregion,neighbor,Solutions.wp_h,T,Data.tau);
+else
+    error_B_interface = 0;
+end
+error_B   = error_B_wp + error_B_interface;
+if isempty(error_B); error_B = 0; end
+
+%% Total errors 
+% Energy error
+error_Energy = sqrt(error_L2_vel + error_dG + error_B);
+error_L2_v   = sqrt(error_L2_vel);
+error_L2_d   = sqrt(error_L2);
+
+% compute poroelastic pressure
+u_h1 = Solutions.up_h(1:femregion.ndof_p);
+u_h2 = Solutions.up_h(femregion.ndof_p+1:2*femregion.ndof_p);
+w_h1 = Solutions.wp_h(1:femregion.ndof_p);
+w_h2 = Solutions.wp_h(femregion.ndof_p+1:2*femregion.ndof_p);
+
+if isempty(u_h1)
+    p_h = 0;
+else
+    p_h = Matrices.Poro.MPrjP_1\(Matrices.Poro.P1_beta*u_h1 + Matrices.Poro.P2_beta*u_h2 + Matrices.Poro.P1*w_h1 + Matrices.Poro.P2*w_h2);
+end
+% if exact poroelastic pressure = 0
+error_L2_p_h = p_h' * Matrices.Poro.MPrjP_1 * p_h;
+error_L2_pressure = sqrt(error_L2_p_h + error_L2_dot_phi);
+
+
+
+%% Savings
+
+%% Outputs
+Error.nel = femregion.nel;
+Error.h   = Data.h;
+Error.p   = Data.degree;
+
+Error.error_L2_d        = error_L2_d;
+Error.error_L2_v        = error_L2_v;
+Error.error_Energy      = error_Energy;
+Error.error_dG          = sqrt(error_dG);
+
+% Error.error_L2          = error_L2;
+% Error.error_L2_vel      = error_L2_vel;
+
+Error.error_L2_p_h      = sqrt(error_L2_p_h);
+Error.error_L2_pressure = error_L2_pressure;
+Error.error_B           = error_B;
+Error.error_B_interface = error_B_interface;
+Error.error_L2_dot_phi  = sqrt(error_L2_dot_phi);
+Error.error_L2_dot_uwp  = sqrt(error_L2_dot_uwp);
+Error.error_L2_dot_wp   = sqrt(error_L2_dot_wp);
+Error.error_L2_dot_up   = sqrt(error_L2_dot_up);
+Error.error_L2_dot_ue   = sqrt(error_L2_dot_ue);
+Error.error_dGp_w       = sqrt(error_dGp_w);
+Error.error_dGa         = sqrt(error_dGa);
+Error.error_dGp         = sqrt(error_dGp);
+Error.error_dGep        = sqrt(error_dGep);
+Error.error_dGe         = sqrt(error_dGe);
+Error.error_L2_phi      = sqrt(error_L2_phi);
+Error.error_L2_wp       = sqrt(error_L2_wp);
+Error.error_L2_up       = sqrt(error_L2_up);
+Error.error_L2_ue       = sqrt(error_L2_ue);
+
+

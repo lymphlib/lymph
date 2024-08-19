@@ -1,6 +1,6 @@
 %> @file  GetInitalConditions.m
-%> @author Ilario Mazzieri
-%> @date 11 May 2023
+%> @author Ilario Mazzieri, Stefano Bonetti
+%> @date 24 July 2024
 %> @brief Compute initial displacement and velocity
 %>
 %==========================================================================
@@ -12,21 +12,14 @@
 %> @param Matrices    Struct with problem's matrices 
 %
 %> @retval Uold       Vector with initial conditions
-%> @retval Solutions  Struct with initial conditions for saving purposes
 %>
 %==========================================================================
 
-function [Uold, Solutions] = GetInitalConditions(Data,femregion, Matrices)
+function [Uold] = GetInitalConditions(Data,femregion, Matrices)
 
-[ue0] = ComputeModalSolutionWave(Data,femregion);
+[ue0, ve0] = ComputeModalSolutionWave(Data,femregion,Data.t0);
 
-ue0t   = ue0   * Data.ue_t_ex{1}(0);
-due0t   = ue0   * Data.due_t_ex{1}(0);
+ue0 = Matrices.Ela.MPrjP \ ue0;
+ve0 = Matrices.Ela.MPrjP \ ve0;
 
-ue0t   = Matrices.Ela.MPrjP \ue0t;
-due0t   = Matrices.Ela.MPrjP \due0t;
-
-Uold = [ue0t; due0t];
-
-Solutions.ue_h  = ue0t;    
-Solutions.dot_ue_h  = due0t;  
+Uold = [ue0; ve0];

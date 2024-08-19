@@ -23,7 +23,7 @@ function [u_mod] = ComputeModalSolution(Data,femregion)
 [~, ~, ref_qNodes_2D, w_2D] = Quadrature(femregion.nqn);
 
 %% Initialization
-u_mod = sparse(femregion.ndof,1);
+u_mod = zeros(femregion.ndof,1);
 
 %% Loop over the elements
 % Visualization of computational progress

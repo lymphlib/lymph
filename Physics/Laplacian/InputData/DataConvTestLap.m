@@ -9,7 +9,7 @@ Data.LabBcLap = 'DDDD';    % Dirichlet/Neumann/Abso
 %% Geometrical properties 
 Data.domain       = [0 1 0 1]; % domain bounds for a new mesh
 Data.N            = {100, 200, 400, 800};        % number of elements for a new mesh
-Data.MeshFromFile = true;     % read mesh from file
+Data.MeshFromFile = false;     % read mesh from file
 Data.FolderName   = 'InputMesh';
 Data.VTKMeshFileName = 'Mesh.vtk';
 Data.meshfileseq  = {"Lap_100_el.mat","Lap_200_el.mat", ... 
@@ -19,9 +19,13 @@ Data.meshfileseq  = {"Lap_100_el.mat","Lap_200_el.mat", ...
 Data.degree  = 4;   % Polynomial degree
 Data.penalty_coeff = 10; % Penalty coefficient
 
+%% Quadrature settings
+Data.quadrature = "ST";       % Quadrature type: ST/QF
+
 %% Visualization settings
-Data.PlotExact   = true;
-Data.PlotGridSol = true;
+Data.PlotExact        = true;
+Data.PlotGridSol      = true;
+Data.NqnVisualization = 3;      % Data.NqnVisualization must be odd and strictly greater than 1 (see Gauleg.m) 
 
 %% Material properties 
 Data.mu       = {@(x,y) 1.*x.^0.*y.^0};

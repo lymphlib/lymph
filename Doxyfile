@@ -993,10 +993,10 @@ EXAMPLE_RECURSIVE      = NO
 # \image command).
 
 IMAGE_PATH             = ./Doxygen ./Doxygen/Logo ./Doxygen/Images \
-                         ./Physics/Elastodynamics/Doxygen \
-                         ./Physics/Heat/Doxygen \
-                         ./Physics/Laplacian/Doxygen \
-                         ./Physics/StokesPS/Doxygen
+                         Physics/Elastodynamics/Doxygen \
+                         Physics/Heat/Doxygen \
+                         Physics/Laplacian/Doxygen \
+                         Physics/PoroElastoAcoustics/Doxygen
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program

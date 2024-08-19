@@ -1,6 +1,6 @@
 %> @file  ComputeModalSolutionWave.m
-%> @author Ilario Mazzieri
-%> @date 11 May 2023
+%> @author Ilario Mazzieri, Stefano Bonetti
+%> @date 24 July 2024
 %> @brief Compute modal expansions for elastic displacement
 %>
 %==========================================================================
@@ -9,18 +9,22 @@
 %
 %> @param Data        Struct with problem's data
 %> @param femregion   Finite Element struct (see CreateDOF.m)
+%> @param time        Time instant
 %
-%> @retval ue       Vector with modal expansions
+%> @retval ue       Vector with modal expansions (displacement)
+%> @retval ve       Vector with modal expansions (velocity)
 %>
 %==========================================================================
 
-function [ue] = ComputeModalSolutionWave(Data,femregion)
+function [ue, ve] = ComputeModalSolutionWave(Data,femregion,time)
 %% Quadrature values
 [~, ~, ref_qNodes_2D, w_2D] = Quadrature(femregion.nqn);
 
 %% Initialization
-ue1 = spalloc(femregion.ndof_e,1,femregion.ndof_e);
-ue2 = spalloc(femregion.ndof_e,1,femregion.ndof_e);
+ue1 = zeros(femregion.ndof_e,1);
+ue2 = zeros(femregion.ndof_e,1);
+ve1 = zeros(femregion.ndof_e,1);
+ve2 = zeros(femregion.ndof_e,1);
 
 %% Loop over the elements
 % Visualization of computational progress
@@ -57,6 +61,8 @@ for ie=1:femregion.nel
         % Inizialize local silution vector
         ue1_loc = 0;
         ue2_loc = 0;
+        ve1_loc = 0;
+        ve2_loc = 0;
         
         for iTria = 1:size(Tria,1)
             
@@ -73,21 +79,29 @@ for ie=1:femregion.nel
             [phiq, ~, ~] = Evalshape2D(femregion, ie, qNodes_2D);
             
             % Compute exact solution
-            ue1ex_loc = Data.ue_ex{1}(xq,yq);
-            ue2ex_loc = Data.ue_ex{2}(xq,yq);
+            ue1ex_loc = Data.ue_ex{1}(xq,yq,time);
+            ue2ex_loc = Data.ue_ex{2}(xq,yq,time);
+            ve1ex_loc = Data.due_dt_ex{1}(xq,yq,time);
+            ve2ex_loc = Data.due_dt_ex{2}(xq,yq,time);
             
             ue1_loc = ue1_loc + (dx.*phiq)'*ue1ex_loc;
             ue2_loc = ue2_loc + (dx.*phiq)'*ue2ex_loc;
+            ve1_loc = ve1_loc + (dx.*phiq)'*ve1ex_loc;
+            ve2_loc = ve2_loc + (dx.*phiq)'*ve2ex_loc;
+
             
         end
         
         ue1(index_e) = ue1_loc;
         ue2(index_e) = ue2_loc;
+        ve1(index_e) = ve1_loc;
+        ve2(index_e) = ve2_loc;
         
     end
 end
 
 ue = [ue1; ue2];
+ve = [ve1; ve2];
 
 fprintf('\n');
 

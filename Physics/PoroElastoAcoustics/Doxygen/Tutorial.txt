@@ -1,0 +1,315 @@
+/*! \page page_TutorialMultiWaves Poro-Acoustic-Elastic Wave propagation
+
+\tableofcontents
+
+\section sec_MultiWave Poro-Acoustic problem
+	
+This is a simple tutorial to solve the poroelastic-acoustic problem: 
+
+   \b Porous domain 
+\f[\begin{cases}
+       \rho_p \frac{\partial^2\mathbf{u}_p}{\partial t^2}  + 
+\rho_f \frac{\partial^2\mathbf{w}_p}{\partial t^2} + 2\rho_p \zeta \frac{\partial\mathbf{u}_p}{\partial t}  + \rho_p\zeta^2 \mathbf{u}_p  - \nabla \cdot  \sigma_p (\mathbf{u_p},\mathbf{u_f}) =  \mathbf{f}_p, &   \Omega_p \times (0,T] ,\\
+       \rho_f \frac{\partial^2\mathbf{u}_p}{\partial t^2}  + 
+\rho_w \frac{\partial^2\mathbf{w}_p}{\partial t^2} + \frac{\eta}{\kappa}\frac{\partial\mathbf{w}_p}{\partial t}  + \nabla p_p (\mathbf{u_p},\mathbf{u_f}) =  \mathbf{f}_f, &   \Omega_p \times (0,T] ,\\
+\sigma_p(\mathbf{u}_p,\mathbf{w}_p) = \sigma_e(\mathbf{u}_p) 
+-\beta\, p_p(\mathbf{u}_p,\mathbf{w}_p) I, & \Omega_p \times(0,T],\\
+ p_p(\mathbf{u}_p,\mathbf{w}_p) = -m (\beta \nabla\cdot\mathbf{u}_p+\nabla\cdot \mathbf{w}_p),
+& \Omega_p\times(0,T],\\
+(\mathbf u_p,\mathbf u_f)  = (\mathbf g_p, \mathbf g_f), & \Gamma_{Dp}\times(0,T],\\
+         (\mathbf{u}_p,\frac{\partial\mathbf{u}_p}{\partial t})  =   (\mathbf{u}_{0p}, \mathbf{v}_{0p}), &    \Omega_p \times {0},    
+  \end{cases}\f]
+where
+\f[
+\sigma_e (\mathbf{u}) =  2\rho c_s^2  \epsilon(\mathbf{u}) + \rho(c_p^2-2c_s^2) tr( \epsilon(\mathbf{u}) )I. 
+\f] 
+    \b Acoustic domain 
+\f[\begin{cases}
+    c^{-2} \frac{\partial^2\varphi}{\partial t^2} - \rho_a^{-1} \nabla \cdot  (\rho_a \nabla \varphi_a) = f_a, &   \Omega_a \times (0,T] ,\\
+\varphi_a =  g_a, & \Gamma_{Da}\times(0,T],\\
+         (\varphi_a,\frac{\partial\varphi_a}{\partial t})  =   (\varphi_{0}, \psi_{0}), &    \Omega_a \times {0}.    
+  \end{cases}\f]
+    \b Coupling terms 
+\f[\begin{cases}
+- \sigma_p(\mathbf{u}_p,\mathbf{w}_p) \mathbf{n}_p  = \rho_a \frac{\partial\varphi_a}{\partial t} \mathbf{n}_p,  & \Gamma_{I}  \times (0,T],    \\
+-(\frac{\partial{\mathbf{u}_p}}{\partial t} + \frac{\partial{\mathbf{w}_p}}{\partial t})\cdot\mathbf{n}_p = \nabla\varphi_a\cdot\mathbf{n}_p, & \Gamma_{I}  \times (0,T],\\
+\tau( \rho_a \frac{\partial\varphi_a}{\partial t} - p_p) = (1-\tau) \frac{\partial\mathbf{w}_p}{\partial t} \cdot\mathbf{n}_p , & \Gamma_{I}  \times (0,T].
+  \end{cases}\f]
+  
+We consider \f$\Omega = \Omega_p \cup \Omega_a =  (-1,0)\times (-1,1) \cup (0,1) \times (-1,1) \f$, \f$ T = 0.25 \f$ and consider the following analytical solution:
+
+\f[ \mathbf{u}_p(x,y,t) = \cos(\pi t \sqrt{2})\begin{bmatrix} x^2\cos(\pi x/2)\sin(\pi x)  \\   x^2\cos(\pi x/2)\sin(\pi x) \end{bmatrix}, \f]
+\f[ \mathbf{w}_p(x,y,t) = -\mathbf{u}_p(x,y,t) \f]
+\f[ \varphi_a(x,y,t) = \sin(\pi t\sqrt{2}) x^2\sin(\pi x)\sin(\pi y).\f]
+
+
+Initial conditions are Dirichlet boundary conditions set accordingly.
+
+\section secTutMultiWave1 Setup the input data 
+   
+We set up these data in \b InputData/DataTestPoroAcu.m script. We consider:
+    - the number of the element mesh \f$N_{el} = 800 \f$; \n
+    - the polynomial approximation degree \f$\ell_\kappa=2\f$ for any \f$\kappa \in \mathcal{T}_h\f$; \n
+    - the penalty constant \f$C_\alpha = 10 \f$, \n
+    - the final time \f$T = 0.25 \f$, \n
+    - time integration step \f$\Delta t = 0.001 \f$, \n
+
+
+We report here for completeness a sample of the script.
+
+\verbatim
+%% InputData/DataTestEla.m 
+%% Elastodynamics problem in [0,1]^2 x (0,T] with Dirichlet conditions
+Data.name = 'DataTestPoroAcu';
+Data.NPhys = 2;
+Data.TagElPoro  = 1; % Element tag
+Data.TagBcPoro  = [3 7 8]; % Boundary tag
+Data.LabBcPoro  = 'DDD'; % (D)irichlet/(N)eumann/(A)bso
+Data.TagElAcu   = 2; % Element tag
+Data.TagBcAcu   = [4 5 6]; % Boundary tag
+Data.LabBcAcu   = 'DDD'; % (D)irichlet/(N)eumann 
+Data.TagElEla   = []; % Element tag
+Data.TagBcEla   = []; % Boundary tag
+Data.LabBcEla   = []; % (D)irichlet/(N)eumann/(A)bso
+%% Geometrical properties 
+Data.domain       = [-1 1 -1 1]; % domain bounds for a new mesh
+Data.N            = 800;        % number of elements for a new mesh
+Data.MeshFromFile = false;      % read mesh from file
+...
+%% Time integration
+Data.t0 = 0;
+Data.T  = 0.25;
+Data.dt = 0.001;
+...
+%% Space discretization
+Data.degree  = 2;   % Polynomial degree
+Data.penalty_coeff = 10; % Penalty coefficient
+...
+%% Properties poroelastic material
+Data.rho_f   = {@(x,y) 1 + 0.*x.*y};
+Data.rho_s   = {@(x,y) 1 + 0.*x.*y};
+Data.phi_por = {@(x,y) 0.5 + 0.*x.*y};
+Data.zetap   = {@(x,y) 0.*x.*y};
+Data.mu      = {@(x,y) 1 + 0.*x.*y};
+Data.lam     = {@(x,y) 1 + 0.*x.*y};
+Data.beta    = {@(x,y) 1 + 0.*x.*y};
+Data.m       = {@(x,y) 1 + 0.*x.*y};
+Data.eta     = {@(x,y) 1 + 0.*x.*y};
+Data.k_per   = {@(x,y) 1 + 0.*x.*y};
+Data.a_coef  = {@(x,y) 1 + 0.*x.*y};
+Data.tau     = 0; % fluid flow poro-acoustic
+Data.delta   = 0; % fluid flow poro-elastic
+...
+% Forcing term poroelastic media
+Data.source_up = {@(x,y) -3*(8*cos((pi*x)/2).^2.*sin((pi*x)/2) + 24*x.*pi.*cos((pi*x)/2).^3 + 2*x.^2.*pi^2.*sin((pi*x)/2) - 16*x.*pi.*cos((pi*x)/2) - 9*x.^2*pi^2.*cos((pi*x)/2).^2.*sin((pi*x)/2))/2'; ...
+                  @(x,y) -  (8*cos((pi*x)/2).^2.*sin((pi*x)/2) + 24*x.*pi.*cos((pi*x)/2).^3 + 2*x.^2.*pi^2.*sin((pi*x)/2) - 16*x.*pi.*cos((pi*x)/2) - 9*x.^2*pi^2.*cos((pi*x)/2).^2.*sin((pi*x)/2))/2};
+Data.source_up_t = {@(t) cos(pi*t*sqrt(2))};
+% forcing term porous media \dot{u}_p
+Data.source_upd = {@(x,y) 0.*x.*y; ...
+                   @(x,y) 0.*x.*y};
+Data.source_upd_t = {@(t) 0.*t};
+% forcing term porous media w_p = u_f
+Data.source_wp = {@(x,y) 2*pi^2*x.^2.*cos(pi*x/2).*sin(pi*x); ...
+                  @(x,y) 2*pi^2*x.^2.*cos(pi*x/2).*sin(pi*x)};
+Data.source_wp_t = {@(t) cos(pi*t*sqrt(2))};
+% forcing term porous media \dot{w}_p
+Data.source_wpd = {@(x,y) -x.^2.*cos(pi*x/2).*sin(pi*x); ...
+                   @(x,y) -x.^2.*cos(pi*x/2).*sin(pi*x)};
+Data.source_wpd_t = {@(t) -sqrt(2)*pi*sin(sqrt(2)*pi*t)};
+
+...
+% Dirichlet BC
+Data.DirBCPoro_up   = {@(x,y) x.^2.*cos(pi*x/2).*sin(pi*x); ...
+                       @(x,y) x.^2.*cos(pi*x/2).*sin(pi*x)};
+Data.DirBCPoro_up_t = {@(t) cos(pi*t*sqrt(2))};
+
+Data.DirBCPoro_wp = {@(x,y) -(x.^2.*cos(pi*x/2).*sin(pi*x)); ...
+                     @(x,y) -(x.^2.*cos(pi*x/2).*sin(pi*x))};
+Data.DirBCPoro_wp_t = {@(t) cos(pi*t*sqrt(2))};
+% Exact solution --> used to compute the initial conditions
+Data.up_ex    =  {@(x,y) x.^2.*cos(pi*x/2).*sin(pi*x); ...
+                  @(x,y) x.^2.*cos(pi*x/2).*sin(pi*x)};
+Data.up_t_ex  =  {@(t) cos(pi*t*sqrt(2))};
+Data.dup_t_ex =  {@(t) -sqrt(2)*pi*sin(sqrt(2)*pi*t)};
+Data.wp_ex    =  {@(x,y) -(x.^2.*cos(pi*x/2).*sin(pi*x)); ...
+                  @(x,y) -(x.^2.*cos(pi*x/2).*sin(pi*x))};
+Data.wp_t_ex  =  {@(t) cos(pi*t*sqrt(2))};
+Data.dwp_t_ex =  {@(t) -sqrt(2)*pi*sin(sqrt(2)*pi*t)};
+
+% properties acoustic material
+Data.rho_a = {@(x,y) 1 + 0.*x.*y};
+Data.c     = {@(x,y) 1 + 0.*x.*y};
+% forcing term acoustic media
+Data.source_phi   = {@(x,y) -sin(pi*y).*(2*sin(pi*x) + 4*x*pi.*cos(pi*x))};
+Data.source_phi_t = {@(t) sin(pi*t*sqrt(2))};
+% exact solution --> used to compute the initial conditions
+Data.phi_ex    = {@(x,y) x.^2.*sin(pi*x).*sin(pi*y)};
+Data.phi_t_ex  = {@(t) sin(pi*t*sqrt(2))}; 
+Data.dphi_t_ex = {@(t) sqrt(2)*pi*cos(sqrt(2)*pi*t)};
+% exact gradient --> used for the error analysis
+Data.grad_phi_ex =  {@(x,y) 2*x.*sin(pi*x).*sin(pi*y) + x.^2*pi*cos(pi*x).*sin(pi*y); ...
+                     @(x,y) x.^2*pi*cos(pi*y).*sin(pi*x)};
+
+Data.DirBCAcu   = {@(x,y) x.^2.*sin(pi*x).*sin(pi*y)};
+Data.DirBCAcu_t = {@(t) sin(pi*t*sqrt(2))};
+...
+\endverbatim
+
+Nex, we define the following option in the \b RunSetup.m file.
+
+\verbatim
+
+    %% RunSetup.m
+    ...
+    % Plot polygonal mesh y/n
+    Setup.isPlotMesh = 0;
+
+    % Save VTK polygonal mesh y/n
+    Setup.isSaveVTKMesh = 0;
+
+    % Plot solution y/n
+    Setup.isPlotSolution = 1;
+    
+    % Save solution y/n -> .mat file
+    Setup.isSaveSolution = 1;
+    Setup.OutFolder = 'Output';
+
+    % Additional solution output y/n -> .csv file
+    Setup.isSaveCSV = 0;
+
+    % Additional solution output y/n -> .vtk file
+    Setup.isSaveVTK = 1;
+    Setup.OutFolderVTK = 'OutputVTK';
+    
+    % Compute errors y/n
+    Setup.isError = 1;
+
+\endverbatim
+
+ 
+\section secTutMultiWave2 Simulation run
+
+We run the specific simulation using the script \b RunMainPoroElastoAcoustics.m, 
+which calls the main algorithm, contained in \b MainFunctions/MainPoroAcuEla.m.
+
+\verbatim
+%% RunMainEla.m
+run("../ImportLymphPaths.m")
+MyPhysicsPath = pwd;
+addpath(genpath(fullfile(MyPhysicsPath,'Assembly')));
+addpath(genpath(fullfile(MyPhysicsPath,'Error')));
+addpath(genpath(fullfile(MyPhysicsPath,'InputData')));
+addpath(genpath(fullfile(MyPhysicsPath,'InputMesh')));
+addpath(genpath(fullfile(MyPhysicsPath,'MainFunctions')));
+addpath(genpath(fullfile(MyPhysicsPath,'PostProcessing')));
+addpath(genpath(fullfile(MyPhysicsPath,'TimeIntegration')));
+%% Simulation - Setup
+run("../RunSetup.m")
+%% Input Data - Boundary conditions - Forcing term
+DataTestPoroAcu;
+%% Mesh Generation
+if Data.MeshFromFile
+    % Load existing mesh
+    Data.meshfile = fullfile(Data.FolderName, Data.meshfileseq);
+else
+    % Create a new mesh
+    if (Data.NPhys == 1)
+        Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
+    elseif (Data.NPhys == 2)
+        Data.meshfile = MakeMeshBidomainVert(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
+    elseif (Data.NPhys == 3)
+        Data.meshfile = MakeMeshQuadridomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
+    end
+end
+%% Main
+[Error] = MainPoroAcuEla(Data,Setup);
+\endverbatim 
+ 
+The script contains different calls, among which one is devoted to the mesh construction, i.e., \b MakeMeshBidomainVert.m
+that is contained in \b lymph/MeshGeneration.
+\verbatim
+        Data.meshfile = MakeMeshBidomainVert(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
+\endverbatim 
+The function \b MakeMeshBidomainVert.m calls the PolyMesher program  \cite talischi2012polymesher to generate the polygonal mesh for the considered domain.
+The mesh structure is saved in \b Data.meshfile.
+ 
+
+\section secTutMultiWave3 Outputs 
+
+
+As the output of the run we obtain the plots in Figure 1 showing the
+computed solution (left), the analytical solution (center), and the arithmetic difference between the two (right).
+
+@image html upx_T.png
+@image html upy_T.png
+@image html wpx_T.png
+@image html wpy_T.png
+@image html phi_T.png "Figure 1. Left column: computed PolydG solution using a polygonal mesh with 800 elements, and polynomial degree equal to 2. Center column: analytical solution. Right column: the difference between numerical and analytical solutions."
+
+Moreover, the output structure \b Error contains the following fields: 
+    - \b nel = 800 \f$\rightarrow\f$ number of mesh elements,
+    - \b h = 0.1272 \f$\rightarrow\f$ mesh size,
+    - \b p = 2 \f$\rightarrow\f$ polynomial approximation degree \f$\ell=3\f$,
+    - \b error_L2_v = 0.0416 \f$\rightarrow\f$ \f$L^2\f$-norm of the error for the velocity, namely \f$\| \frac{\partial \mathbf{U}_{ex}}{\partial t} - \frac{\partial \mathbf{U}_{h}}{\partial t}\|_{L^2(\Omega)}\f$, 
+    - \b error_L2_d = 2.5312e-04 \f$\rightarrow\f$ \f$L^2\f$-norm of the error for the displacement, namely \f$\| \mathbf{U}_{ex}- \mathbf{U}_{h} \|_{L^2(\Omega)}\f$,
+    - \b error_dG = 0.0628 \f$\rightarrow\f$ \f$dG\f$-norm of the error, namely \f$\| \mathbf{U}_{ex} - \mathbf{U}_h\|_{dG}\f$.
+    - \b error_energy = 0.0754 \f$\rightarrow\f$ \f$Energy\f$-norm of the error,  cf. \cite ABNM2021.
+    
+We use the notation \f$ \mathbf{U}_{ex} = (\mathbf{u}_{ex},\mathbf{w}_{ex},\varphi_{ex}) \f$
+and \f$ \mathbf{U}_{h} = (\mathbf{u}_h,\mathbf{w}_h,\varphi_h) \f$.
+
+Other outputs of the simulation are contained in the folder \b Ouput 
+    - \b DataTestPoroAcu_100.mat, \b DataTestPoroAcu_200.mat \f$\rightarrow\f$ Matlab structure containing the simulation info and solutions at time \f$ t = 0.1 \f$ and \f$ t = 0.2\f$. 
+    - \b *.csv \f$\rightarrow\f$ solutions in .csv format at time \f$ t =0.1 \f$ and \f$ t = 0.2\f$.
+    
+and in the folder \b OutputVTK 
+    - \b *.vtk \f$\rightarrow\f$  solution in .vtk format
+    - \b Mesh.vtk \f$\rightarrow\f$ mesh in .vtk format
+
+\section secTutMultiWaveConv Convergence tests
+
+To verify the convergence rates of the PolydG solution \f$\mathbf{U}_{h} = (\mathbf{u}_h,\mathbf{w}_h,\varphi_h)\f$  we use two different scripts: \b RunhConvergencePoroElastoAcoustics.m and \b RunpConvergencePoroElastoAcoustics.m accounting for the \f$h\f$- convergence (mesh size) and the \f$\ell\f$-convergence (polynomial degree) respectively.
+We set up the data in the external script \b InputData/Elastic/DataConvTestPoroAcu.m. 
+With respect to the previous case, four meshes with decreasing granularity \f$h\f$ are provided in input. 
+
+\verbatim
+%% InputData/DataConvTestPoroAcu.m 
+...
+Data.meshfileseq  = ["UnitSquareBidomain_100_el.mat", "UnitSquareBidomain_200_el.mat", ...
+    "UnitSquareBidomain_400_el.mat","UnitSquareBidomain_800_el.mat"]; %filename for mesh 
+...
+\endverbatim
+
+As the output of the aforementioned scripts we obtain the plots in Figure 2. In particular, we can observe the convergence of the PolydG solution obtained with \f$\ell_\kappa=2\f$ for any \f$\kappa \in \mathcal{T}_h\f$ with respect to the \f$L^2\f$-, \f$dG\f$-, and \f$Energy\f$-norms, confirming the theoretical results \cite ABNM2021.
+In Figure 3 the exponential convergence with respect to the polynomial degree \f$\ell\f$ is also shown by fixing \f$N_{el} = 50\f$.
+
+@image html convhtutorials_pa.png "Figure 2. \b Error.error_energy, \b Error.error_dG and \b Error.error_L2_d as a function of the mesh size h by fixing the polynomial degree equal to 2, time step equal to 0.001 and  final time T=0.25."
+
+@image html convptutorials_pa.png "Figure 3. \b Error.error_energy, \b Error.error_dG and \b Error.error_L2_d as a function of the polynomial degree by fixing the number of mesh elements equal to 50."
+ 
+     
+   
+
+ 
+ \section secTutMultiWaveBC Boundary conditions
+ Ohter boundary conditions with respect to the Dirichlet ones can be used in the model. 
+ For elastic wave propagation problems a tipical choice is the following:
+ \b free \b surface condition \f$ \Gamma_{Np} \f$, i.e.  ,  
+ 
+ \f[
+         \sigma_p (\mathbf{u}_p,\mathbf{w}_p ) \mathbf{n}_p   =   \mathbf{0},  \;  \Gamma_{Np} \times (0,T], 
+ \f]
+for the poroelatic domain, or 
+
+ \f[
+         \rho_a \nabla \varphi_a \mathbf{n}_a   =   0,  \;  \Gamma_{Na} \times (0,T], 
+ \f]
+ 
+for the acoustic domain, where \f$\mathbf{n}_p\f$ and \f$\mathbf{n}_a\f$ are the outward pointing unit normals for the porous or acoustic domain, respectivley. Transparent consitions are also available for the porous domain as explained in \cite Morency2008. 
+
+
+
+
+
+*/
+

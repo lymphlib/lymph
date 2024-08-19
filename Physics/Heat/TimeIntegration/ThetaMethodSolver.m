@@ -37,6 +37,8 @@ function [u_h, IntError] = ThetaMethodSolver(Setup, Data, femregion, mesh, Matri
     % Initialization of the integral component of the error
     IntError = 0;
 
+    counter = 1;
+
     %% Time-loop
     for t = Data.dt:Data.dt:Data.T
 
@@ -47,16 +49,8 @@ function [u_h, IntError] = ThetaMethodSolver(Setup, Data, femregion, mesh, Matri
         F_old = F_new;
 
         if ~Data.homog_source_f || Data.TagApplyBCs == 1
-
-            fprintf('\nComputing forcing terms ... \n');
-
             [F_new] = ForcingHeat(Data, mesh.neighbor, femregion, t);
-
-            fprintf('\nDone\n')
-            fprintf('\n------------------------------------------------------------------\n')
-
         end
-
 
         %% Assembling the dynamic component of the matrices in the two treatments of nonlinear term
 
@@ -71,40 +65,14 @@ function [u_h, IntError] = ThetaMethodSolver(Setup, Data, femregion, mesh, Matri
             IntError = IntError + Data.dt*ErrJIT.err_u_dG.^2;
         end
 
+        %% Postprocess solution
+        if (mod(counter,Data.VisualizationStep)==0) && (Setup.isSaveCSV || Setup.isSaveVTK || Setup.isSaveSolution || Setup.isPlotSolution)
+            PostProcessSolution(Setup, Data, mesh, femregion, counter, u_h,t);
+        end
         %% Time advancement
         u_old = u_h;
 
-        %% Plot of the solution      
-        if Setup.isPlotSolution == 1 && mod(t,Data.VisualizationStep) < 0.01*Data.dt
-            [Gu] = GetSolutionQuadPoints(Data, femregion, mesh.neighbor, u_old, t);
-            ScatterPlot(Gu, mesh.region, Data, 'u');
-        end
-
-        %% Save the numerical solution
-        if Setup.isSaveSolution == 1 && mod(t, Data.SaveSolutionStep) < 0.01*Data.dt
-            filenameout = fullfile(Setup.OutFolder,['Solution_', num2str(ceil(t/Data.dt)), '.mat']);
-            save(filenameout);
-        end
-
-        %% Save solutions paraview
-        if Setup.isSaveCSV && mod(t, Data.SaveSolutionStep) < 0.01*Data.dt
-            [Gu] = GetSolutionQuadPoints(Data, femregion, mesh.neighbor, u_old, t);
-            filenameout = fullfile(Setup.OutFolder,['Solution_', num2str(ceil(t/Data.dt)), '.csv']);
-            
-            if Data.PlotExact
-                title = {'x','y','u_h','u_ex'};
-            else
-                title = {'x','y','u_h'};
-            end
-            Gu = array2table(Gu);
-            Gu.Properties.VariableNames(1:length(title)) = title;
-            writetable(Gu,filenameout);
-        end
-        
-        if Setup.isSaveVTK && mod(t, Data.SaveSolutionStep) < 0.01*Data.dt
-            [Gu] = GetSolutionQuadPoints(Data, femregion, mesh.neighbor, u_old, t);
-            PlotSolutionParaview(Setup, Data, Gu, round(t/Data.dt));
-        end
+        counter = counter + 1;
 
     end
 

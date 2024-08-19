@@ -43,7 +43,7 @@ for ii = 1:4
         % Load an existing mesh
         Data.meshfile = fullfile(Data.FolderName,Data.meshfileseq(ii));
     else
-        [Data.meshfile] = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfile,'P');
+        [Data.meshfile] = MakeMeshMonodomain(Data,Data.N{ii},Data.domain,Data.FolderName,Data.meshfileseq(ii),'P');
     end
     
     

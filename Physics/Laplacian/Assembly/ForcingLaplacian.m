@@ -24,7 +24,7 @@ function [F] = ForcingLaplacian(Data, neighbor, femregion)
     [ref_qNodes_1D, w_1D, ref_qNodes_2D, w_2D] = Quadrature(femregion.nqn);
     
     %% Initialization of the forcing term
-    F = sparse(femregion.ndof,1);
+    F = zeros(femregion.ndof,1);
     
     %% Loop over the elements
     

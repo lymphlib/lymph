@@ -11,21 +11,12 @@
 %>
 %> @param a        First interval bound
 %> @param b        Second interval bound
-%> @param n        Number of Gauss-Legendre nodes to compute 
+%> @param n        Number of Gauss-Legendre nodes to compute (n odd, n>1)
 %>
 %> @retval x_GL    Gauss-Legendre nodes
 %> @retval w_GL    Gauss-Legendre weights    
 %>
 %==========================================================================
-
-
-
-% This routine computes the n Gauss-Legendre nodes and weights
-% on a given interval (a,b)
-%
-% Author:
-% Paola Antonietti
-%--------------------------------------------------------------------
 
 function [x_GL, w_GL] = GauLeg(a, b, n)
 

@@ -1,6 +1,6 @@
 %> @file  RunpConvergenceElastodynamics.m
 %> @author The Lymph Team
-%> @date 16 April 2023
+%> @date 24 July 2024
 %> @brief Convergence analysis for the Elastodynamics problem (polynomial refinements)
 %>
 %==========================================================================
@@ -33,11 +33,11 @@ DataConvTestEla;
 
 degree_vector = [1 2 3 4 5];
 
-Errors.err_L2_d = [];
-Errors.err_L2_v = [];
-Errors.err_dG = [];
-Errors.err_Energy = [];
-Errors.h = [];
+Errors.err_u_L2   = [];
+Errors.err_u_dG   = [];
+Errors.err_v_L2   = [];
+Errors.err_energy = [];
+Errors.h          = [];
 
 %% Mesh Generation
 for ii = 1:length(degree_vector)
@@ -55,19 +55,19 @@ for ii = 1:length(degree_vector)
     
     %% Main     
     [Error] = MainEla(Data,Setup);
-    Errors.err_L2_v   = [Errors.err_L2_v,   Error.error_L2_v];
-    Errors.err_L2_d   = [Errors.err_L2_d,   Error.error_L2_d];
-    Errors.err_dG     = [Errors.err_dG,     Error.error_dG];
-    Errors.err_Energy = [Errors.err_Energy, Error.error_Energy];
+    Errors.err_u_L2   = [Errors.err_u_L2,   Error.err_u_L2];
+    Errors.err_u_dG   = [Errors.err_u_dG,   Error.err_u_dG];
+    Errors.err_v_L2   = [Errors.err_v_L2,   Error.err_v_L2];
+    Errors.err_energy = [Errors.err_energy, Error.err_energy];
     Errors.h = [Errors.h, Error.h];
 
 end
 
 %% Plot of the errors
 figure
-semilogy(degree_vector,Errors.err_L2_d,'g')
+semilogy(degree_vector,Errors.err_u_L2,'g')
 hold on
-semilogy(degree_vector,Errors.err_dG,'r')
-semilogy(degree_vector,Errors.err_Energy,'b')
+semilogy(degree_vector,Errors.err_u_dG,'r')
+semilogy(degree_vector,Errors.err_energy,'b')
 legend("Error $L^2$-norm", "Error DG-norm", "Error energy-norm","Interpreter","latex")
 grid on

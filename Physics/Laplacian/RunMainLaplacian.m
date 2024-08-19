@@ -27,15 +27,7 @@ addpath(genpath(fullfile(MyPhysicsPath,'PostProcessing')));
 run("../RunSetup.m")
 
 %% Input Data - Boundary conditions - Forcing term
-domainType = 'Monodomain'		% choose between 'Monodomain' and 'DoubleCircle'
-if strcmp(domainType, 'Monodomain')
-	DataTestLap;
-elseif strcmp(domainType, 'DoubleCircle')
-	DataTestDCLap;
-else
-	error(['Unknown domainType = ', domainType, '\n\tChoose between ''Monodomain'' and ''DoubleCircle'''])
-end
-
+DataTestLap;
 
 %% Mesh Generation
 
@@ -44,16 +36,8 @@ if Data.MeshFromFile
     Data.meshfile = fullfile(Data.FolderName, Data.meshfileseq);
 else
     % Create a new mesh
-	if strcmp(domainType, 'Monodomain')
-	    Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','laplacian');
-	elseif strcmp(domainType, 'DoubleCircle')
-		Data.meshfile = MakeMeshDoubleCircle(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'laplacian');
-	else
-		error(['Unknown domainType = ', domainType, '\n\tChoose between ''Monodomain'' and ''DoubleCircle'''])
-	end
+    Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','laplacian');
 end
-
-
 
 %% Main
 [Error] = MainLaplacian(Data,Setup);

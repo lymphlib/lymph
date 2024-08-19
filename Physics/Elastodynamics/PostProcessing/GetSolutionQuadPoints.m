@@ -1,6 +1,6 @@
 %> @file  GetSolutionQuadPoints.m
-%> @author Ilario Mazzieri
-%> @date 11 May 2023
+%> @author Ilario Mazzieri, Stefano Bonetti
+%> @date 1 August 2024
 %> @brief  Compute solution at quadrature nodes
 %>
 %==========================================================================
@@ -9,34 +9,44 @@
 %
 %> @param Data       Struct with problem's data
 %> @param femregion  Finite Element struct (see CreateDOF.m)
+%> @param neighbor   Neighbor struct (see MakeNeighbor.m)
 %> @param Solutions  Struct with solution vectors
 %> @param time       time instant
 %
-%> @retval Displacement   Vector with solution displacement at quad nodes
-%> @retval Pressure       Vector with solution pressure at quad nodes
-%> @retval Velocity       Vector with solution velocity at quad nodes
+%> @retval Xh        Cell array of length 1 containing a
+%>                   struct with approximate solutions at quad nodes (order: uh, vh, ph)
+%>                   and sequence of strings useful for post-processing
+%> @retval Xexact    Cell array of length 1 containing a
+%>                   struct with exact solutions at quad nodes (order: uex, vex, pex)
+%>                   and sequence of strings useful for post-processing
 %>
 %==========================================================================
 
-function [Displacement, Pressure, Velocity] = GetSolutionQuadPoints(Data, femregion, Solutions, time)
+function [Xh, Xexact] = GetSolutionQuadPoints(Data, femregion, neighbor, Solution, time)
 
 %% Quadrature values
-[~, ~, ref_qNodes_2D, ~] = Quadrature(femregion.nqn);
+[ref_qNodes_1D, ~, ref_qNodes_2D, ~] = Quadrature(Data.NqnVisualization);
 
 %% Setup
-% G = [ x | y | uh ... | uex ... ];
-% Solid elastic displacement
-Ue   = zeros(femregion.nel_e*femregion.nqn.^2,6);
-% Solid elastic velcoty
-dUe  = zeros(femregion.nel_e*femregion.nqn.^2,6);
-% Pressure elastic
-Pe   = zeros(femregion.nel_e*femregion.nqn.^2,3);
+
+% W = [ x | y | wh | wex ] wh = uh, vh, ph (uh and vh vector fields, ph scalar field)  
+X  = zeros(Data.NqnVisualization.^2*sum(neighbor.nedges-2)+sum(neighbor.nedges),1);
+Y  = zeros(Data.NqnVisualization.^2*sum(neighbor.nedges-2)+sum(neighbor.nedges),1);
+Uh = zeros(Data.NqnVisualization.^2*sum(neighbor.nedges-2)+sum(neighbor.nedges),2);
+Vh = zeros(Data.NqnVisualization.^2*sum(neighbor.nedges-2)+sum(neighbor.nedges),2);
+Ph = zeros(Data.NqnVisualization.^2*sum(neighbor.nedges-2)+sum(neighbor.nedges),1);
+Id = zeros(femregion.nel,2);
+Bd = cell(femregion.nel,1);
+
+if Data.PlotExact
+    Uex = zeros(Data.NqnVisualization.^2*sum(neighbor.nedges-2)+sum(neighbor.nedges),2);
+    Vex = zeros(Data.NqnVisualization.^2*sum(neighbor.nedges-2)+sum(neighbor.nedges),2);
+    Pex = zeros(Data.NqnVisualization.^2*sum(neighbor.nedges-2)+sum(neighbor.nedges),1);
+end
 
 % shift index
-kinde = 0;
-
+CountID = 0;
 id_shift_e = 0;
-
 
 %% Loop over the elements
 % Visualization of computational progress
@@ -62,21 +72,26 @@ for ie = 1:femregion.nel % loop over elements
     edges    = [1:femregion.nedges(ie) ; 2:femregion.nedges(ie), 1]';
     Tria_Del = delaunayTriangulation(coords_ie(:,1),coords_ie(:,2), edges);
     Tria     = Tria_Del( isInterior(Tria_Del) == 1, :);
+
+    % Counter boundary nodes
+    CountBD_min = 0;
+    CountBD_max = 0;
     
-    % Poroelastic element
+    % First node of the current element
+    Id(ie,1) = CountID + 1;
+    
     % Elastic element
     if femregion.tag(ie) == 'E'
-        
-        
+              
         index_e = index - femregion.ndof_p - femregion.ndof_a;
+
         % Local solution
-        u1_loc = Solutions.ue_h(index_e);
-        u2_loc = Solutions.ue_h(index_e+femregion.ndof_e);
+        u1_loc = Solution(index_e);
+        u2_loc = Solution(index_e + femregion.ndof_e);
         % Local velocity
-        du1_loc = Solutions.dot_ue_h(index_e);
-        du2_loc = Solutions.dot_ue_h(index_e+femregion.ndof_e);
-        
-        
+        du1_loc = Solution(2*femregion.ndof_e + index_e);
+        du2_loc = Solution(2*femregion.ndof_e + index_e + femregion.ndof_e);
+                
         for iTria = 1:size(Tria,1)
             
             % Construction of Jacobian and quadrature nodes
@@ -92,45 +107,145 @@ for ie = 1:femregion.nel % loop over elements
             % Evaluation of physical parameters
             lambda = Data.lam_el{id_ie-id_shift_e}(xq,yq);
             
-            
             % Approximated solutions at quadrature points
             ue1h_loc  = phiq*u1_loc;
             ue2h_loc  = phiq*u2_loc;
-            pe_loc    = - lambda .* (gradqx*u1_loc + gradqy*u2_loc);
+            peh_loc   = -lambda.*(gradqx*u1_loc + gradqy*u2_loc);
             
             due1h_loc  = phiq*du1_loc;
             due2h_loc  = phiq*du2_loc;
             
-            
             % Exact and approximated solutions at quadrature points
-            ue1ex_loc = Data.ue_ex{1}(xq,yq)*Data.ue_t_ex{1}(time);
-            ue2ex_loc = Data.ue_ex{2}(xq,yq)*Data.ue_t_ex{1}(time);
-            due1ex_loc = Data.ue_ex{1}(xq,yq)*Data.due_t_ex{1}(time);
-            due2ex_loc = Data.ue_ex{2}(xq,yq)*Data.due_t_ex{1}(time);
+            if Data.PlotExact
+                ue1ex_loc  = Data.ue_ex{1}(xq,yq,time);
+                ue2ex_loc  = Data.ue_ex{2}(xq,yq,time);
+                due1ex_loc = Data.due_dt_ex{1}(xq,yq,time);
+                due2ex_loc = Data.due_dt_ex{2}(xq,yq,time);
+                pex_loc    = -lambda.*(Data.grad_ue_ex{1}(xq,yq,time) + Data.grad_ue_ex{4}(xq,yq,time));
+            end
             
-            % calcolare pressione esatta 
+            % calcolare pressione esatta
+
+            % Fill the output (Displacement, Pressure, and Velocity)
+            X(CountID + 1 : CountID + lqn,:)   = xq;
+            Y(CountID + 1 : CountID + lqn,:)   = yq;
             
-            
-            % Fill the output Ue, dUe and Pe
-            Ue(kinde + 1 : kinde + lqn,:) = [xq, yq, ue1h_loc, ue2h_loc, ue1ex_loc, ue2ex_loc];
-            Pe(kinde + 1 : kinde + lqn,:) = [xq, yq, pe_loc];
-            dUe(kinde + 1 : kinde + lqn,:) = [xq, yq, due1h_loc, due2h_loc, due1ex_loc, due2ex_loc];
-            kinde = kinde + lqn ;
+            Uh(CountID + 1 : CountID + lqn,:)  = [ue1h_loc, ue2h_loc];
+            Ph(CountID + 1 : CountID + lqn,:)  = peh_loc;
+            Vh(CountID + 1 : CountID + lqn,:)  = [due1h_loc, due2h_loc];
+
+            if Data.PlotExact
+                Uex(CountID + 1 : CountID + lqn,:) = [ue1ex_loc, ue2ex_loc];
+                Pex(CountID + 1 : CountID + lqn,:) = pex_loc;
+                Vex(CountID + 1 : CountID + lqn,:) = [due1ex_loc, due2ex_loc];
+            end
+
+            % Update auxiliary indexes
+            CountID = CountID + lqn;
+            CountBD_min = CountBD_min + lqn;
+            CountBD_max = CountBD_max + lqn; 
             
         end
-    end
-    
-    
-    
+
+        % First boundary node of the current element
+        CountBD_min = CountBD_min+1;
+
+        % Loop over faces
+        for iedg = 1 : neighbor.nedges(ie)
+
+             % Extraction of the edge coordinates
+            if iedg == neighbor.nedges(ie)
+                p1 = coords_ie(iedg,:);
+                p2 = coords_ie(1,:);
+            else
+                p1 = coords_ie(iedg,:);
+                p2 = coords_ie(iedg+1,:);
+            end
+
+            [qNodes_1D] = GetPhysicalPointsFaces([p1; p2], [0; ref_qNodes_1D]);
+            
+            % Construction of quadrature nodes on the face
+            xq = qNodes_1D(:,1);
+            yq = qNodes_1D(:,2);
+            lqn = length(xq);
+
+
+            % Evaluation of physical parameters
+            lambda = Data.lam_el{id_ie-id_shift_e}(xq,yq);
+            
+            % Construction of the basis functions
+            [phiedgeq, gradedgeqx, gradedgeqy] = Evalshape2D(femregion, ie, qNodes_1D);
+
+            % Approximated solutions at quadrature points
+            ue1h_loc  = phiedgeq*u1_loc;
+            ue2h_loc  = phiedgeq*u2_loc;
+            peh_loc   = -lambda.*(gradedgeqx*u1_loc + gradedgeqy*u2_loc);
+            
+            due1h_loc  = phiedgeq*du1_loc;
+            due2h_loc  = phiedgeq*du2_loc;
+                        
+            % Fill the output
+            X(CountID + 1 : CountID + lqn,:)   = xq;
+            Y(CountID + 1 : CountID + lqn,:)   = yq;
+            Uh(CountID + 1 : CountID + lqn,:)  = [ue1h_loc, ue2h_loc];
+            Ph(CountID + 1 : CountID + lqn,:)  = peh_loc;
+            Vh(CountID + 1 : CountID + lqn,:)  = [due1h_loc, due2h_loc];
+            
+            if Data.PlotExact
+                ue1ex_loc  = Data.ue_ex{1}(xq,yq,time);
+                ue2ex_loc  = Data.ue_ex{2}(xq,yq,time);
+                due1ex_loc = Data.due_dt_ex{1}(xq,yq,time);
+                due2ex_loc = Data.due_dt_ex{2}(xq,yq,time);
+                pex_loc    = -lambda.*(Data.grad_ue_ex{1}(xq,yq,time) + Data.grad_ue_ex{4}(xq,yq,time));
+
+                % Fill the output
+                Uex(CountID + 1 : CountID + lqn,:) = [ue1ex_loc, ue2ex_loc];
+                Pex(CountID + 1 : CountID + lqn,:) = pex_loc;
+                Vex(CountID + 1 : CountID + lqn,:) = [due1ex_loc, due2ex_loc];
+            end
+
+            % Update auxiliary indexes
+            CountID  = CountID  + lqn;
+            CountBD_max = CountBD_max + lqn; 
+        end
+
+        % save a vector from first to last (index of) boundary node of the current element
+        Bd{ie} = (CountBD_min:CountBD_max)';
+
+        % Last node of the current element
+        Id(ie,2) = CountID;
+
+    end    
 end
 
-%% Output
-Displacement.Ue  = Ue;
-Displacement.UeTag = 'u_e';
+XPlot{1} = X;
+XPlot{2} = Y;
+XPlot{3} = Uh;
+XPlot{4} = Vh;
+XPlot{5} = Ph;
+StrVTK   = {'x','y','uh','vh','ph'};
+StrPlot  = {'x','y','u','v','p'};
+StrCSV   = {'x','y','uh1','uh2','vh1','vh2','ph'};
 
-Pressure.Ue = Pe;
+Xh = {};
 
-Velocity.Ue  = dUe;
-Velocity.UeTag = 'u_{e,t}';
+Xh{1}.Solution = XPlot;
+Xh{1}.StrVTK   = StrVTK;
+Xh{1}.StrPlot  = StrPlot;
+Xh{1}.StrCSV   = StrCSV;
+Xh{1}.Id       = Id;
+Xh{1}.Bd       = Bd;
 
+if Data.PlotExact
+    XPlotExact{1} = X;
+    XPlotExact{2} = Y;
+    XPlotExact{3} = Uex;
+    XPlotExact{4} = Vex;
+    XPlotExact{5} = Pex;
 
+    Xexact = {};
+    Xexact{1}.Solution = XPlotExact;
+    Xexact{1}.StrPlot  = StrPlot;
+else
+    Xexact = {[]};
+end

@@ -36,27 +36,21 @@ function CreatePolygonalVTK(Data, Setup, region)
     fprintf(fileID,"POINTS %d float\n",size(region.coord,1));
     app = [region.coord zeros(size(region.coord,1),1)];
     fprintf(fileID,'%d %6.7f %6.7f\r\n',app');
-    s = length(region.connectivity);
- 
-    for ii = 1:length(region.connectivity)
-        s = s + length(region.connectivity{ii});
-    end
+
+    s = region.ne+sum(cell2mat(cellfun(@length,region.connectivity,'UniformOutput',false)));
 
     %% Polygons
-    fprintf(fileID,"\nPOLYGONS %d %d",length(region.connectivity),s);
+    fprintf(fileID,"\nPOLYGONS %d %d", region.ne, s);
+
     for ii = 1:length(region.connectivity)
         fprintf(fileID, "\n%d ", length(region.connectivity{ii}));
-        for jj = 1:length(region.connectivity{ii})
-            fprintf(fileID, "%d ", region.connectivity{ii}(jj)-1);
-        end
+        fprintf(fileID, "%d ", region.connectivity{ii}-1);
     end
-    
+
     fprintf(fileID,"\nCELL_DATA %d",region.ne);
     fprintf(fileID,"\nSCALARS POLYHEDRA int 1");
-    fprintf(fileID,"\nLOOKUP_TABLE default");
-    for ie = 1 : region.ne
-        fprintf(fileID," %d ", region.id(ie));
-    end
+    fprintf(fileID,"\nLOOKUP_TABLE default ");
+    fprintf(fileID,"%d ", region.id);
     
 
     %% Close the file

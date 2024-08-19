@@ -1,6 +1,6 @@
 %> @file  RunMainEla.m
 %> @author The Lymph Team
-%> @date 16 April 2023
+%> @date 24 July 2024
 %> @brief Run of MainEla for the solution of the elstodynamics problem
 %>
 %==========================================================================
@@ -29,9 +29,8 @@ addpath(genpath(fullfile(MyPhysicsPath,'TimeIntegration')));
 run("../RunSetup.m")
 
 %% Input Data - Boundary conditions - Forcing term
-DataTestEla;
-% DataTestPhysicsEla;
-
+%DataTestEla;
+DataTestPhysicsEla;
 
 %% Mesh Generation
 if Data.MeshFromFile
@@ -42,8 +41,5 @@ else
     Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','ela');
 end
 
-
 %% Main
 [Error] = MainEla(Data,Setup);
-
-

@@ -146,4 +146,9 @@ The developers of <tt>lymph</tt> acknowledge the support of
 - ERC Synergy Grant n. 101115663 <a href="https://erc-nemesis.eu">NEMESIS: NEw generation MEthods for numerical SImulationS</a>
 - <a href="https://www.supercomputing-icsc.it/">ICSC--Centro Nazionale di Ricerca in High Performance Computing, Big Data, and Quantum Computing</a> funded by European Union--NextGenerationEU
 
+<table>
+<tr><img src="Doxygen/logo.png" height=50></tr>
+<tr><img src="Doxygen/logoMOX.png" height=50></tr>
+<tr><img src="Doxygen/logoERC.png" height=50></tr>
+</table>
 */

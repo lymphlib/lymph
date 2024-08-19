@@ -1,6 +1,6 @@
 %> @file  ComputeErrors.m
-%> @author Ilario Mazzieri
-%> @date 16 April 2023
+%> @author Ilario Mazzieri, Mattia Corti
+%> @date 26 July 2024
 %> @brief Compute errors for convergence analysis
 %>
 %==========================================================================
@@ -12,19 +12,19 @@
 %> @param femregion   Structure containing all the information 
 %>                    about the finite element approximation
 %> @param Matrices    Finite element matrices 
-%> @param Solutions   Struct containing the problem's solution
+%> @param U           Problem's solution
 %
 %> @retval Errror     Structure with computed L2 and dG errors 
 %>
 %==========================================================================
-function [Error] = ComputeErrors(Data,femregion,Matrices,Solutions)
+function [Error] = ComputeErrors(Data, femregion, Matrices, U)
 
 %% Compute modal coefficient of the exact solution
-[uex_modal] = ComputeModalSolution(Data,femregion);
+[uex_modal] = ComputeModalSolution(Data, femregion);
 uex = Matrices.Mprj\uex_modal;
 
 %% Definition of error vector
-error_u = uex - Solutions.U;
+error_u = uex - U;
 
 %% DG error
 error_dGu = sqrt(error_u' * Matrices.dGA * error_u);

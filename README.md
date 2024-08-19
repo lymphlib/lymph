@@ -73,6 +73,10 @@ NB. If you have a Windows system, when generating the keys by `ssh-keygen` you m
 
 The submodule is itself a git repository: in ``OUTER_REPO/lymph`` you can code, commit, create branches, and contribute to **lymph**!
 
+### License ###
+
+**lymph** is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License (see [LICENSE.md](LICENSE.md)), or (at your option) any later version. **lymph** is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. For more details, see the GNU Lesser General Public License included in this repository as [LICENSE.md](LICENSE.md) or visit the website [http://www.gnu.org/licenses/](http://www.gnu.org/licenses/).
+
 ### Contribution guidelines ###
 
 * `function`s should be named using the *CamelCase* convention.

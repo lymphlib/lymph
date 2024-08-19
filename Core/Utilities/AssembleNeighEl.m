@@ -23,12 +23,11 @@
 %==========================================================================
 % function [M] = AssembleNeighEl(M,row,neigh_ie,MN,nbases,nStart,nEnd)
 
-function [M] = AssembleNeighEl(M, row, neigh_ie, MN, nbases, nStart, nEnd)
+function [M] = AssembleNeighEl(M, row, neight, MN, nbases, nStart, nEnd)
 
-app = (neigh_ie > -1) .* (neigh_ie >= nStart) .* (neigh_ie <= nEnd);
-neigh_ie(app==0) = [];
-j = (ones(nbases,1)*(neigh_ie-nStart)*nbases + (1:nbases)');
+app = (neight > -1) .* (neight >= nStart) .* (neight <= nEnd);
+neight(app==0) = [];
+j = ones(nbases,1)*(neight-nStart)*nbases + (1:nbases)';
 MN(:,:,app==0) = [];
-for iedg = 1:size(MN,3)
-    M(row,j(:,iedg)) = M(row,j(:,iedg)) + MN(:,:,iedg);
-end
+MN = reshape(MN, size(MN,1), size(MN,2)*size(MN,3));
+M(row,j) = M(row,j) + MN;
