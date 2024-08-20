@@ -130,6 +130,9 @@ Setup.isError = 1;
     Structural and Multidisciplinary Optimization, DOI: <a href="https://doi.org/10.1007/s00158-011-0706-z">10.1007/s00158-011-0706-z</a>
 
     <li>
+    The developers of <tt>lymph</tt> acknowledge Prof. Paul Houston and Dr. Giorgio Pennesi for the original implementation of the quadrature-free approach \cite pennesiquadraturefree adopted in the library.
+
+    <li>
     <a href="https://www.doxygen.nl/">Doxygen</a>-based documentation was possible thanks to <a href="https://it.mathworks.com/matlabcentral/fileexchange/25925-using-doxygen-with-matlab">m2cpp.pl</a>, available as<br>
     Fabrice (2023). "Using Doxygen with Matlab" (<a href="https://www.mathworks.com/matlabcentral/fileexchange/25925-using-doxygen-with-matlab">https://www.mathworks.com/matlabcentral/fileexchange/25925-using-doxygen-with-matlab</a>), MATLAB Central File Exchange. Retrieved November 24, 2023.<br>
     Copyright (c) 2009, Fabrice. All rights reserved.

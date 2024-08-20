@@ -95,7 +95,9 @@ The submodule is itself a git repository: in ``OUTER_REPO/lymph`` you can code, 
 
 ### Acknowledgments ###
 
-The developers of **lymph** acknowledge the support of
+The developers of **lymph** acknowledge Prof. Paul Houston and Dr. Giorgio Pennesi for the original implementation of the quadrature-free approach adopted in the library [Antonietti, Houston, Pennesi. Journal of Scientific Computing 77 (2018)].
+
+They acknowledge the support of
 
 * ERC Synergy Grant n. 101115663 [NEMESIS: NEw generation MEthods for numerical SImulationS](https://erc-nemesis.eu)
-* [ICSC--Centro Nazionale di Ricerca in High Performance Computing, Big Data, and Quantum Computing](https://www.supercomputing-icsc.it/) funded by European Union--NextGenerationEU
+* [ICSC-Centro Nazionale di Ricerca in High Performance Computing, Big Data, and Quantum Computing](https://www.supercomputing-icsc.it/) funded by European Union-NextGenerationEU
