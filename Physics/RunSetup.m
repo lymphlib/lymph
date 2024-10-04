@@ -20,10 +20,10 @@
 Setup.isPlotMesh = 0;
 
 % Save VTK polygonal mesh y/n
-Setup.isSaveVTKMesh = 0;
+Setup.isSaveVTKMesh = 1;
 
 % Plot solution y/n
-Setup.isPlotSolution = 0;
+Setup.isPlotSolution = 1;
 
 % Save solution y/n -> .mat file
 Setup.isSaveSolution = 0;

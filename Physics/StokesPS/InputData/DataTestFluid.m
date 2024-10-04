@@ -33,7 +33,7 @@ Data.PlotExact   = true;
 Data.PlotGridSol = true;
 Data.VisualizationStep = 0.1;
 Data.PlotIniCond  = false;
-Data.ComputeVelAndPres = true;
+Data.ComputeVelAndPres = false;
 
 %% Save Solution settings
 Data.timesave  = 50;
