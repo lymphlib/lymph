@@ -19,20 +19,14 @@
 
 # Author: Ivan Fumagalli <ivan.fumagalli@polimi.it>.
 
-image: greenbone/doxygen
-
 pipelines:
   default:
-    - parallel:
-      - step:
-          name: 'Generate documentation'
-          script:
-            - doxygen
-
-    # The following deployment steps will be executed for each pipeline run. To configure your steps and conditionally deploy see https://support.atlassian.com/bitbucket-cloud/docs/configure-bitbucket-pipelinesyml/
     - step:
-        name: 'Deployment to Production'
-        deployment: production
-        trigger: 'manual'
+        name: Sync GitHub Mirror
+        image: alpine/git:latest
+        clone:
+          enabled: false
         script:
-          - echo "Your deployment to production script goes here..."
+          - git clone --bare git@bitbucket.org:lymph/lymph.git
+          - cd lymph.git
+          - git push --mirror git@github.com:lymphlib/lymph.git
