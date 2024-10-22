@@ -45,7 +45,7 @@ Data.PlotExact   = true;
 Data.PlotGridSol = true;
 Data.VisualizationStep = 0.1;
 Data.PlotIniCond  = false;
-Data.NqnVisualization = 3;
+Data.NPtsVisualization = 3;
 
 %% Save Solution settings
 Data.VisualizationStep  = 200;

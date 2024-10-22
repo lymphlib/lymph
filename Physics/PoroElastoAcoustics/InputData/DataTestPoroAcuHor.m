@@ -1,14 +1,15 @@
-% Domain ???
-Data.name = 'DataTestPoroAcu';
+%% InputData/DataTestPoroAcu.m 
+%% Poro-Acoustic problem in [-1,1]^2 x (0,T] with Dirichlet conditions
+Data.name = 'DataTestPoroAcuHor';
 Data.NPhys = 2;
 
 Data.TagElPoro  = 1; % Element tag
-Data.TagBcPoro  = [3 7 8]; % Boundary tag
-Data.LabBcPoro  = 'DDD'; % (D)irichlet/(N)eumann/(A)bso
+Data.TagBcPoro  = [3 4 5]; % Boundary tag
+Data.LabBcPoro  = 'DND'; % (D)irichlet/(N)eumann/(A)bso
 
 Data.TagElAcu   = 2; % Element tag
-Data.TagBcAcu   = [4 5 6]; % Boundary tag
-Data.LabBcAcu   = 'DDD'; % (D)irichlet/(N)eumann 
+Data.TagBcAcu   = [6 7 8]; % Boundary tag
+Data.LabBcAcu   = 'DNN'; % (D)irichlet/(N)eumann 
 
 Data.TagElEla   = []; % Element tag
 Data.TagBcEla   = []; % Boundary tag
@@ -16,7 +17,7 @@ Data.LabBcEla   = []; % (D)irichlet/(N)eumann/(A)bso
 
 %% Geometrical properties 
 Data.domain       = [-1 1 -1 1]; % domain bounds for a new mesh
-Data.N            = [100 200 400 800];        % number of elements for a new mesh
+Data.N            = 100;        % number of elements for a new mesh
 Data.MeshFromFile = false;      % read mesh from file
 Data.FolderName   = 'InputMesh';
 Data.VTKMeshFileName = 'Mesh.vtk';
@@ -41,13 +42,13 @@ Data.quadrature = "QF";       % Quadrature type: ST/QF
 
 %% Visualization settings
 Data.PlotExact   = true;
-Data.PlotGridSol = false;
+Data.PlotGridSol = true;
 Data.VisualizationStep = 0.1;
 Data.PlotIniCond  = false;
 Data.NPtsVisualization = 3;
 
 %% Save Solution settings
-Data.VisualizationStep  = 1100;
+Data.VisualizationStep  = 200;
 
 
 %% properties porous-materials

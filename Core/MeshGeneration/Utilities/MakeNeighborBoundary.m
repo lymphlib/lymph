@@ -38,6 +38,9 @@ elseif strcmp(SimType,'poro-stokes')
     TagBoundary(Data.TagBcFluid) = Data.LabBcFluid;
 elseif strcmp(SimType,'stokes')
     TagBoundary(Data.TagBcFluid) = Data.LabBcFluid;
+elseif strcmp(SimType,'poro') 
+    TagBoundary(Data.TagBcPoro) = Data.LabBcPoro;
+
 else
     error('Simulation type unknown!')
 end

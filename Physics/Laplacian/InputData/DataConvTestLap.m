@@ -23,9 +23,9 @@ Data.penalty_coeff = 10; % Penalty coefficient
 Data.quadrature = "ST";       % Quadrature type: ST/QF
 
 %% Visualization settings
-Data.PlotExact        = true;
-Data.PlotGridSol      = true;
-Data.NqnVisualization = 3;      % Data.NqnVisualization must be odd and strictly greater than 1 (see Gauleg.m) 
+Data.PlotExact         = true;
+Data.PlotGridSol       = true;
+Data.NPtsVisualization = 3;
 
 %% Material properties 
 Data.mu       = {@(x,y) 1.*x.^0.*y.^0};

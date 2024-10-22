@@ -58,10 +58,8 @@ Data.quadrature = "QF";       % Quadrature type: ST/QF
 %% Visualization settings
 
 Data.PlotExact          = true;
+Data.PlotIniCond        = true;
 Data.PlotGridSol        = true;
 Data.VisualizationStep  = 10;
-Data.NqnVisualization   = 3; % Data.NqnVisualization must be odd and strictly greater than 1 (see Gauleg.m) 
+Data.NPtsVisualization  = 3;
 
-%% Save solution settings
-
-Data.SaveSolutionStep = 0.5;

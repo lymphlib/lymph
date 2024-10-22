@@ -1,3 +1,14 @@
+# Report changes as follows:
+# - **New/Changed/Improved**: DESCRIPTION. (Name Surname YYYY/MM/DD)
+
+## Changes between v1.1.0 and v1.2.0
+- **Improved**:`Quadrature`has now (l+1)^2 nodes for integrals over triangles. (Ilario Mazzieri 2024/10/09)
+- **Improved**:`Quadrature`files documentation improved. (Mattia Corti 2024/10/09)
+- **Changed**:`GetSolutionQuadPoints`->`GetSolutionPostProcessing`: post-processing nodes are independent of quadrature nodes to improve performance. (Mattia Corti 2024/10/09)
+- **Improved**: BC imposition in RHS assembly is now more efficient. (Stefano Bonetti 2024/10/09)
+- **Improved**: Bugfix in the computation of harmonic coeff for penalty. (Mattia Corti 2024/10/07)
+- **New**: Mesh generation for a rectangular bidomain with horizontal interface. (Ilario Mazzieri 2024/10/04)
+
 ## Changes between v1.0.0 and v1.1.0
 - **Updated**: the PoroElastoAcoustics physics is now updated with the new Core and the Quadrature-Free is implemented. (Mattia Corti  2024/08/13)
 - **Improved**: fixed doxygen documentation for all physics. (Ilario Mazzieri 2024/30/07)

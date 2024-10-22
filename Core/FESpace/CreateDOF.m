@@ -51,7 +51,7 @@ function [femregion] = CreateDOF(Data, region)
     nln = 0.5.*(Data.degree+1).*(Data.degree+2);
     
     % Computation of the number of quadrature nodes
-    nqn = 2*Data.degree + 1;
+    nqn = Data.degree + 1;
 
     % Struct construction
     femregion = struct('degree',    Data.degree, ...

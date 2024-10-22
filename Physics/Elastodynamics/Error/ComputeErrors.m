@@ -10,7 +10,7 @@
 %> @param Data       Struct with problem's data
 %> @param femregion  Finite Element struct (see CreateDOF.m)
 %> @param Matrices   Struct with problem's matrices 
-%> @param Solutions  Solution vector 
+%> @param Solution   Solution vector
 %
 %> @retval Error     Struct with computed errors
 %>

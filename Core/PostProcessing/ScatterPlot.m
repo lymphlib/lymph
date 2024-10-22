@@ -12,7 +12,7 @@
 %> Xh = { x , y , u_h (x,y), v_h(x,y), ... } for scalar-valued outputs
 %> Xh = { x , y , [(u_h)_x(x,y) (u_h)_y(x,y)], [(v_h)_x(x,y) (v_h)_y(x,y)],
 %... } for vector-valued outputs
-%> @param Xexact    Cell array that contains the exact solutions. It has the following form:
+%> @param Xex       Cell array that contains the exact solutions. It has the following form:
 %> Xexact = { x , y , u_ex (x,y), v_ex(x,y), ... } for scalar-valued outputs
 %> Xexact = { x , y , [(u_ex)_x(x,y) (u_ex)_y(x,y)], [(v_ex)_x(x,y) (v_ex)_y(x,y)],
 %... } for vector-valued outputs

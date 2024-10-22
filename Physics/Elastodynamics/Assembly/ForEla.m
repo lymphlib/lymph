@@ -98,10 +98,10 @@ for ie=1:femregion.nel % loop over elements
             MyxSource = Data.sourceMyx_el{1}(xq,yq,time);
             MyySource = Data.sourceMyy_el{1}(xq,yq,time);
             
-            % Construction of the basis functions
+            % Construction and evalutation on the quadrature points of the basis functions
             [phiq, gradqx, gradqy] = Evalshape2D(femregion, ie, qNodes_2D);
                         
-            %% Vector assembling
+            % Vector assembling
             F1_loc = F1_loc + (dx.*phiq)'*fSource1 + (dx.*gradqx)'*MxxSource + 0.5 * (dx.*gradqy)'*MxySource;
             F2_loc = F2_loc + (dx.*phiq)'*fSource2 + 0.5 * (dx.*gradqx)'*MyxSource + (dx.*gradqy)'*MyySource;
             G1_loc = G1_loc + (dx.*phiq)'*gSource1;
@@ -114,56 +114,59 @@ for ie=1:femregion.nel % loop over elements
         
         % Loop over faces
         for iedg=1:neighbor.nedges(ie)
-            
-            % Extraction of the edge coordinates
-            if iedg == neighbor.nedges(ie)
-                p1 = coords_ie(iedg,:);
-                p2 = coords_ie(1,:);
-            else
-                p1 = coords_ie(iedg,:);
-                p2 = coords_ie(iedg+1,:);
-            end
-            
-            % Construction of quadrature nodes on the face
-            [qNodes_1D] = GetPhysicalPointsFaces([p1; p2], ref_qNodes_1D);
-            
-            xq = qNodes_1D(:,1);
-            yq = qNodes_1D(:,2);
-            
-            % Scaled weights
-            ds = meshsize(iedg) * w_1D;
-            
-            % Extraction of normals to the face
-            nx = normals(1,iedg);
-            ny = normals(2,iedg);
-            
-            % Evaluation of physical parameters
-            mu  = Data.mu_el{id_ie-id_shift}(xq,yq);
-            lam = Data.lam_el{id_ie-id_shift}(xq,yq);
-            harm_ave = (lam+2*mu);
-            
-            aa = (lam+2*mu) * nx;
-            ff = (lam+2*mu) * ny;
-            bb = lam * nx;
-            gg = lam * ny;
-            ee = mu * nx;
-            cc = mu * ny;
-            
-            % Construction of the basis functions
-            [phiedgeq, gradedgeqx, gradedgeqy] = Evalshape2D(femregion, ie, qNodes_1D);
-                        
+
             % Dirichlet boundary faces
             if  neigh_ie(iedg) == -1
+            
+                % Extraction of the edge coordinates
+                if iedg == neighbor.nedges(ie)
+                    p1 = coords_ie(iedg,:);
+                    p2 = coords_ie(1,:);
+                else
+                    p1 = coords_ie(iedg,:);
+                    p2 = coords_ie(iedg+1,:);
+                end
                 
+                % Construction of quadrature nodes on the face
+                [qNodes_1D] = GetPhysicalPointsFaces([p1; p2], ref_qNodes_1D);
+                
+                xq = qNodes_1D(:,1);
+                yq = qNodes_1D(:,2);
+                
+                % Scaled weights
+                ds = meshsize(iedg) * w_1D;
+                
+                % Extraction of normals to the face
+                nx = normals(1,iedg);
+                ny = normals(2,iedg);
+                
+                % Evaluation of physical parameters
+                mu  = Data.mu_el{id_ie-id_shift}(xq,yq);
+                lam = Data.lam_el{id_ie-id_shift}(xq,yq);
+                harm_ave = (lam+2*mu);
+                
+                % Auxiliary quantities (cf. physical parameters) for vector assembling
+                aa = (lam+2*mu) * nx;
+                ff = (lam+2*mu) * ny;
+                bb = lam * nx;
+                gg = lam * ny;
+                ee = mu * nx;
+                cc = mu * ny;
+                
+                % Construction and evalutation on the quadrature points of the basis functions
+                [phiedgeq, gradedgeqx, gradedgeqy] = Evalshape2D(femregion, ie, qNodes_1D);
+                
+                % Evaluation of boundary functions
                 gD1 = Data.DirBCEla{1}(xq,yq,time);
                 gD2 = Data.DirBCEla{2}(xq,yq,time);
                 
+                % Vector assembling
                 F1_loc = F1_loc - (ds.* ( aa .* gradedgeqx + cc .* gradedgeqy))' * gD1 - (ds.* ( gg .* gradedgeqx + ee .* gradedgeqy))' * gD2;
                 F1_loc = F1_loc + penalty_geom(iedg) * (ds .* harm_ave .* phiedgeq)' * gD1;
                 
                 F2_loc = F2_loc - (ds.* ( cc .* gradedgeqx + bb .* gradedgeqy))' * gD1 - (ds.* ( ee .* gradedgeqx + ff .* gradedgeqy))' * gD2;
                 F2_loc = F2_loc + penalty_geom(iedg) * (ds .* harm_ave .* phiedgeq)' * gD2;
-                                
+                
             end
         end
         

@@ -33,7 +33,7 @@ run("../RunSetup.m")
 % DataConvTestAcu;
 % DataConvTestEla;
 % DataConvTestPoro;
-DataConvTestPoroAcu;
+ DataConvTestPoroAcu;
 % DataConvTestElaAcu
 % DataConvTestPoroEla
 
@@ -52,9 +52,9 @@ for ii = 1:4
     else
         % Create a new mesh
         if (Data.NPhys == 1)
-            Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
+            Data.meshfile = MakeMeshMonodomain(Data,Data.N(ii),Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
         elseif (Data.NPhys == 2)
-            Data.meshfile = MakeMeshBidomainVert(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
+            Data.meshfile = MakeMeshBidomainVert(Data,Data.N(ii),Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
         end
     end
 

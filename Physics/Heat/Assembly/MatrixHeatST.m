@@ -4,7 +4,7 @@
 %> @brief Assembly of the matrices for the heat equation (subtriangulation)
 %
 %==========================================================================
-%> @section classMatrixHeat Class description
+%> @section classMatrixHeatST Class description
 %==========================================================================
 %> @brief            Assembly of the mass and stiffness matrices for the heat equation (subtriangulation).
 %
@@ -89,11 +89,11 @@ for ie = 1:femregion.nel
         mu      = Data.mu{1}(xq,yq);
         sigma   = Data.sigma{1}(xq,xq);
 
-        % Construction of the basis functions
+        % Construction and evalutation on the quadrature points of the basis functions
         [phiq, gradqx, gradqy] = Evalshape2D(femregion, ie, qNodes_2D);
 
-        %% Matrix assembling
-
+        % Matrix assembling
+        
         M_prj_loc{ie} = M_prj_loc{ie} + (dx.*phiq)'*phiq;
         
         M_loc{ie} = M_loc{ie} + (dx.*(sigma.*phiq))'*phiq;
@@ -111,6 +111,8 @@ for ie = 1:femregion.nel
 
         % Extraction of the id of the neighboring element in the matrices IAN and SAN
         idneigh = (neigh_ie_unq == neighbor.neigh{ie}(iedg));
+
+        % Extraction of the indexes for assembling face matrices (contribution of the element ie)
         ii_index_neigh{ie}(1:femregion.nbases,:) = repmat(index, 1 ,femregion.nbases);
         jj_index_neigh{ie}(1:femregion.nbases,:) = repmat(index',femregion.nbases,1);
 
@@ -135,7 +137,7 @@ for ie = 1:femregion.nel
         % Evaluation of physical parameters
         mu    = Data.mu{1}(xq,yq);
 
-        % Construction of the basis functions
+        % Construction and evalutation on the quadrature points of the basis functions
         [phiedgeq, gradedgeqx, gradedgeqy] = Evalshape2D(femregion, ie, qNodes_1D);
 
         % Extraction of normals to the face
@@ -157,12 +159,14 @@ for ie = 1:femregion.nel
             IA_loc{ie}(1:femregion.nbases,:)  = IA_loc{ie}(1:femregion.nbases,:)  + 0.5 * (ds .* mu .* (nx * gradedgeqx + ny * gradedgeqy))' * phiedgeq;
             SA_loc{ie}(1:femregion.nbases,:)  = SA_loc{ie}(1:femregion.nbases,:)  + penalty_geom(iedg) * (ds .* mu .* phiedgeq)' * phiedgeq;
 
-            % Construction of the basis functions for the neighbor
+            % Construction and evalutation on the quadrature points of the basis functions for the neighbor
             phiedgeqneigh = Evalshape2D(femregion, neigh_ie(iedg), qNodes_1D);
 
             % Neighboring element
             neigh_idx = find(idneigh)*femregion.nbases+1:(find(idneigh)+1)*(femregion.nbases);
             index_neigh = (neighbor.neigh{ie}(iedg)-1)*femregion.nbases*ones(femregion.nbases,1) + (1:femregion.nbases)';
+
+            % Extraction of the indexes for assembling face matrices (contribution of the neighboring element)
             ii_index_neigh{ie}(neigh_idx,:) = repmat(index, 1,femregion.nbases);
             jj_index_neigh{ie}(neigh_idx,:) = repmat(index_neigh',femregion.nbases,1);
 
@@ -176,6 +180,7 @@ for ie = 1:femregion.nel
 
 end
 
+% Local matrix to global matrix
 ii_index  = reshape(cell2mat(ii_index),[femregion.nbases,femregion.nbases*femregion.nel]);
 jj_index  = reshape(cell2mat(jj_index),[femregion.nbases,femregion.nbases*femregion.nel]);
 

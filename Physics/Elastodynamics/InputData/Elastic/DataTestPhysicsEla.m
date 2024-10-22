@@ -4,23 +4,23 @@
 Data.name = 'Emilia';
 
 Data.TagElEla   = [1 2 3 4 5 6 7]; % Element tag
-Data.TagBcEla   = [8 9 10 11]; % Boundary tag
-Data.LabBcEla   = 'DDND'; % Dirichlet/Neumann/Abso/
+Data.TagBcEla   = [8 9 10 11];     % Boundary tag
+Data.LabBcEla   = 'DDND';          % Dirichlet/Neumann/Abso/
 
 %% Geometrical properties 
 
-Data.domain       = [0  38463.258537  0 10000];
-Data.N            = 0;  %number of elements
-Data.MeshFromFile = true;
-Data.FolderName   = 'InputMesh';
+Data.domain          = [0  38463.258537  0 10000];
+Data.N               = 0;  %number of elements
+Data.MeshFromFile    = true;
+Data.FolderName      = 'InputMesh';
 Data.VTKMeshFileName = 'MeshEmilia.vtk';
-Data.meshfileseq  = ["MeshEmilia.mat"]; %filename for mesh 
+Data.meshfileseq     = ["MeshEmilia.mat"]; %filename for mesh 
 
 %% Discretization properties                            
 
 % Time integration
 Data.t0      = 0;
-Data.T       = 0.005;
+Data.T       = 4;
 Data.dt      = 0.001;
 Data.timeint = 'newmark';
 Data.BetaNM  = 0.25;
@@ -29,7 +29,6 @@ Data.GammaNM = 0.5;
 % Space discretization
 Data.degree        = 5;  % Polynomial degree
 Data.penalty_coeff = 10; % Penalty coefficient
-
 
 %% Quadrature settings
 
@@ -40,7 +39,7 @@ Data.PlotExact         = false;
 Data.PlotGridSol       = false;
 Data.VisualizationStep = 5;
 Data.PlotIniCond       = true;
-Data.NqnVisualization  = 5; % Data.NqnVisualization must be odd and strictly greater than 1 (see Gauleg.m) 
+Data.NPtsVisualization = 5;
 
 %% properties elastic material
 Data.rho_el    = {@(x,y) 1800 + 0.*x.*y; @(x,y) 1800 + 0.*x.*y; ...

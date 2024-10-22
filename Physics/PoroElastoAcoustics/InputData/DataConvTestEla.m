@@ -17,12 +17,11 @@ Data.LabBcEla   = 'DDDD'; % (D)irichlet/(N)eumann/(A)bso
 
 %% Geometrical properties 
 Data.domain       = [0 1 0 1]; % domain bounds for a new mesh
-Data.N            = 100;        % number of elements for a new mesh
-Data.MeshFromFile = true;      % read mesh from file
+Data.N            = [50 100 200 400];        % number of elements for a new mesh
+Data.MeshFromFile = false;      % read mesh from file
 Data.FolderName   = 'InputMesh';
 Data.VTKMeshFileName = 'Mesh.vtk';
-Data.meshfileseq  = ["UnitSquare_50_el.mat","UnitSquare_100_el.mat", ...
-                     "UnitSquare_200_el.mat","UnitSquare_400_el.mat"]; %filename for mesh 
+Data.meshfileseq  = 'UnitSquare'; %filename for mesh 
 
 %% Discretization properties                            
 %% Time integration
@@ -46,7 +45,7 @@ Data.PlotExact   = true;
 Data.PlotGridSol = false;
 Data.VisualizationStep = 0.1;
 Data.PlotIniCond  = false;
-Data.NqnVisualization = 3;
+Data.NPtsVisualization = 3;
 
 %% Save Solution settings
 Data.VisualizationStep  = 1100;

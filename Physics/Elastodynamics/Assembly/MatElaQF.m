@@ -116,7 +116,8 @@ for ie = 1 : femregion.nel
     % Check if the element is poroelastic
     if tag_ie == 'E'
         
-        index_e = index - (femregion.ndof_p + femregion.ndof_a);
+        % Computation of index for elasticity (for multi-physics simulations)
+        % index_e = index - (femregion.ndof_p + femregion.ndof_a);
 
         % Evaluation of physical parameters
         par.rho_e = Data.rho_el{id_ie-id_shift}(0,0);
@@ -128,7 +129,7 @@ for ie = 1 : femregion.nel
         par.m     = 0;
         par.beta  = 0;
             
-        %% Local matrix assembling
+        % Local matrix assembling
         El.V1_loc(:,ie) = (par.lam+2*par.mu)*Integral.gradxgradxC + par.mu*Integral.gradygradyC;
         El.V2_loc(:,ie) = par.lam*Integral.gradygradxC + par.mu*Integral.gradxgradyC;
         El.V3_loc(:,ie) = par.lam*Integral.gradxgradyC + par.mu*Integral.gradygradxC;
@@ -154,6 +155,8 @@ for ie = 1 : femregion.nel
             % Extraction of tag and id of neighbor el
             id_el_neigh = neigh_ie(iedg);
             idneigh = (neigh_ie_unq == neighbor.neigh{ie}(iedg));
+
+            % Extraction of the indexes for assembling face matrices (contribution of the element ie)
             ii_index_neigh{ie}(1:femregion.nbases,:) = repmat(index, 1 ,femregion.nbases);
             jj_index_neigh{ie}(1:femregion.nbases,:) = repmat(index',femregion.nbases,1);
 
@@ -197,6 +200,7 @@ for ie = 1 : femregion.nel
             par.m     = 0;
             par.beta  = 0;
 
+            % Auxiliary quantities (cf. physical parameters) for vector assembling
             if strcmp(tag_neigh,'E') %elastic neighbor
                 par.mu_n   = Data.mu_el{id_neigh-id_shift}(xq,yq);
                 par.lam_n  = Data.lam_el{id_neigh-id_shift}(xq,yq);
@@ -226,14 +230,13 @@ for ie = 1 : femregion.nel
                 par.c3_22 = -(par.mu .* (2*par.vs-par.vp) ./ par.vs + (par.lam .* par.vs + 2*par.mu .* (par.vs-par.vp)) ./ par.vp ) *nx*ny^2;
                 par.c4_22 =  (par.mu .* (2*par.vs-par.vp) ./ par.vs + (par.lam .* par.vs + 2*par.mu .* (par.vs-par.vp)) ./ par.vp ) *ny*nx^2;
             end
-
             par.lambda_ave = 2*par.lam .* par.lam_n ./ (par.lam + par.lam_n);
             par.mu_ave     = 2*par.mu .* par.mu_n ./ (par.mu + par.mu_n);
             par.harm_ave   = (par.lambda_ave + 2*par.mu_ave);
             par.m_ave      = 2*par.m .* par.m_n ./ (par.m + par.m_n);
             par.beta_ave   = 2*par.beta .* par.beta_n ./ (par.beta + par.beta_n);           
                         
-            % Construction of the basis functions
+            % Construction and evalutation on the quadrature points of the basis functions
             [phiedgeq, gradedgeqx, gradedgeqy] = Evalshape2D(femregion, ie, qNodes_1D);            
             
             % Dirichlet boundary faces
@@ -275,10 +278,12 @@ for ie = 1 : femregion.nel
                 % Neighboring element
                 neigh_idx = find(idneigh)*femregion.nbases+1:(find(idneigh)+1)*(femregion.nbases);
                 index_neigh = (neighbor.neigh{ie}(iedg)-1)*femregion.nbases*ones(femregion.nbases,1) + (1:femregion.nbases)';
+
+                 % Extraction of the indexes for assembling face matrices (contribution of the neighboring element)
                 ii_index_neigh{ie}(neigh_idx,:) = repmat(index, 1,femregion.nbases);
                 jj_index_neigh{ie}(neigh_idx,:) = repmat(index_neigh',femregion.nbases,1);
 
-                % Construction of the basis functions for the neighbor
+                % Construction and evalutation on the quadrature points of the basis functions for the neighbor
                 phiedgeqneigh = Evalshape2D(femregion, neigh_ie(iedg), qNodes_1D);
                 
                 % Neighboring element
@@ -298,6 +303,7 @@ for ie = 1 : femregion.nel
     
 end
 
+% Local matrix to global matrix
 ii_index  = reshape(cell2mat(ii_index),[femregion.nbases,femregion.nbases*femregion.nel]);
 jj_index  = reshape(cell2mat(jj_index),[femregion.nbases,femregion.nbases*femregion.nel]);
 

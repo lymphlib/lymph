@@ -34,6 +34,7 @@ run("../RunSetup.m")
 % DataTestEla;             %Convergence test elastic - Dirichlet
 % DataTestPoro;            %Convergence test poroelastic - Dirichlet
 % DataTestPoroAcu;         % Convergence test poroacoustic - paper SISC
+% DataTestPoroAcuHor;         % Convergence test poroacoustic - paper SISC
 % DataTestElaAcu;          % Convergence test elastoacoustic - paper CMAME
 % DataTestPoroEla;         % Convergence test poro-elastic - paper IMAJNA (submitted)
 DataTestPoroAcuEla;        % Convergence test poro-elastic-acoustic
@@ -50,7 +51,8 @@ else
     if (Data.NPhys == 1)
         Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
     elseif (Data.NPhys == 2)
-        Data.meshfile = MakeMeshBidomainVert(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
+        % Data.meshfile = MakeMeshBidomainVert(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
+        Data.meshfile = MakeMeshBidomainHor(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
     elseif (Data.NPhys == 3)
         Data.meshfile = MakeMeshQuadridomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
     end

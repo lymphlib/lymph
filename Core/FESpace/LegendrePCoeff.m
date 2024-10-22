@@ -9,7 +9,7 @@
 %> \f[ P_{i+1}(x) = \frac{1}{i+1}\{(2i+1)xP_i(x)-iP_{i-1}(x)\} \f]
 %>
 %======================================================================
-%> @section classDecr Class description
+%> @section classLegendrePCoeff Class description
 %======================================================================
 %> @brief The function evaluates the Legendre polynomials.
 %>

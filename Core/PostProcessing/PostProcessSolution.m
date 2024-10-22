@@ -37,12 +37,12 @@ function PostProcessSolution(Setup, Data, mesh, femregion, counter, Uh, time)
             
     %% Save solutions paraview
     if (Setup.isSaveCSV || Setup.isSaveVTK || Setup.isPlotSolution)
-        fprintf('\nGetting Solution quad points ... \n')
+        fprintf('\nGetting solution for post-processing... \n')
         tic
         if nargin == 6
-            [XhPlot, XexactPlot] = GetSolutionQuadPoints(Data, femregion, mesh.neighbor, Uh);
+            [XhPlot, XexactPlot] = GetSolutionPostProcessing(Data, femregion, mesh.neighbor, Uh);
         else
-            [XhPlot, XexactPlot] = GetSolutionQuadPoints(Data, femregion, mesh.neighbor, Uh, time);
+            [XhPlot, XexactPlot] = GetSolutionPostProcessing(Data, femregion, mesh.neighbor, Uh, time);
         end
         toc
         fprintf('\nDone\n')

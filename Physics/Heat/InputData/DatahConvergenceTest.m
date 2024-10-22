@@ -12,7 +12,7 @@ Data.TagApplyBCs = 1;      % Skip the assembling of BCs if not necessary
 
 Data.domain             = [0 1 0 1];
 Data.N                  = {30, 100, 300, 1000};
-Data.MeshFromFile       = false;
+Data.MeshFromFile       = true;
 Data.FolderName         = 'InputMesh';
 Data.VTKMeshFileName    = 'Mesh.vtk';
 Data.meshfileseq        = ["UnitSquare_30_el.mat","UnitSquare_100_el.mat","UnitSquare_300_el.mat","UnitSquare_1000_el.mat"];
@@ -53,15 +53,13 @@ Data.penalty_coeff = 10;            % Penalty coefficient
 
 %% Quadrature settings
 
-Data.quadrature = "ST";       % Quadrature type: ST/QF
+Data.quadrature = "QF";       % Quadrature type: ST/QF
 
 %% Visualization settings
 
 Data.PlotExact          = true;
+Data.PlotIniCond        = true;
 Data.PlotGridSol        = true;
 Data.VisualizationStep  = 10;
-Data.NqnVisualization   = 3; % Data.NqnVisualization must be odd and strictly greater than 1 (see Gauleg.m) 
+Data.NPtsVisualization  = 1; 
 
-%% Save solution settings
-
-Data.SaveSolutionStep = 0.5;

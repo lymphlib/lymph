@@ -11,7 +11,7 @@
 %
 %> @param M          Matrix to be assembled, starting from input [in, out]
 %> @param row        Indices of the rows associated to current element
-%> @param neigh_ie   Indices of the rows associated to neighboring elements
+%> @param neight     Indices of the rows associated to neighboring elements
 %> @param MN         Local matrices of the neighboring elements: third index
 %>                   spans the neighboring elements by interface edge index
 %> @param nbases     Number of basis functions
@@ -21,7 +21,7 @@
 %> @retval M         Matrix assembled
 %>
 %==========================================================================
-% function [M] = AssembleNeighEl(M,row,neigh_ie,MN,nbases,nStart,nEnd)
+% function [M] = AssembleNeighEl(M,row,neight,MN,nbases,nStart,nEnd)
 
 function [M] = AssembleNeighEl(M, row, neight, MN, nbases, nStart, nEnd)
 

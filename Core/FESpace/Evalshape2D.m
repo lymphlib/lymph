@@ -1,6 +1,6 @@
 %> @file  Evalshape2D.m
 %> @author Mattia Corti, Paola F. Antonietti
-%> @date 25 February 2023 
+%> @date 7 October 2024
 %> @brief Construction of the structures for the basis functions.
 %> 
 %> The function constructs the basis functions \f$\varphi_j(x)\f$ and the 
@@ -50,5 +50,11 @@ function [phiq, gradqx, gradqy] = Evalshape2D(femregion, ElemIdx, Nodes)
         gradqx = squeeze(Grad(:,1,:));
         gradqy = squeeze(Grad(:,2,:));
 
+        if size(Nodes,1) == 1
+            gradqx = gradqx';
+            gradqy = gradqy';
+        end
+        
     end
+
 end

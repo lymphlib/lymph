@@ -4,7 +4,7 @@
 %> @brief Compute initial condition
 %>
 %==========================================================================
-%> @section classGetInitalConditions Class description
+%> @section classHeatGetInitalConditions Class description
 %> @brief  GetInitalConditions
 %
 %> @param Data        Struct with problem's data

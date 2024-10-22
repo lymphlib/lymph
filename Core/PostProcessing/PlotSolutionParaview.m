@@ -14,6 +14,7 @@
 %> @param stringVTK  vector of strings to write in the title (one for each solution of the PDE)
 %> @param Id         vector of cell ids associated to the points DispVTK
 %> @param Bd         vector of booleans: 1: point on the edge - 0: inner point
+%> @param jj         index of the current physics: useful to distinguish variables in multi-physics problems
 %>
 %> @retval []
 %>

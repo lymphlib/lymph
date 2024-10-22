@@ -10,7 +10,7 @@ Data.LabBcEla   = 'DDDD'; % Dirichlet/Neumann/Abso/
 %% Geometrical properties 
 
 Data.domain          = [0 1 0 1];
-Data.N               = 0;  %number of elements
+Data.N               = {100, 200, 400, 800};  %number of elements
 Data.MeshFromFile    = false;
 Data.FolderName      = 'InputMesh';
 Data.VTKMeshFileName = 'Mesh.vtk';
@@ -40,7 +40,7 @@ Data.PlotExact         = false;
 Data.PlotGridSol       = false;
 Data.VisualizationStep = 1;
 Data.PlotIniCond       = false;
-Data.NqnVisualization  = 3; % Data.NqnVisualization must be odd and strictly greater than 1 (see Gauleg.m) 
+Data.NPtsVisualization = 3;
 
 %% Properties elastic material
 Data.rho_el    = {@(x,y) 1 + 0.*x.*y};
@@ -84,7 +84,3 @@ Data.grad_ue_ex =  {@(x,y,t) sin(sqrt(2)*pi*t).*(-2*pi*cos(pi*x).sin(pi*x).*sin(
                     @(x,y,t) sin(sqrt(2)*pi*t).*(-2*pi*cos(2*pi*y).*sin(pi*x).^2); ...
                     @(x,y,t) sin(sqrt(2)*pi*t).*( 2*pi*cos(2*pi*x).*sin(pi*y).^2); ...
                     @(x,y,t) sin(sqrt(2)*pi*t).*( 2*pi*cos(pi*y).*sin(2*pi*x).*sin(pi*y))};
-
-
-                
-

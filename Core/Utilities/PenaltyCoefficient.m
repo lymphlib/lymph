@@ -1,6 +1,6 @@
 %> @file  PenaltyCoefficient.m
 %> @author Stefano Bonetti, Mattia Corti, Ivan Fumagalli, Ilario Mazzieri
-%> @date 29 March 2023 
+%> @date 03 October 2024
 %> @brief Construction of the penalty coefficients for all the faces of an
 %> element.
 %> 
@@ -31,7 +31,8 @@
 %>                       between current and neighboring element.
 %>
 %> @retval penalty     Array containing the geometrical part of the penalty
-%> coefficient for all the faces of an element.
+%> coefficient for all the faces of an element (on all the boundary faces the 
+%> penalty coefficient is defined as in the Dirichlet case).
 %======================================================================
 
 function [penalty] = PenaltyCoefficient(femregion, Data, ie, neighedges_ie, neigh_ie, meshsize, penalty_policy)
@@ -50,7 +51,7 @@ function [penalty] = PenaltyCoefficient(femregion, Data, ie, neighedges_ie, neig
             penalty_coeff = Data.penalty_coeff./femregion.degree;
         elseif strcmp(penalty_policy,'harm')
             %> @TODO check dependency on degree in the harm case
-            penalty_coeff = Data.penalty_coeff./femregion.degree;
+            penalty_coeff = Data.penalty_coeff.*femregion.degree.^2;
         else
             error(strcat('Unknown penalty policy: ', penalty_policy))
         end
@@ -66,7 +67,7 @@ function [penalty] = PenaltyCoefficient(femregion, Data, ie, neighedges_ie, neig
     elseif strcmp(penalty_policy,'min')
         penalty_dir = penalty_coeff * (femregion.area(ie)/meshsize);
     elseif strcmp(penalty_policy,'harm')
-        penalty_dir = penalty_coeff * (meshsize/femregion.area(ie));
+        penalty_dir = penalty_coeff .* Cinv .* (meshsize/femregion.area(ie));
     else
         error(strcat('Unknown penalty policy: ', penalty_policy))
     end
@@ -89,8 +90,9 @@ function [penalty] = PenaltyCoefficient(femregion, Data, ie, neighedges_ie, neig
                 p_ie(ii) = penalty_coeff * femregion.area(ie)/meshsize(ii);
                 p_ie_n(ii) = penalty_coeff * femregion.area(neigh_ie(ii))/meshsize(ii);
             elseif strcmp(penalty_policy,'harm')
-                p_ie(ii) = penalty_coeff * (meshsize(ii)/femregion.area(ie));
-                p_ie_n(ii) = penalty_coeff * femregion.area(neigh_ie(ii))/meshsize(ii);
+                Cinv_ext(ii) = femregion.area(neigh_ie(ii))./femregion.max_kb{neigh_ie(ii)}(neighedges_ie(ii));
+                p_ie(ii)     = penalty_coeff * Cinv(ii) .* (meshsize(ii)/femregion.area(ie));
+                p_ie_n(ii)   = penalty_coeff * Cinv_ext(ii) * (meshsize(ii)/femregion.area(neigh_ie(ii)));
             else
                 error(strcat('Unknown penalty policy: ', penalty_policy))
             end
@@ -107,12 +109,11 @@ function [penalty] = PenaltyCoefficient(femregion, Data, ie, neighedges_ie, neig
         % Note that in \cite dryja2007bddc , l_ij=2 is there because the sum in (6) is
         % over the faces of an element, thus containing only half of the contribution.
         % On the other hand, here we do not need l_ij.
-        penalty = penalty_coeff.*(p_ie + p_ie_n)./(2*p_ie.*p_ie_n);
+        penalty = (p_ie + p_ie_n)/2;
     else
         error(strcat('Unknown penalty policy: ', penalty_policy))
     end
-    %> @TODO check the cases neigh_ie<-1 and introduce comments to explain the choice
-    % penalty = (neigh_ie > 0)'.*max([p_ie p_ie_n],[],2) + (neigh_ie == -1)'.*penalty_dir;
+
     penalty = (neigh_ie > 0)'.*penalty + (neigh_ie < 0)'.*penalty_dir;
 
 end

@@ -4,7 +4,7 @@
 %> @brief Assembly of the matrices for the poroelastic problem \cite ABNM2021
 %>
 %==========================================================================
-%> @section classMatPoroPEA Class description
+%> @section classMatPoroPEAST Class description
 %==========================================================================
 %> @brief Assembly of the matrices for the poroelastic problem \cite ABNM2021
 %
@@ -240,11 +240,10 @@ for ie = 1 : femregion.nel
             par.rho2_zeta = 2 * Data.rho{id_ie}(xq,yq) .* Data.zetap{id_ie}(xq,yq);
             par.rho_zeta2 = Data.rho{id_ie}(xq,yq) .* Data.zetap{id_ie}(xq,yq).^2;
 
-            % Construction of the basis functions
+            % Construction and evalutation on the quadrature points of the basis functions
             [phiq, gradqx, gradqy] = Evalshape2D(femregion, ie, qNodes_2D);
                     
-            %% Local matrix assembling
-
+            % Local matrix assembling
             El.V1_loc{ie_sh} = El.V1_loc{ie_sh} + (dx .* ((par.lam+2*par.mu) .* gradqx))' * gradqx + (dx .* (par.mu .* gradqy))' * gradqy;
             El.V2_loc{ie_sh} = El.V2_loc{ie_sh} + (dx .* (par.lam .* gradqx))' * gradqy + (dx .* (par.mu .* gradqy))' * gradqx;
             El.V3_loc{ie_sh} = El.V3_loc{ie_sh} + (dx .* (par.lam .* gradqy))' * gradqx + (dx .* (par.mu .* gradqx))' * gradqy;
@@ -293,6 +292,8 @@ for ie = 1 : femregion.nel
             % Extraction of tag and id of neighbor el
             id_el_neigh = neigh_ie(iedg);
             idneigh = (neigh_ie_unq == neighbor.neigh{ie}(iedg));
+
+            % Extraction of the indexes for assembling face matrices (contribution of the element ie)
             ii_index_neigh{ie_sh}(1:femregion.nbases,:) = repmat(index, 1 ,femregion.nbases);
             jj_index_neigh{ie_sh}(1:femregion.nbases,:) = repmat(index',femregion.nbases,1);
 
@@ -332,6 +333,7 @@ for ie = 1 : femregion.nel
             par.beta      = Data.beta{id_ie}(xq,yq);
             par.m         = Data.m{id_ie}(xq,yq);
 
+            % Auxiliary quantities (cf. physical parameters) for vector assembling
             if strcmp(tag_neigh,'E') %elastic neighbor
                 par.mu_n   = Data.mu_el{id_neigh-id_elas}(xq,yq);
                 par.lam_n  = Data.lam_el{id_neigh-id_elas}(xq,yq);
@@ -358,14 +360,13 @@ for ie = 1 : femregion.nel
                 par.phi_por   = Data.phi_por{id_ie}(xq,yq);
                 par.a_coef    = Data.a_coef{id_ie}(xq,yq);
             end
-
             par.lambda_ave = 2*par.lam .* par.lam_n ./ (par.lam + par.lam_n);
             par.mu_ave     = 2*par.mu .* par.mu_n ./ (par.mu + par.mu_n);
             par.harm_ave   = (par.lambda_ave + 2*par.mu_ave);
             par.m_ave      = 2*par.m .* par.m_n ./ (par.m + par.m_n);
             par.beta_ave   = 2*par.beta .* par.beta_n ./ (par.beta + par.beta_n);
                         
-            % Construction of the basis functions
+            % Construction and evalutation on the quadrature points of the basis functions
             [phiedgeq, gradedgeqx, gradedgeqy] = Evalshape2D(femregion, ie, qNodes_1D);            
             
             % Dirichlet boundary faces
@@ -477,10 +478,12 @@ for ie = 1 : femregion.nel
                 % Neighboring element
                 neigh_idx = find(idneigh)*femregion.nbases+1:(find(idneigh)+1)*(femregion.nbases);
                 index_neigh = (neighbor.neigh{ie}(iedg)-1-nel_sh)*femregion.nbases*ones(femregion.nbases,1) + (1:femregion.nbases)';
+
+                % Extraction of the indexes for assembling face matrices (contribution of the neighboring element)
                 ii_index_neigh{ie_sh}(neigh_idx,:) = repmat(index, 1,femregion.nbases);
                 jj_index_neigh{ie_sh}(neigh_idx,:) = repmat(index_neigh',femregion.nbases,1);
 
-                % Construction of the basis functions for the neighbor
+                % Construction and evalutation on the quadrature points of the basis functions for the neighbor
                 phiedgeqneigh = Evalshape2D(femregion, neigh_ie(iedg), qNodes_1D);
                 
                 % Neighboring element
@@ -610,8 +613,9 @@ for ie = 1 : femregion.nel
     
 end
 
-%% Reshape of the volume matrices 
+% Local matrix to global matrix
 
+%% Reshape of the volume matrices 
 ii_index  = reshape(cell2mat(ii_index),[femregion.nbases,femregion.nbases*femregion.nel_p]);
 jj_index  = reshape(cell2mat(jj_index),[femregion.nbases,femregion.nbases*femregion.nel_p]);
 

@@ -23,18 +23,20 @@
 %> @brief  Construction of the polygonal mesh (uses polymesher functions
 %>contained in the Polymesher folder
 %>
+%> @param Data                    Structure with problem data
 %> @param N                       Number of mesh elements
 %> @param DomainLimits            Domain limits
 %> @param FolderName              Directory name for saving
 %> @param FileName                File name for saving
 %> @param MeshType                String 'C' for cartesian grid, 'P' for
 %polygonal grid
+%> @param SimType                 Simulation type
 %>
 %> @retval FileNameOut            File name of the *.mat structure
 %>                                containing mesh info
 %>
 %======================================================================
-function [FileNameOut] = MakeMeshBidomainHor(N,DomainLimits,FolderName,FileName,MeshType)
+function [FileNameOut] = MakeMeshBidomainHor(Data,N,DomainLimits,FolderName,FileName,MeshType,SimType)
 %% SET DIRECTORIES AND NAMES
 
 if ~exist(FolderName,'dir')
@@ -43,6 +45,13 @@ end
 
 %% RECTANGULAR DOMAIN
 global Dati
+
+if nargin < 7
+    SimType = 'laplacian';
+    Data.TagBcLap = [3, 4, 5, 6, 7, 8];
+    Data.LabBcLap = 'DDDDDD';
+end
+
 
 Dati.domain = DomainLimits;
 if (strcmp(MeshType,'P')==1)
@@ -66,83 +75,10 @@ elseif (strcmp(MeshType,'C')==1)
     
 end
 
-%% CONNECTIVITY - NEIGHBOURS AND BOUNDARY EDGES
+%% Compute the neighbor structure
+[region,neighbor] = MakeNeighborBidomainHor(Data,region,SimType);
 
-[neighbour] = neighbours(region);
+%% Otuput 
+FileNameOut = [FolderName,'/',FileName,'_',num2str(region.ne),'_el.mat'];
+save(FileNameOut,'region','neighbor');
 
-fid = fopen([FolderName,'B-connectivity'],'w');
-k = 1;
-for i = 1 : region.ne
-    E_tag(i,1) = region.id(i);
-    for j = 1 : neighbour.nedges(i)
-        id_edge = neighbour.neigh{i}(j);
-        if (E_tag(i,1) == 1 && id_edge == -1)
-            %right edge
-            B_tag = 3;
-            if(j < neighbour.nedges(i))
-                edge = [region.connectivity{i}(j) region.connectivity{i}(j+1)];
-            else
-                edge = [region.connectivity{i}(j) region.connectivity{i}(1)];
-            end
-            %upper edge
-            if(abs(region.coord(edge(1),2) - Dati.domain(4)) < 1.e-8 && ...
-                    abs(region.coord(edge(2),2) - Dati.domain(4)) < 1.e-8)
-                B_tag = 4;
-            end
-            %left edge
-            if(abs(region.coord(edge(1),1) - Dati.domain(1)) < 1.e-8 && ...
-                    abs(region.coord(edge(2),1) - Dati.domain(1)) < 1.e-8)
-                B_tag = 5;
-            end
-            
-            fprintf(fid,'%i  %i  %i\n', [B_tag, edge(1), edge(2)]);
-            region.connectivity_bc(k,1:2) = [edge(1), edge(2)];
-            region.bc_tag(k) = B_tag;
-            k = k +1;
-            
-        elseif (E_tag(i,1) == 2 && id_edge == -1)
-            %left edge
-            B_tag =6;
-            if(j < neighbour.nedges(i))
-                edge = [region.connectivity{i}(j) region.connectivity{i}(j+1)];
-            else
-                edge = [region.connectivity{i}(j) region.connectivity{i}(1)];
-            end
-            %right edge
-            if(abs(region.coord(edge(1),1) - Dati.domain(2)) < 1.e-8 && ...
-                    abs(region.coord(edge(2),1) - Dati.domain(2)) < 1.e-8)
-                B_tag = 8;
-            end
-            
-            %bottom edge
-            if(abs(region.coord(edge(1),2) - Dati.domain(3)) < 1.e-8 && ...
-                    abs(region.coord(edge(2),2) - Dati.domain(3)) < 1.e-8)
-                B_tag = 7;
-            end
-            
-            
-            fprintf(fid,'%i  %i  %i\n', [B_tag, edge(1), edge(2)]);
-            region.connectivity_bc(k,1:2) = [edge(1), edge(2)];
-            region.bc_tag(k) = B_tag;
-            k = k +1;
-            
-            
-        end
-        
-        
-    end
-    
-end
-fclose(fid);
-
-N_poly = length(E_tag);
-Mesh.N     = N_poly;
-Mesh.E_tag = E_tag;
-Mesh.B_tag = B_tag;
-Mesh.region = region;
-Mesh.neighbor  = neighbour;
-Mesh.domain_lim = Dati.domain;
-
-FileNameOut = [FolderName,'/',FileName,'_',num2str(N_poly),'_el.mat'];
-
-save(FileNameOut,'-struct','Mesh');

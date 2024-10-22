@@ -4,7 +4,7 @@
 %> @brief Assembly of the matrices for the poroelastic problem \cite ABNM2021
 %>
 %==========================================================================
-%> @section classMatPoroPEA Class description
+%> @section classMatPoroPEAQF Class description
 %==========================================================================
 %> @brief Assembly of the matrices for the poroelastic problem \cite ABNM2021
 %
@@ -37,7 +37,6 @@ ii_index_neigh = mat2cell(zeros(femregion.nbases*max_nedges,femregion.nbases,fem
 jj_index_neigh = mat2cell(zeros(femregion.nbases*max_nedges,femregion.nbases,femregion.nel_p),femregion.nbases*max_nedges,femregion.nbases,ones(1,femregion.nel_p));
 
 %% Initialization of the volume matrices
-
 El.V1_loc = zeros(femregion.nbases^2,femregion.nel_p);
 El.V2_loc = zeros(femregion.nbases^2,femregion.nel_p);
 El.V3_loc = zeros(femregion.nbases^2,femregion.nel_p);
@@ -75,7 +74,6 @@ El.P1_beta_loc  = zeros(femregion.nbases^2,femregion.nel_p);
 El.P2_beta_loc  = zeros(femregion.nbases^2,femregion.nel_p);
 
 %% Initialization of the edge matrices
-
 Edge.S1_P_loc = mat2cell(zeros(femregion.nbases*max_nedges,femregion.nbases,femregion.nel_p),femregion.nbases*max_nedges,femregion.nbases,ones(1,femregion.nel_p));
 Edge.S4_P_loc = mat2cell(zeros(femregion.nbases*max_nedges,femregion.nbases,femregion.nel_p),femregion.nbases*max_nedges,femregion.nbases,ones(1,femregion.nel_p));
 
@@ -115,7 +113,6 @@ Edge.BT3_beta2_loc = mat2cell(zeros(femregion.nbases*max_nedges,femregion.nbases
 Edge.BT4_beta2_loc = mat2cell(zeros(femregion.nbases*max_nedges,femregion.nbases,femregion.nel_p),femregion.nbases*max_nedges,femregion.nbases,ones(1,femregion.nel_p));
 
 %% Initialization of the absorbing boundary matrices
-
 Edge.ABC_uu_1_loc = mat2cell(zeros(femregion.nbases,femregion.nbases,femregion.nel_p),femregion.nbases,femregion.nbases,ones(1,femregion.nel_p));
 Edge.ABC_uu_2_loc = mat2cell(zeros(femregion.nbases,femregion.nbases,femregion.nel_p),femregion.nbases,femregion.nbases,ones(1,femregion.nel_p));
 Edge.ABC_uu_3_loc = mat2cell(zeros(femregion.nbases,femregion.nbases,femregion.nel_p),femregion.nbases,femregion.nbases,ones(1,femregion.nel_p));
@@ -137,14 +134,12 @@ Edge.ABC_ww_3_loc = mat2cell(zeros(femregion.nbases,femregion.nbases,femregion.n
 Edge.ABC_ww_4_loc = mat2cell(zeros(femregion.nbases,femregion.nbases,femregion.nel_p),femregion.nbases,femregion.nbases,ones(1,femregion.nel_p));
 
 %% Initialization of the acoustic boundary matrices
-
 Edge.D1_loc = mat2cell(zeros(femregion.nbases,femregion.nbases,femregion.nel_p),femregion.nbases,femregion.nbases,ones(1,femregion.nel_p));
 Edge.D2_loc = mat2cell(zeros(femregion.nbases,femregion.nbases,femregion.nel_p),femregion.nbases,femregion.nbases,ones(1,femregion.nel_p));
 Edge.D3_loc = mat2cell(zeros(femregion.nbases,femregion.nbases,femregion.nel_p),femregion.nbases,femregion.nbases,ones(1,femregion.nel_p));
 Edge.D4_loc = mat2cell(zeros(femregion.nbases,femregion.nbases,femregion.nel_p),femregion.nbases,femregion.nbases,ones(1,femregion.nel_p));
  
 %% Initialization of the elastic boundary matrices
-
 Edge.S1_P_EP_loc = mat2cell(zeros(femregion.nbases,femregion.nbases,femregion.nel_p),femregion.nbases,femregion.nbases,ones(1,femregion.nel_p));
 Edge.S4_P_EP_loc = mat2cell(zeros(femregion.nbases,femregion.nbases,femregion.nel_p),femregion.nbases,femregion.nbases,ones(1,femregion.nel_p));
 
@@ -213,7 +208,6 @@ for ie = 1 : femregion.nel
         ii_index_QF(:,ie_sh) = reshape(repmat(index, 1,femregion.nbases),[femregion.nbases^2 1]);
         jj_index_QF(:,ie_sh) = reshape(repmat(index',femregion.nbases,1),[femregion.nbases^2 1]);
     
-
         % Extraction of neighbor element and their edges
         neigh_ie      = neighbor.neigh{ie};
         neigh_ie_unq  = unique(neighbor.neigh{ie});
@@ -299,6 +293,8 @@ for ie = 1 : femregion.nel
             % Extraction of tag and id of neighbor el
             id_el_neigh = neigh_ie(iedg);
             idneigh = (neigh_ie_unq == neighbor.neigh{ie}(iedg));
+
+            % Extraction of the indexes for assembling face matrices (contribution of the element ie)
             ii_index_neigh{ie_sh}(1:femregion.nbases,:) = repmat(index, 1 ,femregion.nbases);
             jj_index_neigh{ie_sh}(1:femregion.nbases,:) = repmat(index',femregion.nbases,1);
 
@@ -338,6 +334,7 @@ for ie = 1 : femregion.nel
             par.beta      = Data.beta{id_ie}(xq,yq);
             par.m         = Data.m{id_ie}(xq,yq);
 
+            % Auxiliary quantities (cf. physical parameters) for vector assembling
             if strcmp(tag_neigh,'E') %elastic neighbor
                 par.mu_n   = Data.mu_el{id_neigh-id_elas}(xq,yq);
                 par.lam_n  = Data.lam_el{id_neigh-id_elas}(xq,yq);
@@ -364,14 +361,13 @@ for ie = 1 : femregion.nel
                 par.phi_por   = Data.phi_por{id_ie}(xq,yq);
                 par.a_coef    = Data.a_coef{id_ie}(xq,yq);
             end
-
             par.lambda_ave = 2*par.lam .* par.lam_n ./ (par.lam + par.lam_n);
             par.mu_ave     = 2*par.mu .* par.mu_n ./ (par.mu + par.mu_n);
             par.harm_ave   = (par.lambda_ave + 2*par.mu_ave);
             par.m_ave      = 2*par.m .* par.m_n ./ (par.m + par.m_n);
             par.beta_ave   = 2*par.beta .* par.beta_n ./ (par.beta + par.beta_n);
                         
-            % Construction of the basis functions
+            % Construction and evalutation on the quadrature points of the basis functions
             [phiedgeq, gradedgeqx, gradedgeqy] = Evalshape2D(femregion, ie, qNodes_1D);            
             
             % Dirichlet boundary faces
@@ -483,10 +479,12 @@ for ie = 1 : femregion.nel
                 % Neighboring element
                 neigh_idx = find(idneigh)*femregion.nbases+1:(find(idneigh)+1)*(femregion.nbases);
                 index_neigh = (neighbor.neigh{ie}(iedg)-1-nel_sh)*femregion.nbases*ones(femregion.nbases,1) + (1:femregion.nbases)';
+
+                % Extraction of the indexes for assembling face matrices (contribution of the neighboring element)
                 ii_index_neigh{ie_sh}(neigh_idx,:) = repmat(index, 1,femregion.nbases);
                 jj_index_neigh{ie_sh}(neigh_idx,:) = repmat(index_neigh',femregion.nbases,1);
 
-                % Construction of the basis functions for the neighbor
+                % Construction and evalutation on the quadrature points of the basis functions for the neighbor
                 phiedgeqneigh = Evalshape2D(femregion, neigh_ie(iedg), qNodes_1D);
                 
                 % Neighboring element
@@ -616,6 +614,7 @@ for ie = 1 : femregion.nel
     
 end
 
+% Local matrix to global matrix
 ii_index  = reshape(cell2mat(ii_index),[femregion.nbases,femregion.nbases*femregion.nel_p]);
 jj_index  = reshape(cell2mat(jj_index),[femregion.nbases,femregion.nbases*femregion.nel_p]);
 

@@ -4,7 +4,7 @@
 %> @brief Jacobian map from reference to polygon vertices
 %> 
 %======================================================================
-%> @section classDecr Class description
+%> @section classGetJacobinPolygon Class description
 %======================================================================
 %> @brief Jacobian map from reference to polygon vertices
 %> 

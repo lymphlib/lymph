@@ -81,5 +81,5 @@ end
 [region,neighbor] = MakeNeighborBidomainVert(Data,region,SimType);
 
 %% Otuput 
-FileNameOut = [FolderName,'/',FileName,'_',num2str(region.ne),'_el.mat'];
+FileNameOut = strcat(FolderName,'/',FileName,'_',num2str(region.ne),'_el.mat');
 save(FileNameOut,'region','neighbor');

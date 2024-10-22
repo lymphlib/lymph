@@ -16,7 +16,7 @@ Data.LabBcEla   = 'DDD'; % (D)irichlet/(N)eumann/(A)bso
 
 %% Geometrical properties 
 Data.domain       = [-1 1 0 1]; % domain bounds for a new mesh
-Data.N            = 400;        % number of elements for a new mesh
+Data.N            = [50 100 200 400];        % number of elements for a new mesh
 Data.MeshFromFile = false;      % read mesh from file
 Data.FolderName   = 'InputMesh';
 Data.VTKMeshFileName = 'Mesh.vtk';
@@ -44,7 +44,7 @@ Data.PlotExact   = true;
 Data.PlotGridSol = false;
 Data.VisualizationStep = 0.1;
 Data.PlotIniCond  = false;
-Data.NqnVisualization = 3;
+Data.NPtsVisualization = 3;
 
 %% Save Solution settings
 Data.VisualizationStep  = 1100;

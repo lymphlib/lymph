@@ -21,7 +21,7 @@ Data.N            = 400;        % number of elements for a new mesh
 Data.MeshFromFile = false;      % read mesh from file
 Data.FolderName   = 'InputMesh';
 Data.VTKMeshFileName = 'Mesh.vtk';
-Data.meshfileseq  = "HalfUnitSquare"; %filename for mesh 
+Data.meshfileseq  = 'HalfUnitSquare'; %filename for mesh 
 
 %% Discretization properties                            
 %% Time integration
@@ -45,7 +45,7 @@ Data.PlotExact   = true;
 Data.PlotGridSol = false;
 Data.VisualizationStep = 0.1;
 Data.PlotIniCond  = false;
-Data.NqnVisualization = 3;
+Data.NPtsVisualization = 3;
 
 %% Save Solution settings
 Data.VisualizationStep  = 1100;

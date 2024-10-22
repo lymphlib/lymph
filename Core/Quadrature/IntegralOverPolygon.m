@@ -9,9 +9,10 @@
 %> \f[
 %>      f(x,y) = Cf x^i y^j,\qquad i=1,...,E_x,\;j=1,...,E_y
 %> \f]
+%> For the details of formulas, we refer to \cite pennesiquadraturefree
 %>
 %======================================================================
-%> @section classDecr Class description
+%> @section classIntegralOverPolygon Class description
 %======================================================================
 %> @brief Evaluate integral of a polygon of verteces v.
 %>

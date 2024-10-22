@@ -1,4 +1,4 @@
-%% Acoustic problem in [0 1]^2 with Dirichlet conditions
+ope%% Acoustic problem in [0 1]^2 with Dirichlet conditions
 
 Data.name = 'DataTestAcu';
 Data.NPhys = 1;
@@ -45,7 +45,7 @@ Data.PlotExact   = true;
 Data.PlotGridSol = false;
 Data.VisualizationStep = 0.1;
 Data.PlotIniCond  = false;
-Data.NqnVisualization = 1;
+Data.NPtsVisualization = 1;
 
 %% Save Solution settings
 Data.VisualizationStep  = 200;

@@ -27,6 +27,9 @@ function WriteVtk(fname, x, y, z, val, conn, prop_name, append)
 % Check if we save a scalar- or vector- field
 n_val = size(val,2);
 
+% Cut the values below 10^{-40} for the sake of Paraview visualization
+val = val.*(abs(val) > 1e-40);
+
 if append
 
     fid = fopen(fname, 'a');
@@ -35,13 +38,13 @@ if append
         % Scalar value
         fprintf(fid,['SCALARS  ', prop_name,' float 1\n']);
         fprintf(fid,'LOOKUP_TABLE default\n');
-        fprintf(fid,'%f\n',val);
+        fprintf(fid,'%.4e\n',val);
         
     else        
         % Vectors
         fprintf(fid,['VECTORS  ' ,prop_name, '  float\n']);
         val = [val zeros(size(val,1),1)];
-        fprintf(fid,'%f %f %f\n',val');
+        fprintf(fid,'%.4e %.4e %i\n',val');
     end
 
 else
@@ -61,7 +64,7 @@ else
     % Mesh points
     fprintf(fid,'POINTS %i float\n', length(x));
     coords = [x y z];
-    fprintf(fid,'%f %f %f\n',coords');
+    fprintf(fid,'%.4e %.4e %i\n',coords');
     
     numpoly = size(conn,1);
     numval = size(conn,1)*size(conn,2) + numpoly;
@@ -83,13 +86,13 @@ else
         % Scalar value
         fprintf(fid,['SCALARS  ', prop_name,' float 1\n']);
         fprintf(fid,'LOOKUP_TABLE default\n');
-        fprintf(fid,'%f\n',val);
+        fprintf(fid,'%.4e\n',val);
         
     else        
         % Vectors
         fprintf(fid,['VECTORS  ' ,prop_name, '  float\n']);
         val = [val zeros(size(val,1),1)];
-        fprintf(fid,'%f %f %f\n',val');
+        fprintf(fid,'%.4e %.4e %i\n',val');
     end
 
 end

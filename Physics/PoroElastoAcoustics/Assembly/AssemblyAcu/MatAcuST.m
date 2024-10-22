@@ -4,14 +4,13 @@
 %> @brief Assembly of the matrices for the acoustic problem \cite ABNM2021
 %>
 %==========================================================================
-%> @section classMatAcu Class description
+%> @section classMatAcuST Class description
 %==========================================================================
 %> @brief Assembly of the matrices for the acoustic problem \cite ABNM2021
 %
 %> @param Data       Struct with problem's data
 %> @param neighbor   Neighbor struct (see MakeNeighbor.m)
 %> @param femregion  Finite Element struct (see CreateDOF.m)
-%> @param Matrices   Struct Matrices computed for the poro domain
 %
 %> @retval Matrices  Acoustic matrices (Mass, Stiffness, dG, projection matrix, etc)
 %>
@@ -101,7 +100,7 @@ for ie = 1 : femregion.nel
             par.rho_a   = Data.rho_a{id_ie-id_shift}(xq,yq);
             par.c       = Data.c{id_ie-id_shift}(xq,yq);
             
-            % Construction of the basis functions
+            % Construction and evalutation on the quadrature points of the basis functions
             [phiq, gradqx, gradqy] = Evalshape2D(femregion, ie, qNodes_2D);
                     
             %% Local matrix assembling
@@ -122,6 +121,8 @@ for ie = 1 : femregion.nel
             % Extraction of tag and id of neighbor el
             id_el_neigh = neigh_ie(iedg);
             idneigh = (neigh_ie_unq == neighbor.neigh{ie}(iedg));
+
+            % Extraction of the indexes for assembling face matrices (contribution of the element ie)
             ii_index_neigh{ie_sh}(1:femregion.nbases,:) = repmat(index, 1 ,femregion.nbases);
             jj_index_neigh{ie_sh}(1:femregion.nbases,:) = repmat(index',femregion.nbases,1);
 
@@ -159,6 +160,7 @@ for ie = 1 : femregion.nel
             par.rho_a   = Data.rho_a{id_ie-id_shift}(xq,yq);
             par.c       = Data.c{id_ie-id_shift}(xq,yq);
 
+            % Auxiliary quantities (cf. physical parameters) for vector assembling
             if strcmp(tag_neigh,'E') %elastic neighbor
                 par.rho_a_n   = Data.rho_a{id_ie-id_shift}(xq,yq);
                 par.c_n       = Data.c{id_ie-id_shift}(xq,yq);
@@ -172,11 +174,10 @@ for ie = 1 : femregion.nel
                 par.rho_a_n   = Data.rho_a{id_ie-id_shift}(xq,yq);
                 par.c_n       = Data.c{id_ie-id_shift}(xq,yq);
             end
-
             par.rho_a_ave = 2*par.rho_a.*par.rho_a_n./(par.rho_a + par.rho_a_n);
             par.rho_c_ave = 2*par.c.*par.c_n./(par.c + par.c_n);      
                         
-            % Construction of the basis functions
+            % Construction and evalutation on the quadrature points of the basis functions
             [phiedgeq, gradedgeqx, gradedgeqy] = Evalshape2D(femregion, ie, qNodes_1D);            
             
             % Dirichlet boundary faces
@@ -200,10 +201,12 @@ for ie = 1 : femregion.nel
                 % Neighboring element
                 neigh_idx = find(idneigh)*femregion.nbases+1:(find(idneigh)+1)*(femregion.nbases);
                 index_neigh = (neighbor.neigh{ie}(iedg)-1-nel_sh)*femregion.nbases*ones(femregion.nbases,1) + (1:femregion.nbases)';
+
+                % Extraction of the indexes for assembling face matrices (contribution of the neighboring element)
                 ii_index_neigh{ie_sh}(neigh_idx,:) = repmat(index, 1,femregion.nbases);
                 jj_index_neigh{ie_sh}(neigh_idx,:) = repmat(index_neigh',femregion.nbases,1);
 
-                % Construction of the basis functions for the neighbor
+                % Construction and evalutation on the quadrature points of the basis functions for the neighbor
                 phiedgeqneigh = Evalshape2D(femregion, neigh_ie(iedg), qNodes_1D);
 
                 % Neighboring element
@@ -217,7 +220,7 @@ for ie = 1 : femregion.nel
     
 end
 
-
+% Local matrix to global matrix
 ii_index  = reshape(cell2mat(ii_index),[femregion.nbases,femregion.nbases*femregion.nel_a]);
 jj_index  = reshape(cell2mat(jj_index),[femregion.nbases,femregion.nbases*femregion.nel_a]);
 

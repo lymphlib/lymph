@@ -8,11 +8,11 @@ Data.LabBcEla   = 'DDDD';    % (D)irichlet/(N)eumann/(A)bso
 
 %% Geometrical properties 
 Data.domain       = [0 1 0 1]; % domain bounds for a new mesh
-Data.N            = 100;        % number of elements for a new mesh
+Data.N            = 200;        % number of elements for a new mesh
 Data.MeshFromFile = false;      % read mesh from file
 Data.FolderName   = 'InputMesh';
 Data.VTKMeshFileName = 'Mesh.vtk';
-Data.meshfileseq  = 'UnitSquare_200_el'; %filename for mesh 
+Data.meshfileseq  = 'UnitSquare'; %filename for mesh 
 
 %% Discretization properties 
 
@@ -35,8 +35,8 @@ Data.quadrature = "QF";       % Quadrature type: ST/QF
 Data.PlotExact         = true;
 Data.PlotGridSol       = false;
 Data.VisualizationStep = 1;
-Data.PlotIniCond       = false;
-Data.NqnVisualization  = 3; % Data.NqnVisualization must be odd and strictly greater than 1 (see Gauleg.m) 
+Data.PlotIniCond       = true;
+Data.NPtsVisualization = 3;
 
 %% Properties elastic material
 Data.rho_el    = {@(x,y) 1 + 0.*x.*y};

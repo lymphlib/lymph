@@ -11,7 +11,6 @@
 %> @param Data       Struct with problem's data
 %> @param neighbor   Neighbor struct (see MakeNeighbor.m)
 %> @param femregion  Finite Element struct (see CreateDOF.m)
-%> @param Matrices   Struct containing the matrices of the problem
 %
 %> @retval Matrices  Coupling matrices
 %>
@@ -114,15 +113,17 @@ function [Matrices] = MatPoroAcu(Data, neighbor, femregion)
                     % Evaluation of physical parameters
                     par.rho_a = Data.rho_a{id_neigh-id_shift}(xq,yq);
 
-                    % Construction of the basis functions
+                    % Construction and evalutation on the quadrature points of the basis functions
                     phiedgeq = Evalshape2D(femregion, ie, qNodes_1D);
 
                     % Neighboring element
                     index_neigh = (neighbor.neigh{ie}(iedg)-1-nel_sh)*femregion.nbases*ones(femregion.nbases,1) + (1:femregion.nbases)';
+
+                    % Extraction of the indexes for assembling face matrices
                     ii_index_neigh{ie_gamma} = repmat(index, 1,femregion.nbases);
                     jj_index_neigh{ie_gamma} = repmat(index_neigh',femregion.nbases,1);
 
-                    % Construction of the basis functions for the neighbor
+                    % Construction and evalutation on the quadrature points of the basis functions for the neighbor
                     phiedgeqneigh = Evalshape2D(femregion, neigh_ie(iedg), qNodes_1D);
 
                     C1_loc{ie_gamma} = (ds .* par.rho_a .* nx .* phiedgeq)' * phiedgeqneigh;
@@ -135,8 +136,7 @@ function [Matrices] = MatPoroAcu(Data, neighbor, femregion)
         end
     end
 
-    %% Reshape of the matrices
-
+    % Local matrix to global matrix
     ii_index_neigh = reshape(cell2mat(ii_index_neigh),[femregion.nbases,n_interf*femregion.nbases]);
     jj_index_neigh = reshape(cell2mat(jj_index_neigh),[femregion.nbases,n_interf*femregion.nbases]);
 

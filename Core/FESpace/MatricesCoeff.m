@@ -8,7 +8,7 @@
 %> the matrices.
 %>
 %======================================================================
-%> @section classDecr Class description
+%> @section classMatricesCoeff Class description
 %======================================================================
 %> @brief The function constructs the coefficients of the basis terms for
 %> matrices construction.
@@ -99,4 +99,3 @@ function [Coeff] = MatricesCoeff(femregion, Lx, Ly, dLx, dLy)
     Coeff.phigradyC   = reshape(phigradyC,[(2*(femregion.degree+1)-1)^2, femregion.nbases^2])';
 
 end
-    

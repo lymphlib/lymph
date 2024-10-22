@@ -20,13 +20,10 @@
 function [F] = ForcingHeat(Data, neighbor, femregion, t)
 
     %% Quadrature values
-
     [ref_qNodes_1D, w_1D, ref_qNodes_2D, w_2D] = Quadrature(femregion.nqn);
 
     %% Initialization of the forcing term
-
     F = zeros(femregion.ndof,1);
-
 
     %% Loop over the elements
     for ie = 1:femregion.nel
@@ -63,15 +60,13 @@ function [F] = ForcingHeat(Data, neighbor, femregion, t)
                 % Scaled weights
                 dx = det(BJ) * w_2D;
 
-                % Construction of the basis functions
+                % Construction and evalutation on the quadrature points of the basis functions
                 phiq = Evalshape2D(femregion, ie, qNodes_2D);
 
-                % Evaluation of physical parameters
-                mu   	= Data.mu{1}(xq,yq);
-                f       = Data.source_f{1}(xq,yq,t);
+                % Evaluation of boundary function
+                f = Data.source_f{1}(xq,yq,t);
 
-                %% Vector assembling
-
+                % Vector assembling
                 F_loc = F_loc + (dx.*phiq)'*f;
 
              end
@@ -85,39 +80,39 @@ function [F] = ForcingHeat(Data, neighbor, femregion, t)
             % Loop over faces
             for iedg = 1 : neighbor.nedges(ie)
 
-                % Extraction of the edge coordinates
-                if iedg == neighbor.nedges(ie)
-                    p1 = coords_ie(iedg,:);
-                    p2 = coords_ie(1,:);
-                else
-                    p1 = coords_ie(iedg,:);
-                    p2 = coords_ie(iedg+1,:);
-                end
-
-                % Construction of quadrature nodes on the face
-                [qNodes_1D] = GetPhysicalPointsFaces([p1; p2], ref_qNodes_1D);
-
-                xq = qNodes_1D(:,1);
-                yq = qNodes_1D(:,2);
-
-                % Scaled weights
-                ds = meshsize(iedg) * w_1D;
-
-                % Construction of the basis functions
-                [phiedgeq, gradedgeqx, gradedgeqy] = Evalshape2D(femregion, ie, qNodes_1D);
-
-                % Extraction of normals to the face
-                nx = normals(1,iedg);
-                ny = normals(2,iedg);
-
                 % Dirichlet boundary faces
                 if neigh_ie(iedg) == -1
 
-                    % Physical parameters
-                    mu     = Data.mu{1}(xq,yq);
-                    gD     = Data.DirBC(xq,yq,t);
+                    % Extraction of the edge coordinates
+                    if iedg == neighbor.nedges(ie)
+                        p1 = coords_ie(iedg,:);
+                        p2 = coords_ie(1,:);
+                    else
+                        p1 = coords_ie(iedg,:);
+                        p2 = coords_ie(iedg+1,:);
+                    end
+    
+                    % Construction of quadrature nodes on the face
+                    [qNodes_1D] = GetPhysicalPointsFaces([p1; p2], ref_qNodes_1D);
+    
+                    xq = qNodes_1D(:,1);
+                    yq = qNodes_1D(:,2);
+    
+                    % Scaled weights
+                    ds = meshsize(iedg) * w_1D;
+    
+                    % Construction and evalutation on the quadrature points of the basis functions
+                    [phiedgeq, gradedgeqx, gradedgeqy] = Evalshape2D(femregion, ie, qNodes_1D);
+    
+                    % Extraction of normals to the face
+                    nx = normals(1,iedg);
+                    ny = normals(2,iedg);
 
-                    %% Vector assembling
+                    % Physical parameters
+                    mu = Data.mu{1}(xq,yq);
+                    gD = Data.DirBC(xq,yq,t);
+
+                    % Vector assembling
                     F_loc = F_loc - (ds .* mu .* ( nx * gradedgeqx + ny * gradedgeqy))' * gD;
                     F_loc = F_loc + penalty_geom(iedg) * (ds .* mu .* phiedgeq)' * gD;
 

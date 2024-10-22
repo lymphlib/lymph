@@ -29,7 +29,7 @@ addpath(genpath(fullfile(MyPhysicsPath,'TimeIntegration')));
 run("../RunSetup.m")
 
 %% Input Data - Boundary conditions - Forcing term
-DataConvTestEla;
+DataConvpTestEla;
 
 degree_vector = [1 2 3 4 5];
 
@@ -49,7 +49,7 @@ for ii = 1:length(degree_vector)
         Data.meshfile = fullfile(Data.FolderName,Data.meshfileseq(1));
     else
         % Create a new mesh
-        [Data.meshfile] = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfile,'P');
+        [Data.meshfile] = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfile,'P','ela');
     end
     
     

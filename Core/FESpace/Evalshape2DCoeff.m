@@ -6,7 +6,7 @@
 %> The function constructs the coefficients of the polynomial basis functions \f$\varphi_j(x,y)=\mathcal{L}_i(x)\mathcal{L}_k(y)\f$.
 %> 
 %======================================================================
-%> @section classDecr Class description
+%> @section classEvalshape2DCoeff Class description
 %======================================================================
 %> @brief  Construction of the the structures for the basis functions.
 %>

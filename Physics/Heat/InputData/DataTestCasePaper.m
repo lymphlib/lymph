@@ -46,7 +46,6 @@ Data.T      = 1;
 Data.dt     = 2e-3;
 Data.theta  = 0.5;
 
-
 %% Space discretization
 
 Data.degree        = 5;          % Polynomial degree
@@ -62,9 +61,4 @@ Data.PlotExact          = true;
 Data.PlotIniCond        = true;
 Data.PlotGridSol        = true;
 Data.VisualizationStep  = 50;
-Data.NqnVisualization   = 5;        % Data.NqnVisualization must be odd and strictly greater than 1 (see Gauleg.m) 
-
-
-%% Save solution settings
-
-Data.SaveSolutionStep = 1;
+Data.NPtsVisualization  = 1; 
