@@ -27,6 +27,14 @@ pipelines:
         clone:
           enabled: false
         script:
-          - git clone --bare git@bitbucket.org:lymph/lymph.git
+          # Get an oauth access token using the client credentials, parsing out the token with jq.
+          - apt-get update && apt-get install -y curl jq
+          - >
+            export access_token=$(curl -s -X POST -u "${CLIENT_ID}:${CLIENT_SECRET}" \
+              https://bitbucket.org/site/oauth2/access_token \
+              -d grant_type=client_credentials -d scopes="repository"| jq --raw-output '.access_token')
+
+          # Clone through the oauth token.
+          - git clone --bare "https://x-token-auth:${access_token}@bitbucket.org/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}"
           - cd lymph.git
           - git push --mirror git@github.com:lymphlib/lymph.git
