@@ -50,5 +50,5 @@ repository-code: 'https://bitbucket.org/lymph/lymph/'
 url: 'https://lymph.bitbucket.io/'
 license: AGPL-3.0+
 preferred-citation:
-  collection-doi: 10.48550/arXiv.2401.13376
+  collection-doi: 10.1145/3716310
   type: generic

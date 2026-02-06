@@ -123,11 +123,12 @@ Setup.isError = 1;
 \section sec1000 License and Funding
     <ul style="padding-bottom:20px">
     <li>
-    You can cite <tt>lymph</tt> by this documentation site (https://lymph.bitbucket.io/) and the following preprint:
+    You can cite <tt>lymph</tt> by this documentation site (https://lymph.bitbucket.io/) and the following paper:
 
-    P.F. Antonietti, S. Bonetti, M. Botti, M. Corti, I. Fumagalli, I. Mazzieri (2024).
+    P.F. Antonietti, S. Bonetti, M. Botti, M. Corti, I. Fumagalli, I. Mazzieri (2025).
     <em>lymph: discontinuous poLYtopal methods for Multi-PHysics differential problems.</em>
-    arXiv preprint arXiv:2401.13376. [https://doi.org/10.48550/arXiv.2401.13376](https://doi.org/10.48550/arXiv.2401.13376)
+    ACM Transactions on Mathematical Software, 51(1), 1-22.
+    [https://doi.org/10.1145/3716310](https://doi.org/10.1145/3716310)
 
     <tt>lymph</tt> is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. <tt>lymph</tt> is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with <tt>lymph</tt>. If not, see http://www.gnu.org/licenses/.
 
