@@ -11,17 +11,24 @@ The development of **lymph** is part of the activities of the project **NEMESIS*
 - Paola F. Antonietti (P.I.) <paola.antonietti@polimi.it>
 - Stefano Bonetti <stefano.bonetti@polimi.it>
 - Michele Botti <michele.botti@polimi.it>
+- Alessandra Cancrini <alessandra.cancrini@polimi.it>
 - Mattia Corti <mattia.corti@polimi.it>
 - Ivan Fumagalli <ivan.fumagalli@polimi.it>
+- Caterina B. Leimer Saglio <caterinabeatrice.leimer@polimi.it>
 - Ilario Mazzieri <ilario.mazzieri@polimi.it>
+- Stefano Pagani <stefano.pagani@polimi.it>
+- Valentina Pederzoli <valentina.pederzoli@polimi.it>
 
 ### Maintainers ###
 
 * Stefano Bonetti <stefano.bonetti@polimi.it>
 * Michele Botti <michele.botti@polimi.it>
+* Alessandra Cancrini <alessandra.cancrini@polimi.it>
 * Mattia Corti <mattia.corti@polimi.it>
 * Ivan Fumagalli <ivan.fumagalli@polimi.it>
+* Caterina B. Leimer Saglio <caterinabeatrice.leimer@polimi.it>
 * Ilario Mazzieri <ilario.mazzieri@polimi.it>
+* Valentina Pederzoli <valentina.pederzoli@polimi.it>
 
 ### How to include lymph in your code ###
 
