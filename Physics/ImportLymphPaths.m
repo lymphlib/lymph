@@ -1,8 +1,4 @@
-%% Check if lymph is running on the online version of Matlab or on an installed
-%% app (if so, clear the path)
-if ~strcmp(matlabroot, '/MATLAB')
-    restoredefaultpath;
-end
+restoredefaultpath;
 
 %% Import the necessary lymph paths for the problem resolution and print lymph header
 
@@ -30,5 +26,3 @@ if ~exist(PathOriginalPolyMesher, 'dir')
 end
 
 addpath(genpath(PathCore));
-
-Header;

@@ -5,14 +5,16 @@
 \section secUGEl1 Setup and Configuration
 
   A single simulation in lymph use the following MATLAB scripts:
-  - \b RunSetup.m   : setup and configuration
+  - \b SimulationSetup.m   : setup and configuration
+  - \b RunSetup.m          : run setup and configuration
+  - \b RunMainEla.m        : run simulation 
+
+  The different proposed testcases are the following MATLAB scripts:
   - \b DataTestEla.m: data input file 
-  - \b RunMainEla.m : run simulation 
 
    Other secondary scripts are:
   - \b RunhConvergenceElastodynamics.m: verification test for h convergence (see \ref secTutElConv)
   - \b RunpConvergenceElastodynamics.m: verification test for p convergence (see \ref secTutElConv)
-
 
 \subsection subUGEl1 Simulation Setup
 
@@ -28,6 +30,8 @@ In particular, \b RunSetup.m defines the  simulation setup and contains the foll
     - isSaveVTK     : 1/0 to save the solution in the .vtk format
     - OutFolderVTK  : folder name for the VTK-output
     - isError       : 1/0 to compute the error (e.g. OutputVTK)
+    - isParallel    : 1/0 for parallel implementation
+    - numCores      : define number of cores for parallel implementation
     \endverbatim
 
 \subsection subUGEl2 Input data files
@@ -40,9 +44,10 @@ boundary conditions, forcing terms and analystical solution (if needed).
 %% InputData/DataTestLap.m 
 %% Elastodynamics problem in [0,1]^2 x [0, 1] with Dirichlet conditions
 Data.name = 'DataTestEla';
-Data.TagElEla   = 1;         % Element tag
-Data.TagBcEla   = [2 3 4 5]; % Boundary tag
-Data.LabBcEla   = 'DDDD';    % (D)irichlet/(N)eumann/(A)bso
+Data.LabEl = {'E'};     % Element labels
+Data.TagEl = { 1 };     % Element tags
+Data.TagBc = {[2 3 4 5]};  % Boundary tags
+Data.LabBc = {'DDDD'};  % (D)irichlet/(N)eumann/(A)bsorbing
 %% Geometrical properties 
 Data.domain       = [0 1 0 1]; % domain bounds for a new mesh
 Data.N            = 200;        % number of elements for a new mesh
@@ -89,21 +94,19 @@ With the file \b RunMainEla.m you can run the specific simulation.
 
 \verbatim
 %% RunMainEla.m
-%% Simulation - Path
-ImportLymphPaths;
-%% Inizialization
-Header;
-%% Simulation - Setup
-RunSetup;
+%% Initial Simulation Setup
+MyPhysicsPath = pwd;
+run('../SimulationSetup.m');
 %% Input Data - Boundary conditions - Forcing term
 DataTestEla;
+%DataTestPhysicsEla;
 %% Mesh Generation
 if Data.MeshFromFile
     % Load existing mesh
     Data.meshfile = fullfile(Data.FolderName, Data.meshfileseq);
 else
     % Create a new mesh
-    Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
+    Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','ela');
 end
 %% Main
 [Error] = MainEla(Data,Setup);

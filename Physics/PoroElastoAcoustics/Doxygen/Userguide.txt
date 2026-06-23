@@ -45,11 +45,12 @@ boundary conditions, forcing terms and analystical solution (if needed).
  \verbatim
 %% InputData/DataTestPoro.m 
 %% Poro problem in [-1,1] x [0, 1] with Dirichlet conditions
-Data.name = 'DataTestPoro';
-Data.NPhys = 1;  % Number of physics (1 in this case)
-Data.TagElPoro  = 1; % Element tag
-Data.TagBcPoro  = [2 3 4 5]; % Boundary tag
-Data.LabBcPoro  = 'DDDD'; % (D)irichlet/(N)eumann/(A)bso
+Data.name = 'DataTestPoroAcu';
+Data.NPhys = 2;
+Data.LabEl = {'P', 'A'};     % Element labels
+Data.TagEl = { 1 ,  2 };     % Element tags
+Data.TagBc = {[3 7 8], [4 5 6]};  % Boundary tags
+Data.LabBc = {'DDD'  , 'DDD'  };  % (D)irichlet/(N)eumann/(A)bsorbing
 ...
 %% Geometrical properties 
 Data.domain       = [-1 0 -1 1]; % domain bounds for a new mesh
@@ -98,7 +99,7 @@ Data.dup_t_ex =  {@(t) -sqrt(2)*pi*sin(sqrt(2)*pi*t)};
 
 \subsection subUGPAE3 Run a simulation
 
-With the file \b RunMainPoroElastoAcoustics.m you can run the specific simulation. 
+With the file \b RunMainPoroElastoAcoustics.m you can run the specific simulation. We underline that the assembly routines of elastodynamics terms are reused from the \b Physics folder \b Elastodynamics. 
 
 \verbatim
 %% RunMainPoroElastoAcoustics.m

@@ -43,18 +43,7 @@ function [region] = ClockWiseElements(region)
 
             % Element visualization
             fprintf(1,'Element %d coordinates are now stored in clockwise order\n', jj);
-            plot(xB,yB,'xr')
-
-        else
-
-            % Element visualization
-            plot(xB,yB,'xb')
-        
+            
         end
         
-        % Element visualization
-        if mod(jj,100) == 0
-            pause(1e-5)
-        end
-
     end

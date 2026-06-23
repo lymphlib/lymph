@@ -1,6 +1,6 @@
 %> @file  MakeNeighbor.m
 %> @author Ilario Mazzieri, Mattia Corti
-%> @date 3 October 2024
+%> @date 29 May 2026
 %> @brief Construction of the neighbor structure.
 %>
 %==========================================================================
@@ -9,8 +9,7 @@
 %> @brief  Build neighbor structure for internal and boundary edges
 %>
 %> @param Data        Struct with problem's data
-%> @param region      Struct for mesh elements
-%> @param SimType     String simulation type, used for boundary tag       
+%> @param region      Struct for mesh elements       
 %>
 %> @retval region     Boundary connectivity and boundary tags
 %> @retval neighbor   Neigbor struct having fields
@@ -19,7 +18,7 @@
 %>                     - neighedges{i}(j) edge-id for neigh. of el. i edge j 
 %>
 %==========================================================================
-function [region,neighbor]= MakeNeighbor(Data,region,SimType)
+function [region,neighbor]= MakeNeighbor(Data, region)
 
 %% Make internal neighbor
 [neighbor] = MakeNeighborInternal(region);
@@ -67,5 +66,5 @@ for i = 1 : region.ne
 end
 
 %% Make boundary neighbor
-[neighbor] = MakeNeighborBoundary(Data,region,neighbor,SimType);
+[neighbor] = MakeNeighborBoundary(Data, region, neighbor);
 

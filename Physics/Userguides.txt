@@ -2,8 +2,10 @@
 
 User guides for the solvers provided with the current release of <tt>lymph</tt>:
 
-- \subpage page_UserguideHeat
 - \subpage page_UserguideLaplacian
+- \subpage page_UserguideHeat
+- \subpage page_UserguideFHN
+- \subpage page_UserguideFKPP
 - \subpage page_UserguideElastodynamics
 - \subpage page_UserguideMultiWaves
 

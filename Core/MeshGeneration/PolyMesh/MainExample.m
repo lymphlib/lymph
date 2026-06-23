@@ -13,11 +13,11 @@ DomainLimits = [-1 4 -1 1];
 Circle.Radius = 0.2;
 Circle.Center = [0 0];
 FolderName = 'MeshTest/';
-FileName = 'FlowAroundCilinder';
+FileName = 'FlowAroundCylinder';
 Data = struct;
 Data.TagBcFluid = [2 3 4 5];
 Data.LabBcFluid = 'DDDD';
-[FileNameOutCircle] = MakeMeshFlowAroundCilinder(Data,N,DomainLimits,Circle,FolderName,FileName);
+[FileNameOutCircle] = MakeMeshWithCircularHole(Data,N,DomainLimits,Circle,FolderName,FileName);
 
 
 

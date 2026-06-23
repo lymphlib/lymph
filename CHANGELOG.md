@@ -1,6 +1,25 @@
 # Report changes as follows:
 # - **New/Changed/Improved**: DESCRIPTION. (Name Surname YYYY/MM/DD)
 
+## Changes between v1.2.0 and v2.0.0
+- **Improved**: Provided a common treatment of labels and tags for the meshes in Data file. (Mattia Corti 2026/06/06)
+- **New**: Implemented the common assembly for the poroelastoacoustics. (Mattia Corti 2026/06/06)
+- **New**: Implemented a parallel version of the common assembly and background postprocessing procedure. (Mattia Corti 2026/05/13)
+- **New**: Implemented the common assembly for the elastodynamics equation. (Mattia Corti 2026/05/13)
+- **New**: Implemented the FitzHugh-Nagumo equation (within the p-adaptivity framework). (Caterina Leimer Saglio, Mattia Corti 2026/05/11)
+- **New**: Implemented the p-adaptivity framework for the Fisher-Kolmogorov equation. (Caterina Leimer Saglio, Mattia Corti 2026/05/11)
+- **New**: Implemented the p-adaptivity framework for the heat equation. (Caterina Leimer Saglio, Mattia Corti 2026/03/03)
+- **New**: Implemented the p-adaptivity framework for the Laplace equation. (Caterina Leimer Saglio, Mattia Corti 2026/03/03)
+- **New**: Common assembly and femregion with different polynomial degrees in the mesh cells. (Caterina Leimer Saglio, Mattia Corti 2026/03/03) 
+- **New**: Fisher-KPP physics is now available on main with nonlinear solvers and trilinear matrices treatment. (Mattia Corti 2025/09/17)
+- **Improved**: Common assembly has been updated to be adapted also to nonlinear problems with trilinear forms. (Mattia Corti 2025/09/16)
+- **Improved**: The construction of the basis functions for the triangular meshes with Jacobi polynomials has been improved. (Mattia Corti 2025/09/16)
+- **New**: Implemented mesh import from VTK file. (Mattia Corti 2025/05/22)
+- **Improved**: Evaluation of Legendre polynomials and their integrals. (Matteo Caldana 2025/05/15)
+- **Deprecated**: `MatricesCoeff` is now deprecated, use MakeCoefficientsQF instead. (Mattia Corti 2025/05/14)
+- **New**: Common assembly function in Core to avoid repetition of code in cycling over mesh elements and facets. (Mattia Corti 2025/04/22)
+- **Updated**: `PenaltyCoefficient` function improved and now computes all the possible penalty choices. (Mattia Corti 2025/04/22)
+
 ## Changes between v1.1.0 and v1.2.0
 - **Improved**:`Quadrature`has now (l+1)^2 nodes for integrals over triangles. (Ilario Mazzieri 2024/10/09)
 - **Improved**:`Quadrature`files documentation improved. (Mattia Corti 2024/10/09)

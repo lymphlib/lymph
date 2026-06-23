@@ -58,23 +58,21 @@ We set up these data in \b InputData/DataTestPoroAcu.m script. We consider:
 We report here for completeness a sample of the script.
 
 \verbatim
-%% InputData/DataTestEla.m 
-%% Elastodynamics problem in [0,1]^2 x (0,T] with Dirichlet conditions
+%% InputData/DataTestPoroAcu.m 
+%% Poro-Acoustic problem in [-1,1]^2 x (0,T] with Dirichlet conditions
 Data.name = 'DataTestPoroAcu';
 Data.NPhys = 2;
-Data.TagElPoro  = 1; % Element tag
-Data.TagBcPoro  = [3 7 8]; % Boundary tag
-Data.LabBcPoro  = 'DDD'; % (D)irichlet/(N)eumann/(A)bso
-Data.TagElAcu   = 2; % Element tag
-Data.TagBcAcu   = [4 5 6]; % Boundary tag
-Data.LabBcAcu   = 'DDD'; % (D)irichlet/(N)eumann 
-Data.TagElEla   = []; % Element tag
-Data.TagBcEla   = []; % Boundary tag
-Data.LabBcEla   = []; % (D)irichlet/(N)eumann/(A)bso
+Data.LabEl = {'P', 'A'};     % Element labels
+Data.TagEl = { 1 ,  2 };     % Element tags
+Data.TagBc = {[3 7 8], [4 5 6]};  % Boundary tags
+Data.LabBc = {'DDD'  , 'DDD'  };  % (D)irichlet/(N)eumann/(A)bsorbing
 %% Geometrical properties 
 Data.domain       = [-1 1 -1 1]; % domain bounds for a new mesh
 Data.N            = 800;        % number of elements for a new mesh
 Data.MeshFromFile = false;      % read mesh from file
+Data.FolderName   = 'InputMesh';
+Data.VTKMeshFileName = 'Mesh.vtk';
+Data.meshfileseq  = 'UnitSquareBidomain'; %filename for mesh 
 ...
 %% Time integration
 Data.t0 = 0;
@@ -85,7 +83,7 @@ Data.dt = 0.001;
 Data.degree  = 2;   % Polynomial degree
 Data.penalty_coeff = 10; % Penalty coefficient
 ...
-%% Properties poroelastic material
+%% properties porous-materials
 Data.rho_f   = {@(x,y) 1 + 0.*x.*y};
 Data.rho_s   = {@(x,y) 1 + 0.*x.*y};
 Data.phi_por = {@(x,y) 0.5 + 0.*x.*y};
@@ -158,32 +156,26 @@ Data.DirBCAcu_t = {@(t) sin(pi*t*sqrt(2))};
 Nex, we define the following option in the \b RunSetup.m file.
 
 \verbatim
-
     %% RunSetup.m
-    ...
     % Plot polygonal mesh y/n
-    Setup.isPlotMesh = 0;
-
+    Setup.isPlotMesh = 1;
     % Save VTK polygonal mesh y/n
     Setup.isSaveVTKMesh = 0;
-
     % Plot solution y/n
     Setup.isPlotSolution = 1;
-    
     % Save solution y/n -> .mat file
     Setup.isSaveSolution = 1;
     Setup.OutFolder = 'Output';
-
     % Additional solution output y/n -> .csv file
     Setup.isSaveCSV = 0;
-
     % Additional solution output y/n -> .vtk file
     Setup.isSaveVTK = 1;
     Setup.OutFolderVTK = 'OutputVTK';
-    
     % Compute errors y/n
     Setup.isError = 1;
-
+    % Use parallel implementation y/n
+    Setup.isParallel = 0;
+    Setup.numCores = 4;
 \endverbatim
 
  
@@ -193,20 +185,21 @@ We run the specific simulation using the script \b RunMainPoroElastoAcoustics.m,
 which calls the main algorithm, contained in \b MainFunctions/MainPoroAcuEla.m.
 
 \verbatim
-%% RunMainEla.m
-run("../ImportLymphPaths.m")
+%% RunMainPoroElastoAcoustics.m
+%% Initial Simulation Setup
 MyPhysicsPath = pwd;
-addpath(genpath(fullfile(MyPhysicsPath,'Assembly')));
-addpath(genpath(fullfile(MyPhysicsPath,'Error')));
-addpath(genpath(fullfile(MyPhysicsPath,'InputData')));
-addpath(genpath(fullfile(MyPhysicsPath,'InputMesh')));
-addpath(genpath(fullfile(MyPhysicsPath,'MainFunctions')));
-addpath(genpath(fullfile(MyPhysicsPath,'PostProcessing')));
-addpath(genpath(fullfile(MyPhysicsPath,'TimeIntegration')));
-%% Simulation - Setup
-run("../RunSetup.m")
+run('../SimulationSetup.m');
+addpath(genpath('..\Elastodynamics\Assembly\'));
 %% Input Data - Boundary conditions - Forcing term
-DataTestPoroAcu;
+% DataTestAcu;             % Convergence test acoustic - Dirichlet
+% DataTestEla;             % Convergence test elastic - Dirichlet
+% DataTestPoro;            % Convergence test poroelastic - Dirichlet
+DataTestPoroAcu;         % Convergence test poroacoustic - paper SISC
+% DataTestPoroAcuHor;      % Convergence test poroacoustic - paper SISC
+% DataTestElaAcu;          % Convergence test elastoacoustic - paper CMAME
+% DataTestPoroEla;         % Convergence test poro-elastic - paper IMAJNA (submitted)
+% DataTestPoroAcuEla;      % Convergence test poro-elastic-acoustic
+
 %% Mesh Generation
 if Data.MeshFromFile
     % Load existing mesh
@@ -214,11 +207,12 @@ if Data.MeshFromFile
 else
     % Create a new mesh
     if (Data.NPhys == 1)
-        Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
+        Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P');
     elseif (Data.NPhys == 2)
-        Data.meshfile = MakeMeshBidomainVert(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
+        Data.meshfile = MakeMeshBidomainVert(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P');
+        % Data.meshfile = MakeMeshBidomainHor(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P');
     elseif (Data.NPhys == 3)
-        Data.meshfile = MakeMeshQuadridomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
+        Data.meshfile = MakeMeshQuadridomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P');
     end
 end
 %% Main
@@ -236,24 +230,27 @@ The mesh structure is saved in \b Data.meshfile.
 
 \section secTutMultiWave3 Outputs 
 
+First we represent the constructed mesh for the testcase.
+@image html meshPEA.png "Figure 1. Constructed polygonal mesh with 800 elements" width=500px
 
 As the output of the run we obtain the plots in Figure 1 showing the
 computed solution (left), the analytical solution (center), and the arithmetic difference between the two (right).
 
-@image html upx_T.png
-@image html upy_T.png
-@image html wpx_T.png
-@image html wpy_T.png
-@image html phi_T.png "Figure 1. Left column: computed PolydG solution using a polygonal mesh with 800 elements, and polynomial degree equal to 2. Center column: analytical solution. Right column: the difference between numerical and analytical solutions."
+
+@image html upx.png
+@image html upy.png
+@image html wpx.png
+@image html wpy.png
+@image html phi.png "Figure 2. Left column: computed PolydG solution using a polygonal mesh with 800 elements, and polynomial degree equal to 2. Center column: analytical solution. Right column: the difference between numerical and analytical solutions."
 
 Moreover, the output structure \b Error contains the following fields: 
     - \b nel = 800 \f$\rightarrow\f$ number of mesh elements,
-    - \b h = 0.1272 \f$\rightarrow\f$ mesh size,
+    - \b h = 0.1258 \f$\rightarrow\f$ mesh size,
     - \b p = 2 \f$\rightarrow\f$ polynomial approximation degree \f$\ell=3\f$,
-    - \b error_L2_v = 0.0416 \f$\rightarrow\f$ \f$L^2\f$-norm of the error for the velocity, namely \f$\| \frac{\partial \mathbf{U}_{ex}}{\partial t} - \frac{\partial \mathbf{U}_{h}}{\partial t}\|_{L^2(\Omega)}\f$, 
-    - \b error_L2_d = 2.5312e-04 \f$\rightarrow\f$ \f$L^2\f$-norm of the error for the displacement, namely \f$\| \mathbf{U}_{ex}- \mathbf{U}_{h} \|_{L^2(\Omega)}\f$,
-    - \b error_dG = 0.0628 \f$\rightarrow\f$ \f$dG\f$-norm of the error, namely \f$\| \mathbf{U}_{ex} - \mathbf{U}_h\|_{dG}\f$.
-    - \b error_energy = 0.0754 \f$\rightarrow\f$ \f$Energy\f$-norm of the error,  cf. \cite ABNM2021.
+    - \b error_L2_v = 0.3658 \f$\rightarrow\f$ \f$L^2\f$-norm of the error for the velocity, namely \f$\| \frac{\partial \mathbf{U}_{ex}}{\partial t} - \frac{\partial \mathbf{U}_{h}}{\partial t}\|_{L^2(\Omega)}\f$, 
+    - \b error_L2_d = 0.0424 \f$\rightarrow\f$ \f$L^2\f$-norm of the error for the displacement, namely \f$\| \mathbf{U}_{ex}- \mathbf{U}_{h} \|_{L^2(\Omega)}\f$,
+    - \b error_dG = 0.3906 \f$\rightarrow\f$ \f$dG\f$-norm of the error, namely \f$\| \mathbf{U}_{ex} - \mathbf{U}_h\|_{dG}\f$.
+    - \b error_energy = 0.5355 \f$\rightarrow\f$ \f$Energy\f$-norm of the error,  cf. \cite ABNM2021.
     
 We use the notation \f$ \mathbf{U}_{ex} = (\mathbf{u}_{ex},\mathbf{w}_{ex},\varphi_{ex}) \f$
 and \f$ \mathbf{U}_{h} = (\mathbf{u}_h,\mathbf{w}_h,\varphi_h) \f$.
@@ -283,9 +280,9 @@ Data.meshfileseq  = ["UnitSquareBidomain_100_el.mat", "UnitSquareBidomain_200_el
 As the output of the aforementioned scripts we obtain the plots in Figure 2. In particular, we can observe the convergence of the PolydG solution obtained with \f$\ell_\kappa=2\f$ for any \f$\kappa \in \mathcal{T}_h\f$ with respect to the \f$L^2\f$-, \f$dG\f$-, and \f$Energy\f$-norms, confirming the theoretical results \cite ABNM2021.
 In Figure 3 the exponential convergence with respect to the polynomial degree \f$\ell\f$ is also shown by fixing \f$N_{el} = 50\f$.
 
-@image html convhtutorials_pa.png "Figure 2. \b Error.error_energy, \b Error.error_dG and \b Error.error_L2_d as a function of the mesh size h by fixing the polynomial degree equal to 2, time step equal to 0.001 and  final time T=0.25."
+@image html convHtutorialPa.png "Figure 3. \b Error.error_energy, \b Error.error_dG and \b Error.error_L2_d as a function of the mesh size h by fixing the polynomial degree equal to 2, time step equal to 0.001 and  final time T=0.25."
 
-@image html convptutorials_pa.png "Figure 3. \b Error.error_energy, \b Error.error_dG and \b Error.error_L2_d as a function of the polynomial degree by fixing the number of mesh elements equal to 50."
+@image html convPtutorialPa.png "Figure 4. \b Error.error_energy, \b Error.error_dG and \b Error.error_L2_d as a function of the polynomial degree by fixing the number of mesh elements equal to 50."
  
      
    

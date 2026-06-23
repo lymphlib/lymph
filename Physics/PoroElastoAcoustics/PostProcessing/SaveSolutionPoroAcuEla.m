@@ -1,13 +1,13 @@
 %> @file  SaveSolutionPoroAcuEla.m
-%> @author Ilario Mazzieri
-%> @date 28 June 2024
+%> @author Ilario Mazzieri, Mattia Corti
+%> @date 5 June 2026
 %> @brief  Save solution vector in a struct
 %>
 %==========================================================================
 %> @section classSaveSolutionPoroAcuEla Class description
 %> @brief  Save solution vector in a struct
 %
-%> @param Uh     Solution vector
+%> @param Uh         Solution vector
 %> @param femregion  Finite Element struct (see CreateDOF.m)
 %
 %> @retval Solutions  Struct with solution vector
@@ -16,10 +16,18 @@
 
 function  [Solutions]  = SaveSolutionPoroAcuEla(Uh,femregion)
 
-np = femregion.ndof_p;
-ne = femregion.ndof_e;
-na = femregion.ndof_a;
-
+np = femregion.ndof_phys(femregion.phys == 'P');
+ne = femregion.ndof_phys(femregion.phys == 'E');
+na = femregion.ndof_phys(femregion.phys == 'A');
+if isempty(ne)
+    ne = 0;
+end
+if isempty(np)
+    np = 0;
+end
+if isempty(na)
+    na = 0;
+end
 up_h  = [];
 wp_h  = [];
 phi_h = [];

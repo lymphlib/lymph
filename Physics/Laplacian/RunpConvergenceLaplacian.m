@@ -1,6 +1,6 @@
 %> @file  RunpConvergenceLaplacian.m
 %> @author The Lymph Team
-%> @date 16 April 2023
+%> @date 5 June 2026
 %> @brief Convergence analysis for the Poisson problem (polynomial refinement)
 %>
 %==========================================================================
@@ -14,40 +14,30 @@
 %>
 %==========================================================================
 
-%% Import lymph and paths of folders related to this problem
-run("../ImportLymphPaths.m")
+%% Initial Simulation Setup
 MyPhysicsPath = pwd;
-addpath(genpath(fullfile(MyPhysicsPath,'Assembly')));
-addpath(genpath(fullfile(MyPhysicsPath,'InputData')));
-addpath(genpath(fullfile(MyPhysicsPath,'MainFunctions')));
-addpath(genpath(fullfile(MyPhysicsPath,'Error')));
-addpath(genpath(fullfile(MyPhysicsPath,'PostProcessing')));
-
-%% Simulation - Setup
-run("../RunSetup.m")
+run('../SimulationSetup.m');
 
 %% Input Data - Boundary conditions - Forcing term
-DataConvTestLap;
-
-degree_vector = [1 2 3 4 5 6];
+DataConvTestLapp;
 
 Errors.err_L2 = [];
 Errors.err_dG = [];
 Errors.h = [];
 
 %% Mesh Generation
-for ii = 1:length(degree_vector)
+if Data.MeshFromFile
+    % Load an existing mesh
+    Data.meshfile = fullfile(Data.FolderName,Data.meshfileseq);
+else
+    % Create a new mesh
+    [Data.meshfile] = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P');
+end
 
-    Data.degree = degree_vector(ii);
+%p-convergence
+for ii = 1:length(Data.degree_vector)
 
-    if Data.MeshFromFile
-        % Load an existing mesh
-        Data.meshfile = fullfile(Data.FolderName,Data.meshfileseq{1});
-    else
-        % Create a new mesh
-        [Data.meshfile] = MakeMeshMonodomain(Data,Data.N{1},Data.domain,Data.FolderName,Data.meshfileseq{1},'P','laplacian');
-    end
-    
+    Data.degree = Data.degree_vector(ii);
     
     %% Main     
     [Error] = MainLaplacian(Data,Setup);
@@ -59,9 +49,14 @@ end
 
 %% Plot of the errors
 figure
-semilogy(degree_vector,Errors.err_L2,'g','Linewidth',2)
+cols = lines(2);
+leg = strings(0);
+light = @(c,a) c + a*(1-c); 
+c_i= cols(1,:);
+
+semilogy(Data.degree_vector,Errors.err_L2,'-o', 'LineWidth',1.4,'Color',cols(1,:),'MarkerFaceColor',cols(1,:))
 hold on
-semilogy(degree_vector,Errors.err_dG,'r','Linewidth',2)
-legend("Error $L^2$-norm", "Error DG-norm", "Interpreter","latex")
-xlabel('$\ell$',"Interpreter","latex")
+semilogy(Data.degree_vector,Errors.err_dG,'-o', 'LineWidth',1.4,'Color',cols(2,:),'MarkerFaceColor',cols(2,:))
+legend("Error $L^2$-norm", "Error DG-norm","Interpreter","latex")
 grid on
+

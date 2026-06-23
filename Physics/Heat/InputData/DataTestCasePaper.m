@@ -2,40 +2,43 @@
 
 Data.name = 'TestCase';
 
-Data.TagElLap = 1;         % Element tag
-Data.TagBcLap = [2 3 4 5]; % Boundary tag
-Data.LabBcLap = 'DDDD';    % Dirichlet/Neumann/Abso
+Data.LabEl = {'L'};     % Element labels
+Data.TagEl = { 1 };     % Element tags
+
+Data.TagBc = {[2 3 4 5]};  % Boundary tags
+Data.LabBc = {'DDDD'};  % (D)irichlet/(N)eumann/(A)bsorbing
 
 Data.TagApplyBCs = 1;      % Skip the assembling of BCs if not necessary
 
 %% Geometrical properties
 
-Data.domain             = [-1.5 1.5 -1 1];
+Data.domain             = [0 1 0 1];
 Data.N                  = 250;                     % Number of mesh elements
-Data.MeshFromFile       = true;
+Data.MeshFromFile       = false;
 Data.FolderName         = 'InputMesh';
 Data.VTKMeshFileName    = 'Mesh.vtk';
-Data.meshfileseq        = 'DataTestDCLap_250_el.mat'; % Names of mesh files
+Data.meshfileseq        = 'DataTest'; % Names of mesh files
 
 %% Material properties 
 
-Data.mu          = {@(x,y) 0.1+0.*x};     % Diffusion parameter
-Data.sigma       = {@(x,y) 0+0.*x};       % Reaction parameter
+Data.mu          = {@(x,y,t) 1+0.*x};     % Diffusion parameter
+Data.sigma       = {@(x,y,t) 0+0.*x};     % Reaction parameter
 
 % Forcing Term
-Data.homog_source_f = true;
-Data.source_f       = {@(x,y,t) 0.*x};
+Data.homog_source_f = false;
+Data.source_f       = {@(x,y,t) -(cos(pi*x).*cos(pi*y)+2).*exp(-t)+2*pi*pi*cos(pi*x).*cos(pi*y).*exp(-t)};
 
 % Boundary Conditions
-Data.DirBC    =  @(x,y,t) (x>=0);
+Data.DirBC        = {@(x,y,t) (cos(pi*x).*cos(pi*y)+2).*exp(-t)};
+Data.gradDirBC    = {@(x,y,t) -pi.*(sin(pi*x).*cos(pi*y)).*exp(-t) ; @(x,y,t) -pi.*(cos(pi*x).*sin(pi*y)).*exp(-t)};
 
 % Exact Solution (if any)
-Data.u_ex     =  @(x,y,t) (x>=0);
+Data.u_ex     =  {@(x,y,t) (cos(pi*x).*cos(pi*y)+2).*exp(-t)};
 
 % Gradient of the Exact Solution
-Data.du_dx_ex =  @(x,y,t) 0.*x;
-Data.du_dy_ex =  @(x,y,t) 0.*x;
-Data.du_dt_ex =  @(x,y,t) 0.*x;
+Data.du_dx_ex =  {@(x,y,t) -pi*sin(pi*x).*cos(pi*y).*exp(-t)};
+Data.du_dy_ex =  {@(x,y,t) -pi*cos(pi*x).*sin(pi*y).*exp(-t)};
+Data.du_dt_ex =  {@(x,y,t) -(cos(pi*x).*cos(pi*y)+2).*exp(-t)};
 
 %% Discretization properties
 
@@ -43,12 +46,12 @@ Data.du_dt_ex =  @(x,y,t) 0.*x;
 
 Data.t0     = 0;
 Data.T      = 1;
-Data.dt     = 2e-3;
+Data.dt     = 2.5e-2;
 Data.theta  = 0.5;
 
 %% Space discretization
 
-Data.degree        = 5;          % Polynomial degree
+Data.degree        = 3;          % Polynomial degree
 Data.penalty_coeff = 10;         % Penalty coefficient
 
 %% Quadrature settings
@@ -60,5 +63,12 @@ Data.quadrature = "QF";       % Quadrature type: ST/QF
 Data.PlotExact          = true;
 Data.PlotIniCond        = true;
 Data.PlotGridSol        = true;
-Data.VisualizationStep  = 50;
-Data.NPtsVisualization  = 1; 
+Data.VisualizationStep  = 10;
+Data.NPtsVisualization  = 20; 
+
+%% Adaptivity
+Data.Adaptivity         = false;                 % Flag of adaptivity                                             
+Data.maxDegree          = 5;                    % Maximum polynomial degree
+Data.AdaptFunc          = @(tau_r) floor(1 + 2*Data.maxDegree/pi* atan(tau_r));     % Adaptivity function
+Data.AdaptIts           = 2;                   % Maximum iterations of adaptivity
+Data.AdaptivityStep     = 10; 

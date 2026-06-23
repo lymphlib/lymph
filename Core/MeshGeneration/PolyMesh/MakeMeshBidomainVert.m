@@ -1,6 +1,6 @@
 %> @file  MakeMeshBidomainVert.m
 %> @author Ilario Mazzieri
-%> @date 8 March 2023
+%> @date 5 June 2026
 %> @brief Construction of a polygonal mesh for a rectangular domain.
 %>
 %> Creation of a polygonal mesh for a rectangular domain
@@ -27,13 +27,12 @@
 %> @param FileName                File name for saving
 %> @param MeshType                String 'C' for cartesian grid, 'P' for
 %polygonal grid
-%> @param SimType		  Simulation type
 %>
 %> @retval FileNameOut            File name of the *.mat structure
 %>                                containing mesh info
 %>
 %======================================================================
-function [FileNameOut] = MakeMeshBidomainVert(Data,N,DomainLimits,FolderName,FileName,MeshType,SimType) 
+function [FileNameOut] = MakeMeshBidomainVert(Data,N,DomainLimits,FolderName,FileName,MeshType) 
 
 %% Set directories and names
 
@@ -43,12 +42,6 @@ end
 
 %% Rectangular domain
 global Dati
-
-if nargin < 7
-    SimType = 'laplacian';
-    Data.TagBcLap = [3, 4, 5, 6, 7, 8];
-    Data.LabBcLap = 'DDDDDD';
-end
 
 % ATTENTION!!! First y and then x
 % ymin ymax xmin<0 xmax>0
@@ -78,7 +71,7 @@ end
 
 
 %% Compute the neighbor structure
-[region,neighbor] = MakeNeighborBidomainVert(Data,region,SimType);
+[region,neighbor] = MakeNeighborBidomainVert(Data,region);
 
 %% Otuput 
 FileNameOut = strcat(FolderName,'/',FileName,'_',num2str(region.ne),'_el.mat');

@@ -2,9 +2,12 @@
 
 Data.name = 'hConvergenceTest';
 
-Data.TagElLap = 1;         % Element tag
-Data.TagBcLap = [2 3 4 5]; % Boundary tag
-Data.LabBcLap = 'DDDD';    % Dirichlet/Neumann/Abso
+
+Data.LabEl = {'H'};     % Element labels
+Data.TagEl = { 1 };     % Element tags
+
+Data.TagBc = {[2 3 4 5]};  % Boundary tags
+Data.LabBc = {'DDDD'};  % (D)irichlet/(N)eumann/(A)bsorbing
 
 Data.TagApplyBCs = 1;      % Skip the assembling of BCs if not necessary
 
@@ -12,7 +15,7 @@ Data.TagApplyBCs = 1;      % Skip the assembling of BCs if not necessary
 
 Data.domain             = [0 1 0 1];
 Data.N                  = {30, 100, 300, 1000};
-Data.MeshFromFile       = true;
+Data.MeshFromFile       = false;
 Data.FolderName         = 'InputMesh';
 Data.VTKMeshFileName    = 'Mesh.vtk';
 Data.meshfileseq        = ["UnitSquare_30_el.mat","UnitSquare_100_el.mat","UnitSquare_300_el.mat","UnitSquare_1000_el.mat"];
@@ -27,15 +30,16 @@ Data.homog_source_f = false;
 Data.source_f       = {@(x,y,t) -(cos(pi*x).*cos(pi*y)+2).*exp(-t)+2*pi*pi*cos(pi*x).*cos(pi*y).*exp(-t)};
 
 % Boundary Conditions
-Data.DirBC    = @(x,y,t) (cos(pi*x).*cos(pi*y)+2).*exp(-t);
+Data.DirBC        = {@(x,y,t) (cos(pi*x).*cos(pi*y)+2).*exp(-t)};
+Data.gradDirBC    = {@(x,y,t) -pi.*(sin(pi*x).*cos(pi*y)).*exp(-t) ; @(x,y,t) -pi.*(cos(pi*x).*sin(pi*y)).*exp(-t)};
 
 % Exact Solution (if any)
-Data.u_ex     =  @(x,y,t) (cos(pi*x).*cos(pi*y)+2).*exp(-t);
+Data.u_ex     =  {@(x,y,t) (cos(pi*x).*cos(pi*y)+2).*exp(-t)};
 
 % Gradient of the Exact Solution
-Data.du_dx_ex =  @(x,y,t) -pi*sin(pi*x).*cos(pi*y).*exp(-t);
-Data.du_dy_ex =  @(x,y,t) -pi*cos(pi*x).*sin(pi*y).*exp(-t);
-Data.du_dt_ex =  @(x,y,t) -(cos(pi*x).*cos(pi*y)+2).*exp(-t);
+Data.du_dx_ex =  {@(x,y,t) -pi*sin(pi*x).*cos(pi*y).*exp(-t)};
+Data.du_dy_ex =  {@(x,y,t) -pi*cos(pi*x).*sin(pi*y).*exp(-t)};
+Data.du_dt_ex =  {@(x,y,t) -(cos(pi*x).*cos(pi*y)+2).*exp(-t)};
 
 %% Discretization properties
 
@@ -61,5 +65,11 @@ Data.PlotExact          = true;
 Data.PlotIniCond        = true;
 Data.PlotGridSol        = true;
 Data.VisualizationStep  = 10;
-Data.NPtsVisualization  = 1; 
+Data.NPtsVisualization  = 5; 
 
+%% Adaptivity
+Data.Adaptivity = false;                 % Flag of adaptivity                                             
+Data.maxDegree  = 1;                    % Maximum polynomial degree
+Data.AdaptFunc  = @(tau_r) floor(1 + 2*Data.maxDegree/pi* atan(tau_r));     % Adaptivity function
+Data.AdaptIts   = 10;                   % Maximum iterations of adaptivity
+Data.AdaptivityStep     = 10; 

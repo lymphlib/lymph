@@ -1,6 +1,6 @@
 %> @file  RunhConvergenceHeat.m
 %> @author The Lymph Team
-%> @date 9 October 2023
+%> @date 5 June 2026
 %> @brief Convergence analysis for the heat equation (mesh refinements)
 %>
 %==========================================================================
@@ -15,18 +15,9 @@
 %==========================================================================
 
 
-%% Import lymph and add path related to this physics.
-run("../ImportLymphPaths.m")
+%% Initial Simulation Setup
 MyPhysicsPath = pwd;
-addpath(genpath(fullfile(MyPhysicsPath,'Assembly')));
-addpath(genpath(fullfile(MyPhysicsPath,'Error')));
-addpath(genpath(fullfile(MyPhysicsPath,'InputData')));
-addpath(genpath(fullfile(MyPhysicsPath,'InputMesh')));
-addpath(genpath(fullfile(MyPhysicsPath,'MainFunctions')));
-addpath(genpath(fullfile(MyPhysicsPath,'PostProcessing')));
-addpath(genpath(fullfile(MyPhysicsPath,'TimeIntegration')));
-%% Simulation - Setup
-run("../RunSetup.m")
+run('../SimulationSetup.m');
 
 %% Input Data - Boundary conditions - Forcing term
 DatahConvergenceTest;
@@ -50,21 +41,29 @@ for ii = 1:4
     %% Main 
     
     [Error] = MainHeat(Data,Setup);
-    Errors.err_u_L2 = [Errors.err_u_L2, Error.err_u_L2];
-    Errors.err_u_dG = [Errors.err_u_dG, Error.err_u_dG];
+    Errors.err_u_L2 = [Errors.err_u_L2, Error.L2];
+    Errors.err_u_dG = [Errors.err_u_dG, Error.dG];
     Errors.err_Energy = [Errors.err_Energy, Error.err_Energy];
     Errors.h = [Errors.h, Error.h];
 
 end
 
+
 %% Plot of the errors
 figure
-loglog(Errors.h,Errors.h.^Data.degree,'k')
+
+cols = lines(3);
+leg = strings(0);
+light = @(c,a) c + a*(1-c); 
+c_i= cols(1,:);
+
+loglog(Errors.h,Errors.h.^Data.degree,'k','LineWidth',1.2)
 hold on
-loglog(Errors.h,Errors.h.^(Data.degree+1),'k--')
-loglog(Errors.h,Errors.err_u_L2,'g')
-loglog(Errors.h,Errors.err_u_dG,'r')
-loglog(Errors.h,Errors.err_Energy,'b')
+loglog(Errors.h,Errors.h.^(Data.degree+1),'k--','LineWidth',1.2)
+loglog(Errors.h,Errors.err_u_L2,'-o', 'LineWidth',1.4,'Color',cols(1,:),'MarkerFaceColor',cols(1,:));
+loglog(Errors.h,Errors.err_u_dG,'-o', 'LineWidth',1.4,'Color',cols(2,:),'MarkerFaceColor',cols(2,:));
+loglog(Errors.h,Errors.err_Energy,'-o', 'LineWidth',1.4,'Color',cols(3,:),'MarkerFaceColor',cols(3,:));
+
 conv1 = ['$h^', num2str(Data.degree), '$'];
 conv2 = ['$h^', num2str(Data.degree+1), '$'];
 legend(conv1, conv2, "Error $L^2$-norm", "Error DG-norm", "Error energy-norm","Interpreter","latex")

@@ -7,14 +7,13 @@ The development of <tt>lymph</tt> is part of the activities of the project <a hr
 - Paola F. Antonietti (P.I.) <paola.antonietti@polimi.it>
 - Stefano Bonetti <stefano.bonetti@polimi.it>
 - Michele Botti <michele.botti@polimi.it>
-- Alessandra Cancrini <alessandra.cancrini@polimi.it>
 - Mattia Corti <mattia.corti@polimi.it>
 - Ivan Fumagalli <ivan.fumagalli@polimi.it>
-- Caterina B. Leimer Saglio <caterinabeatrice.leimer@polimi.it>
 - Ilario Mazzieri <ilario.mazzieri@polimi.it>
+- Caterina B. Leimer Saglio <caterinabeatrice.leimer@polimi.it>
 - Stefano Pagani <stefano.pagani@polimi.it>
 - Valentina Pederzoli <valentina.pederzoli@polimi.it>
-
+- Alessandra Cancrini <alessandra.cancrini@polimi.it>
 
 
 \tableofcontents
@@ -24,12 +23,12 @@ The development of <tt>lymph</tt> is part of the activities of the project <a hr
 
 - Stefano Bonetti <stefano.bonetti@polimi.it>
 - Michele Botti <michele.botti@polimi.it>
-- Alessandra Cancrini <alessandra.cancrini@polimi.it>
 - Mattia Corti <mattia.corti@polimi.it>
 - Ivan Fumagalli <ivan.fumagalli@polimi.it>
-- Caterina B. Leimer Saglio <caterinabeatrice.leimer@polimi.it>
 - Ilario Mazzieri <ilario.mazzieri@polimi.it>
+- Caterina B. Leimer Saglio <caterinabeatrice.leimer@polimi.it>
 - Valentina Pederzoli <valentina.pederzoli@polimi.it>
+- Alessandra Cancrini <alessandra.cancrini@polimi.it>
 
 
 \section sec1 Installation
@@ -51,8 +50,13 @@ The source code and additional information can be found <a href="https://bitbuck
 
 - \c Core
     Contains common tools for discontinuous Galerkin methods on polygonal grids.
+    - \c Adaptivity 
+            Common adaptive utilities, for the update of the element-wise polynomial approximation degree.
+    - \c Assembly 
+            Common assembly including routines for local volume and face contributions, quadrature-free preprocessing, and reconstruction of the final global matrices.
     - \c FEspace
             Dof maps and evaluation of basis functions on quadrature points.
+    - \c MainFunction Collection of high-level routines driving the setup and execution of the mesh setup. 
     - \c MeshGeneration
         - \c PolyMesh
             Generation of a polytopal mesh based on <a href="http://paulino.princeton.edu/software.html">PolyMesher</a> and functions to compute neigboring elements/faces.
@@ -66,22 +70,21 @@ The source code and additional information can be found <a href="https://bitbuck
     Contains code to set-up and discretize specific PDE models.
     - \c ImportLymphPaths.m
         Set up the environment paths to use <tt>lymph</tt>: call \c ImportLymphPaths in your <tt>Run*.m</tt> file (see below).
+    - \c RunSetup.m
+        To configure speficic run.
+    - \c SimulationSetup.m
+        To run the Setup configuration.
     - One folder for each specific PDE model (named \c MYPHYSICS below), all sharing the following structure (see the \c Heat folder for an example):
         - <tt>Run*MYPHYSICS.m</tt>
             Callable script(s) to initialize <tt>lymph</tt>, set up the I/O parameters of the simulation, and launch the execution of a simulation (see also next point).
             Multiple files with such name can be present, e.g. to run single simulations, convergence analysis, etc.
             This/these file(s) **must include the following lines**:
-\verbatim
-%% Import lymph and add path related to this physics.
-run("../ImportLymphPaths.m")
-MyPhysicsPath = pwd;
-addpath(genpath(fullfile(ProblemPath,'Assembly')));
-addpath(genpath(fullfile(ProblemPath,'InputData')));
-... and same for all other directories related to MYPHYSICS ...
-
-%% Simulation - Setup
-run("../RunSetup.m")
-\endverbatim
+        \verbatim
+        %% Initial Simulation Setup
+        MyPhysicsPath = pwd;
+        run('../SimulationSetup.m');
+        ... and same for all other directories related to MYPHYSICS ...
+        \endverbatim
         - \c MainFunctions
             Folder with actual main function of a simulation, launched by <tt>Run*MYPHYSICS.m</tt>.
         - \c Assembly
@@ -94,41 +97,16 @@ run("../RunSetup.m")
             Folder with physics-specific functions for post-processing: see also <tt>../Core/PostProcessing</tt> for physics-independent functions (e.g. conversion to VTK format).
         - Other folders containing utilities and functions to address specific issues of a physics solver.
         - The folders related to <tt>lymph</tt> tutorials distributed with the current release contain also a \c Doxygen folder with their own documentation.
-    - \c RunSetup.m
-        To configure speficic run. In particular one can select the following options:
-\verbatim
-% Plot polygonal mesh
-Setup.isPlotMesh = 0;
-
-% Save VTK polygonal mesh
-Setup.isSaveVTKMesh = 0;
-
-% Plot solution
-Setup.isPlotSolution = 0;
-
-% Save solution in .mat format
-Setup.isSaveSolution = 0;
-Setup.OutFolder = 'Output';
-
-% Save solution for Paraview in .csv or .vtk format
-Setup.isSaveCSV    = 0;
-Setup.isSaveVTK    = 0;
-Setup.OutFolderVTK = 'OutputVTK';
-
-% Compute errors
-Setup.isError = 1;
-\endverbatim
 
 
 \section sec1000 License and Funding
     <ul style="padding-bottom:20px">
     <li>
-    You can cite <tt>lymph</tt> by this documentation site (https://lymph.bitbucket.io/) and the following paper:
+    You can cite <tt>lymph</tt> by this documentation site (https://lymph.bitbucket.io/) and the following preprint:
 
     P.F. Antonietti, S. Bonetti, M. Botti, M. Corti, I. Fumagalli, I. Mazzieri (2025).
     <em>lymph: discontinuous poLYtopal methods for Multi-PHysics differential problems.</em>
-    ACM Transactions on Mathematical Software, 51(1), 1-22.
-    [https://doi.org/10.1145/3716310](https://doi.org/10.1145/3716310)
+    ACM Transactions on Mathematical Software, 51(1), pages 3:1-3:22. [https://doi.org/10.1145/3716310](https://doi.org/10.1145/3716310)
 
     <tt>lymph</tt> is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. <tt>lymph</tt> is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with <tt>lymph</tt>. If not, see http://www.gnu.org/licenses/.
 
@@ -157,9 +135,4 @@ The developers of <tt>lymph</tt> acknowledge the support of
 - ERC Synergy Grant n. 101115663 <a href="https://erc-nemesis.eu">NEMESIS: NEw generation MEthods for numerical SImulationS</a>
 - <a href="https://www.supercomputing-icsc.it/">ICSC--Centro Nazionale di Ricerca in High Performance Computing, Big Data, and Quantum Computing</a> funded by European Union--NextGenerationEU
 
-<table>
-<tr><img src="Doxygen/logo.png" height=50></tr>
-<tr><img src="Doxygen/logoMOX.png" height=50></tr>
-<tr><img src="Doxygen/logoERC.png" height=50></tr>
-</table>
 */

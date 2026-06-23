@@ -17,6 +17,10 @@
 function CreatePolygonalVTK(Data, Setup, region)
 
     %% Creation of the VTK file
+    if ~exist(Setup.OutFolderVTK,'dir')
+        mkdir(Setup.OutFolderVTK)
+    end
+    
     VTKName = [Setup.OutFolderVTK, '/', Data.VTKMeshFileName];
     fileID = fopen(VTKName,'w');
 

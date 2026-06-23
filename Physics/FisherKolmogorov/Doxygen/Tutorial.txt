@@ -1,0 +1,268 @@
+/*! \page page_TutorialFKPP Fisher-Kolmogorov
+
+\tableofcontents
+
+\section sec_FKPP Fisher-Kolmogorov equation
+
+This tutorial presents the solution of the Fisher--Kolmogorov equation using the PolyDG method implemented in the Physics/FisherKolmogorov folder.
+
+The mathematical model reads
+\f[
+\frac{\partial c}{\partial t}
+-
+\nabla \cdot (\boldsymbol{\Sigma} \nabla c)
+=
+\alpha\,c(1-c)
++
+I_{\mathrm{app}},
+\qquad {\rm in} \;\Omega \times (0,T],
+\f]
+where \f$c\f$ denotes the scalar unknown variable, representing for instance a normalized population density or concentration field, \f$\boldsymbol{\Sigma}\f$ is the diffusion tensor, and \f$r\f$ is the reaction coefficient governing the growth dynamics.
+
+The nonlinear reaction term
+\f[
+f(c)=\alpha\,c(1-c),
+\f]
+corresponds to the classical Fisher--Kolmogorov logistic law, combining linear growth for small values of \f$c\f$ with saturation effects as \f$c\f$ approaches the carrying capacity.
+
+As a benchmark application of the presented PolyDG method, we consider a wave propagation problem on a two-dimensional domain.
+The initial condition and the applied source term generate a traveling front that propagates through the computational domain according to the Fisher--Kolmogorov dynamics.
+
+\section secTutFKPP1 Setup the input data
+
+We set up these data in the script \b InputData/DataWavesFKPP.m.
+In particular, we consider:
+    - the computational domain \f$\Omega = (-1,3)\times(0,1)\f$ with Neumann boundary conditions; \n
+    - isotropic diffusion with diffusion coefficient \f$d = 10^{-3}\f$; \n
+    - the reaction parameter \f$\alpha = 1\f$; \n
+    - the final simulation time \f$T = 1.0\f$; \n
+    - the time integration step \f$\Delta t = 10^{-2}\f$; \n
+    - a computational mesh with \f$N_{el} = 1000\f$ elements; \n
+    - polynomial approximation degree equal to \f$3\f$; \n
+    - penalty coefficient \f$C_\alpha = 10\f$; \n
+    - Picard iterations for the nonlinear solver, with tolerance \f$10^{-10}\f$, maximum number of iterations equal to \f$1000\f$, and relaxation parameter equal to \f$1\f$; \n
+
+We report here for completeness a sample of the script.
+
+\verbatim
+%% InputData/DataWavesFKPP.m
+%% Convergence test for FK equation
+...
+Data.domain          = [-1 3 0 1];
+Data.N               = 1000;
+Data.meshfromfile    = true;
+Data.foldername      = 'Meshes';
+Data.VTKMeshFileName = 'WavesMesh.vtk';
+Data.meshfileseq     = "FK_1000_el.mat";
+...
+%% Time discretization
+Data.t0    = 0;
+Data.T     = 1.00;
+Data.dt    = 1e-2;
+Data.theta    = 0.5;
+%% Space discretization
+Data.degree        = 3;		        % Polynomial degree
+Data.penalty_coeff = 10;   			% Penalty coefficient
+...
+%% Adaptivity
+Data.Adaptivity         = false;                % Flag of adaptivity                                             
+...
+\endverbatim
+
+Nex, we define the following option in the \b RunSetup.m file.
+
+\verbatim
+
+    %% RunSetup.m
+    ...
+    % Plot polygonal mesh y/n
+    Setup.isPlotMesh = 0;
+
+    % Save VTK polygonal mesh y/n
+    Setup.isSaveVTKMesh = 0;
+
+    % Plot solution y/n
+    Setup.isPlotSolution = 1;
+    
+    % Save solution y/n -> .mat file
+    Setup.isSaveSolution = 0;
+    Setup.OutFolder = 'Output';
+
+    % Additional solution output y/n -> .csv file
+    Setup.isSaveCSV = 0;
+
+    % Additional solution output y/n -> .vtk file
+    Setup.isSaveVTK = 0;
+    Setup.OutFolderVTK = 'OutputVTK';
+    
+    % Compute errors y/n
+    Setup.isError = 1;
+
+    % Use parallel implementation y/n
+    Setup.isParallel = 0;
+    Setup.numCores = 4;
+
+\endverbatim
+
+\section secTutFKPP2 Simulation run
+
+We run the specific simulation using the script \b RunMainFKPP.m, 
+which calls the main algorithm, contained in \b MainFunctions/MainFKPP.m.
+
+\verbatim
+%% RunMainFKPP.m
+%% Initial Simulation Setup
+MyPhysicsPath = pwd;
+run('../SimulationSetup.m');
+%% Input Data - Boundary conditions - Forcing term
+DataWavesFKPP;
+%% Mesh Generation
+if Data.meshfromfile
+    % Load an existing mesh
+    Data.meshfile = fullfile(Data.foldername,Data.meshfileseq);
+else
+    [Data.meshfile] = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.foldername,Data.meshfileseq,'P','laplacian');
+end
+%% Main 
+[Error] = MainFKPP(Data,Setup)
+\endverbatim 
+
+\section secTutFKPP3 Outputs
+
+As the output of the run we obtain the plots in Figure 1 showing the
+constructed mesh and the obtained numerical solution.
+
+@image html MeshSim.png "Figure 1: Constructed mesh for the resolution of the test case." width=400px
+@image html SimFKPP.png "Figure 2: Obtained numerical solution c_h of the test case at time t=1."
+
+Moreover, the output structure \b Error contains the following fields: 
+    - \b nel = 1000 \f$\rightarrow\f$ number of mesh elements,
+    - \b h = 0.1178 \f$\rightarrow\f$ mesh size,
+    - \b p = 3 \f$\rightarrow\f$ polynomial degree,
+    - \b NDoF = 10000 \f$\rightarrow\f$ numbers of degrees of freedom of the system,
+    - \b err_L2 = 2.3142e-05 \f$\rightarrow\f$ \f$L^2\f$-norm of the error, namely \f$\| \mathbf{c}_{ex} - \mathbf{c}_{h}\|_{L^2(\Omega)}\f$ at time t=1,
+    - \b err_dG = 0.0028 \f$\rightarrow\f$ \f$dG\f$-norm of the error, namely \f$\| \mathbf{c}_{ex} - \mathbf{c}_h\|_{dG}\f$ at time t=1.
+    - \b err_Energy = 0.0028 \f$\rightarrow\f$ \f$Energy\f$-norm of the error, namely \f$\| \mathbf{c}_{ex} - \mathbf{c}_h\|_{Energy}\f$ at time t=1.
+    - \b Cells_L2  \f$\rightarrow\f$ local L2 error for each element of the mesh,
+    - \b Cells_dG  \f$\rightarrow\f$ local dG erro for each element of the mesh
+
+\section secTutFKPP4 Convergence tests with respect to mesh refinement
+
+To verify the convergence rates of the PolydG solution \f$\mathbf{c}_h\f$ with respect to the mesh refinement we use \b RunhConvergenceFKPP.m. We set up the data in the external script \b InputData/DataConvTestDir.m. 
+With respect to the previous case, four meshes with decreasing granularity \f$h\f$ are provided in input. 
+
+\verbatim
+%% InputData/DataConvTestDir.m 
+%% Convergence test for FKPP equation
+...
+Data.domain             = [-1 3 0 1];
+Data.N                  = {100, 300, 800, 1000};
+Data.meshfromfile       = false;
+Data.foldername         = 'Meshes';
+Data.VTKMeshFileName    = 'Mesh.vtk';
+Data.meshfileseq        = ["FK_100_el.mat", "FK_300_el.mat", "FK_800_el.mat", "FK_1000_el.mat"];
+...
+%% Adaptivity
+Data.Adaptivity         = false;                % Flag of adaptivity                                             
+...
+\endverbatim
+
+As the output of the aforementioned scripts we obtain the plots in Figure 3. In particular, we can observe the convergence of the PolydG solution obtained with \f$\ell_\kappa=2\f$ for any \f$\kappa \in \mathcal{T}_h\f$ with respect to the \f$L^2\f$-, \f$dG\f$ and the \f$Energy\f$-norm.
+
+@image html hConvergenceFK.png "Figure 3. \b Errors.error_Energy, \b Errors.error_c_dG and \b Errors.error_c_L2 as a function of the mesh size h by fixing the polynomial degree equal to 2, time step equal to 0.00001 and final time 0.0001."
+ 
+\section secTutFKPPConv Convergence test with respect to the polynomial degree
+
+To verify the convergence rates of the PolydG solution \f$\mathbf{c}_h\f$ with respect to the polynomial degree we use the script \b RunpConvergenceFKPP.m. We set up the data in the external script \b InputData/DataConvWavesFKPP.m. 
+With respect to the previous cases, eight polynomial degrees are provided in input. 
+
+\verbatim
+%% InputData/DataConvWavesFKPP.m 
+...
+Data.degree  = [1, 2, 3, 4, 5, 6, 7, 8];  
+...
+%% Time discretization
+Data.t0    = 0;
+Data.T     = 0.1;
+Data.dt    = 1e-3;
+...
+\endverbatim
+
+As the output of the aforementioned script we obtain the plot in Figure 4. The exponential convergence with respect to the polynomial degree \f$\ell\f$ is shown by fixing \f$N_{el} = 300\f$.
+
+@image html pConvergenceFK.png "Figure 4.  \b Errors.error_Energy , \b Errors.error_c_dG and \b Errors.error_c_L2 as a function of the polynomial degree by fixing the number of mesh elements equal to 300."
+ 
+    
+\section secAdaptiveFK l-adaptive framework
+The \f$\ell\f$-adaptive strategy is driven by a local a-posteriori residual indicator, computed element-wise from the discrete solution, following \cite cangiani_posteriori_2023.
+A detailed description of the estimator components is provided in \ref secAdaptiveHeat. Here, the indicator is extended to the time-dependent heat equation by accounting for both the current and previous time levels through the \f$\theta\f$-time discretization.
+Given the discrete solutions \f$c_h^n\f$ and \f$c_h^{n-1}\f$, the local indicators associated with an element \f$K\f$ are defined as:
+
+\subsection pAdaptiveSetupFK Setup Data 
+We set up these data in the script \b InputData/DataWavesFKPP.m.
+
+\verbatim
+%% InputData/DataWavesFKPP.m 
+%% Simulation for FKPP equation
+...
+%% Adaptivity
+Data.Adaptivity         = true;                 % Flag of adaptivity                                             
+Data.maxDegree          = 3;                    % Maximum polynomial degree
+Data.AdaptFunc          = @(tau_r) floor(1 + (Data.maxDegree-1)*tanh(5*tau_r));     % Adaptivity function
+Data.AdaptIts           = 2;                   % Maximum iterations of adaptivity
+Data.AdaptivityStep     = 10; 
+\endverbatim
+
+The parameter \b Data.AdaptivityStep defines the frequency of the adaptive update during the time integration procedure.
+
+\subsection pAdaptiveSimulationFKPP Simulation Run
+
+We run the specific simulation using the script \b RunMainFKPP.m, previously described in Section \ref secTutFKPP2, which calls the main algorithm, contained in \b MainFunctions/MainFKPP.m, and the Dataset \b DataWavesFKPP.m
+For this particular simulation we exploited a polytopal mesh of 1000 elements and \f$\ell_\text{max}=3\f$. 
+
+@image html uSimAdaptiveFK.png "Figure 5. Numerical solution, exact solution, and difference between the two at time t=1."
+
+In Figure 6 we represent the spatial distribution of the local polynomial degrees at the end of the simulation and the complete local error indicator.
+
+@image html pSimAdaptiveFK.png "Figure 6. Spatial distribution of the local polynomial degrees and total a-posteriori error indicator at the end of the simulation at time t=1."
+
+In Figure 7 we represent the spatial distribution of the local polynomial degrees \f$p_K\f$ at the end of the simulation and the complete local error indicator \f$\tau_{K}\f$.
+
+@image html TauSimAdaptiveFK.png "Figure 7. Spatial distribution of the components of the local error indicator at the final time t=1."
+
+\subsection pAdaptiveConvFK Convergence tests
+In order to test the convergence test for different polynomial degree \f$\ell_\text{max}\f$ we refer to RunNDoFConvergencep.m for the NDoF-convergence. We setup the initial data in the external script InputData/DataComparep.m. 
+In order to construct the \f$\ell_\text{val}\f$ values for the simulation. 
+
+\verbatim
+%% InputData/DataComparep.m 
+%% Convergence test for FK equation - Comparison with the uniform framework
+Data.domain          = [-1 3 0 1];
+Data.N               = 100;
+Data.MeshFromFile    = true;
+Data.FolderName      = 'Meshes';
+Data.VTKMeshFileName = 'WavesMesh.vtk';
+Data.meshfileseq     = ["FK_100_el.mat","FK_300_el.mat","FK_800_el.mat","FK_1500_el.mat"]; 
+...
+%% Time discretization
+Data.t0    = 0;
+Data.T     = 1;
+Data.dt    = 1e-3;
+....
+%% Space discretization
+Data.l_val         = [3];		        % Polynomial degree
+Data.penalty_coeff = 10;   			% Penalty coefficient
+...
+%% Adaptivity
+Data.Adaptivity         = true;                % Flag of adaptivity                                             
+Data.maxDegree          = 3;                    % Maximum polynomial degree
+Data.AdaptFunc          = @(tau_r) floor(1 + (Data.maxDegree-1)*tanh(5*tau_r));     % Adaptivity function
+Data.AdaptIts           = 2;                   % Maximum iterations of adaptivity
+Data.AdaptivityStep     = 10; 
+\endverbatim
+
+@image html  CompareConvergenceFK.png " Figure 9. Comparison of Error.dG and Error.L2 as a function of the mesh size h by fixing Data.maxDegree with the uniform testcase." width=400px
+
+
+*/
+

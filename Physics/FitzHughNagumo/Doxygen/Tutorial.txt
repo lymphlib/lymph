@@ -1,0 +1,312 @@
+/*! \page page_TutorialFHN FitzHugh-Nagumo
+
+\tableofcontents
+
+\section sec_FHN Monodomain equation coupled with the FitzHugh--Nagumo ionic model
+
+This tutorial presents the solution of the monodomain equation coupled with the FitzHugh--Nagumo ionic model using the PolyDG method implemented in the <tt>Physics/FitzHughNagumo</tt> folder.
+The mathematical model reads
+\f[
+\chi_m C_m \frac{\partial u}{\partial t}
+-
+\nabla_m \cdot (\boldsymbol{\Sigma} \nabla u)
++
+\chi I_{\mathrm{ion}}(u,w)
+=
+I_{\mathrm{app}},
+\qquad {\rm in} \;\Omega \times (0,T],
+\f]
+coupled with the ionic variable equation
+\f[
+\frac{\partial w}{\partial t}
+=
+g(u,w),
+\qquad {\rm in} \;\Omega \times (0,T].
+\f]
+
+Here, \f$u\f$ denotes the transmembrane potential, \f$w\f$ is the recovery variable of the FitzHugh-Nagumo model, \f$\boldsymbol{\Sigma}\f$ is the conductivity tensor, \f$\chi_m\f$ is the membrane surface-to-volume ratio, and \f$C_m\f$ is the membrane capacitance.
+
+The ionic model is described by the FitzHugh--Nagumo reaction terms
+\f[
+I_{\mathrm{ion}}(u,w)
+=
+k\,u(u-a)(u-1) + w,
+\f]
+and
+\f[
+g(u,w)
+=
+\varepsilon(\beta u - \gamma w).
+\f]
+
+Here, \f$a\f$, \f$k\f$, \f$\varepsilon\f$, \f$\beta\f$, and \f$\gamma\f$ are model parameters regulating the excitation and recovery dynamics of the membrane potential. As a benchmark application of the presented PolyDG method, we consider a wave propagation problem on a two-dimensional domain.
+The initial condition and the applied stimulus generate an excitation wave that propagates through the computational domain according to the monodomain dynamics coupled with the FitzHugh--Nagumo ionic response.
+
+\section secTutFHN1 Setup the input data
+
+We set up these data in the script \b InputData/DataTestCaseFHN.m.
+In particular, we consider:
+    - the computational domain \f$\Omega = (-1,1)^2\f$ with Dirichlet boundary conditions; \n
+    - the FitzHugh--Nagumo ionic parameters
+    \f$a = 0.5\f$,
+    \f$\varepsilon = 1\f$,
+    \f$\beta = 1\f$,
+    \f$\gamma = 2\f$,
+    \f$k = 1\f$; \n
+    - the final simulation time \f$T = 2\f$; \n
+    - the time integration step \f$\Delta t = 10^{-2}\f$; \n
+    - the initial time \f$t_0 = 0\f$ and the time discretization parameter \f$\theta = 1\f$; \n
+    - the number of mesh elements \f$N_{el} = 180\f$; \n
+    - the polynomial approximation degree \f$\ell_\text{max} = 3\f$;
+    - the penalty coefficient \f$C_\alpha = 10\f$; \n
+    - Picard iterations for the nonlinear solver, with tolerance \f$10^{-10}\f$, maximum number of iterations equal to \f$1000\f$, and relaxation parameter equal to \f$1\f$; \n
+
+We report here for completeness a sample of the script.
+
+\verbatim
+%% Convergence test for FHN equation
+...
+%% Material properties 
+Data.D_ext       = {@(x,y,t) 1+0.*x};  % External diffusion
+Data.D_axn       = {@(x,y,t) 0.*x};       % Axonal diffusion
+Data.Cm          = {@(x,y,t) 1 + 0.*x}; 
+Data.Chi         = {@(x,y,t) 1 + 0.*x};
+Data.k       = {@(x,y,t) 1 + 0.*x};
+Data.epsilon = {@(x,y,t) 1 + 0.*x};
+Data.gamma   = {@(x,y,t) 2 + 0.*x};
+Data.beta    = {@(x,y,t) 1 + 0.*x};
+Data.a       = {@(x,y,t) 0.5 + 0.*x};
+...
+%% Space discretization
+Data.degree        = 3;		        % Polynomial degree
+Data.penalty_coeff = 10;   			% Penalty coefficient
+%% Nonlinear solver settings
+Data.NonLinearSolver = 'Picard iterations';     % Nonlinearity treatment: Semi-implicit or Picard iterations
+...
+%% Adaptivity
+Data.Adaptivity         = false;                % Flag of adaptivity                                             
+\endverbatim
+
+Nex, we define the following option in the \b RunSetup.m file.
+
+\verbatim
+
+    %% RunSetup.m
+    ...
+    % Plot polygonal mesh y/n
+    Setup.isPlotMesh = 0;
+
+    % Save VTK polygonal mesh y/n
+    Setup.isSaveVTKMesh = 0;
+
+    % Plot solution y/n
+    Setup.isPlotSolution = 0;
+    
+    % Save solution y/n -> .mat file
+    Setup.isSaveSolution = 0;
+    Setup.OutFolder = 'Output';
+
+    % Additional solution output y/n -> .csv file
+    Setup.isSaveCSV = 0;
+
+    % Additional solution output y/n -> .vtk file
+    Setup.isSaveVTK = 0;
+    Setup.OutFolderVTK = 'OutputVTK';
+    
+    % Compute errors y/n
+    Setup.isError = 1;
+
+    % Use parallel implementation y/n
+    Setup.isParallel = 0;
+    Setup.numCores = 4;
+
+\endverbatim
+
+\section secTutFHN2 Simulation run
+
+We run the specific simulation using the script \b RunMainFHN.m, 
+which calls the main algorithm, contained in \b MainFunctions/MainFHN.m.
+
+\verbatim
+%% Initial Simulation Setup
+MyPhysicsPath = pwd;
+run('../SimulationSetup.m');
+%% Input Data - Boundary conditions - Forcing term
+DataTestCaseFHN
+%DataSpiral;
+%% Mesh Generation
+if Data.meshfromfile
+    % Load an existing mesh
+    Data.meshfile = fullfile(Data.foldername,Data.meshfileseq);
+else
+    %[Data.meshfile] = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.foldername,Data.meshfileseq,'C','laplacian');
+    [Data.meshfile] = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.foldername,Data.meshfileseq,'P','laplacian');
+end
+%% Main 
+[Error] = MainFHN(Data,Setup)
+\endverbatim 
+
+\section secTutFHN3 Outputs
+
+As the output of the run we obtain the plots in Figure 1 showing the
+constructed mesh (left), the obtained numerical solution (right).
+
+@image html MeshFHN.png "Figure 1: Constructed mesh for the resolution of the test case." width=300px
+@image html FHNu.png "Figure 2: Obtained numerical solution u_h of the test case at time t=2."
+@image html FHNw.png "Figure 2: Obtained numerical solution w_h of the test case at time t=2."
+
+Moreover, the output structure \b Error contains the following fields: 
+    - \b nel = 180 \f$\rightarrow\f$ number of mesh elements,
+    - \b h = 0.2754 \f$\rightarrow\f$ mesh size,
+    - \b p = 3 \f$\rightarrow\f$ polynomial degree,
+    - \b NDoF = 1800 \f$\rightarrow\f$ numbers of degrees of freedom of the system,
+    - \b err_L2 = 1.9574e-05 \f$\rightarrow\f$ \f$L^2\f$-norm of the error, namely \f$\| \mathbf{u}_{ex} - \mathbf{u}_{h}\|_{L^2(\Omega)}\f$,
+    - \b err_dG = 0.0014 \f$\rightarrow\f$ \f$dG\f$-norm of the error, namely \f$\| \mathbf{u}_{ex} - \mathbf{u}_h\|_{dG}\f$.
+    - \b Cells_L2  \f$\rightarrow\f$ local L2 error for each element of the mesh,
+    - \b Cells_dG  \f$\rightarrow\f$ local dG erro for each element of the mesh
+
+\section secTutFHN4 Convergence tests with respect to mesh refinement
+
+To verify the convergence rates of the PolydG solution \f$\mathbf{u}_h\f$ with respect to the mesh refinement we use \b RunhConvergenceFHN.m. We set up the data in the external script \b InputData/DatahConvergenceTestFHN.m. 
+With respect to the previous case, four meshes with decreasing granularity \f$h\f$ are provided in input. 
+
+\verbatim
+%% InputData/DatahConvergenceTestFHN.m 
+%% Convergence test for FHN equation
+...
+%% Geometrical properties
+Data.domain = [-1 1 -1 1];
+Data.N      = {180,300,800,1500};
+Data.meshfromfile = true;
+Data.foldername = 'InputMesh';
+Data.VTKMeshFileName = 'Mesh.vtk';
+Data.meshfileseq = ["FHN_180_el.mat","FHN_300_el.mat", ... 
+                     "FHN_800_el.mat","FHN_1500_el.mat"]
+...
+%% Adaptivity
+Data.Adaptivity         = false;                % Flag of adaptivity                                             
+...
+\endverbatim
+
+As the output of the aforementioned scripts we obtain the plots in Figure 3. In particular, we can observe the convergence of the PolydG solution obtained with \f$\ell_\kappa=1\f$ for any \f$\kappa \in \mathcal{T}_h\f$ with respect to the \f$L^2\f$-, \f$dG\f$.
+
+@image html ConvergencehFHN.png "Figure 3. \b Errors.error_u_dG and \b Errors.error_u_L2 as a function of the mesh size h by fixing the polynomial degree equal to 2, time step equal to 0.00001 and final time 0.0001."
+ 
+\section secTutFHNConv Convergence test with respect to the polynomial degree
+
+To verify the convergence rates of the PolydG solution \f$\mathbf{u}_h\f$ with respect to the polynomial degree we use the script \b RunpConvergenceFHN.m. We set up the data in the external script \b InputData/DatapConvergenceTestFHN.m. 
+With respect to the previous cases, eight polynomial degrees are provided in input. 
+
+\verbatim
+%% InputData/DatapConvergenceTestFHN.m 
+...
+Data.degree  = [1, 2, 3, 4, 5, 6, 7, 8];  
+...
+\endverbatim
+
+As the output of the aforementioned script we obtain the plot in Figure 4. The exponential convergence with respect to the polynomial degree \f$\ell\f$ is shown by fixing \f$N_{el} = 180\f$.
+
+@image html ConvergencepFHN.png "Figure 4. \b Errors.error_u_dG and \b Errors.error_u_L2_d as a function of the polynomial degree by fixing the number of mesh elements equal to 180."
+ 
+    
+\section secAdaptiveFHN l-adaptive framework
+The \f$\ell\f$-adaptive strategy is driven by a local a-posteriori residual indicator, computed element-wise from the discrete solution, following \cite cangiani_posteriori_2023.
+A detailed description of the estimator components is provided in \ref secAdaptiveHeat. Here, the indicator is extended to the time-dependent heat equation by accounting for both the current and previous time levels through the \f$\theta\f$-time discretization.
+Given the discrete solutions \f$u_h^n\f$ and \f$u_h^{n-1}\f$, the local indicators associated with an element \f$K\f$ are defined as:
+
+\subsection pAdaptiveSetupFHN Setup Data 
+We set up these data in the script \b InputData/DataSpiral.m.
+In particular, we consider:
+    - the computational domain \f$\Omega = (0,2.5)^2\f$ with homogeneous Neumann boundary conditions; \n
+    - the FitzHugh--Nagumo ionic parameters
+    \f$a = 0.1\f$,
+    \f$\varepsilon = 0.01\f$,
+    \f$\beta = 1\f$,
+    \f$\gamma = 0.5\f$,
+    \f$k = 10\f$; \n
+    - the final simulation time \f$T = 2000\f$; \n
+    - the time integration step \f$\Delta t = 5 \cdot 10^{-1}\f$; \n
+    - the number of mesh elements \f$N_{el} = 2500\f$; \n
+    - the penalty coefficient \f$C_\alpha = 10\f$; \n
+
+\verbatim
+%% InputData/DataSpiral.m 
+%% Simulation for FHN equation
+Data.name = 'FHN_Adaptive';
+Data.LabEl = {'N:q'};     % Element labels
+Data.TagEl = { 1 };     % Element tags
+Data.TagBc = {[2 3 4 5]};  % Boundary tags
+Data.LabBc = {'NNNN'};  % (D)irichlet/(N)eumann/(A)bsorbing
+Data.TagApplyBCs = 0;      % Skip the assembling of BCs if not necessary
+%% Geometrical properties
+Data.domain          = [0 2.5 0 2.5];
+Data.N               = [50 50]; 
+...
+% Exact Solution
+Data.u_ex = {@(x,y,t) double( (x <= 1.25) & (y <= 1.25) )};
+eps = 0.09;
+Data.w_ex = {@(x,y,t) 0.1 * 0.5 * (1 + tanh((y - 1.25)/eps))};
+...
+%% Nonlinear solver settings
+Data.NonLinearSolver = 'Picard iterations';     % Nonlinearity treatment: Semi-implicit or Picard iterations
+Data.NLS_tolerance  = 1e-10;
+Data.NLS_max_it     = 1000;
+Data.NLS_relax      = 1;
+...
+%% Adaptivity
+Data.Adaptivity         = true;                % Flag of adaptivity                                             
+Data.maxDegree          = 4;                    % Maximum polynomial degree
+Data.AdaptFunc          = @(tau_r) floor(1 + (Data.maxDegree-1)*tanh(5*tau_r));     % Adaptivity function
+Data.AdaptIts           = 2;                   % Maximum iterations of adaptivity
+Data.AdaptivityStep     = 10; 
+\endverbatim
+
+The parameter \b Data.AdaptivityStep defines the frequency of the adaptive update during the time integration procedure.
+
+\subsection pAdaptiveSimulationFHN Simulation Run
+
+We run the specific simulation using the script \b RunMainFHN.m, which calls the main algorithm, contained in \b MainFunctions/MainFHN.m, and the Dataset \b DataSpiral.m 
+As output of the run, we first obtain a set of plots associated with the polygonal mesh \f$\mathcal{T}_h\f$ and the corresponding numerical solution.
+For this particular simulation we exploited a polytopal mesh of 2500 elements and \f$\ell_\text{max}=4\f$. 
+
+\verbatim
+%% Initial Simulation Setup
+MyPhysicsPath = pwd;
+run('../SimulationSetup.m');
+%% Input Data - Boundary conditions - Forcing term
+%DataTestCaseFHN
+DataSpiral;
+%% Mesh Generation
+if Data.meshfromfile
+    % Load an existing mesh
+    Data.meshfile = fullfile(Data.foldername,Data.meshfileseq);
+else
+    [Data.meshfile] = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.foldername,Data.meshfileseq,'C','laplacian');
+    %[Data.meshfile] = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.foldername,Data.meshfileseq,'P','laplacian');
+end
+%% Main 
+[Error] = MainFHN(Data,Setup)
+\endverbatim 
+
+The script contains different calls, among which one is devoted to the mesh construction, i.e., \b MakeMeshMonodomain.m,
+contained in \b Core/MeshGeneration.
+\verbatim
+[Data.meshfile] = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'C','laplacian');
+\endverbatim
+The function \b MakeMeshMonodomain.m can generate different types of polygonal meshes depending on the selected option.
+In this case, the flag \c 'C' is used to construct a Cartesian polygonal mesh for the considered domain.
+
+@image html SoluFHN.png width=400px
+@image html SolwFHN.png "Figure 5. Numerical solution u_h and gating variable w_h at time t=250." width=400px
+
+In Figure 6 we represent the spatial distribution of the local polynomial degrees at the end of the simulation and the complete local error indicator.
+
+@image html pSol.png "Figure 6. Left: spatial distribution of the local polynomial degrees at time t=250. Right: local a-posteriori indicator at time t=250."
+
+In Figure 7 we represent the spatial distribution of the local polynomial degrees \f$\ell_K\f$ at the end of the simulation and the complete local error indicator \f$\tau_{K}\f$.
+
+@image html TauSolFHN.png "Figure 7. Spatial distribution of the components of the local error indicator at time t=250."
+
+
+*/
+

@@ -1,10 +1,33 @@
-function [mesh, femregion, h] = MeshFemregionSetup(Setup, Data, TagEl, LabelEl)
+%> @file  MeshFemregionSetup.m
+%> @author Mattia Corti
+%> @date 29 May 2026
+%> @brief Load of the mesh and creation of femregion structure
+%>
+%==========================================================================
+%> @section classMeshFemregionSetup Class description
+%==========================================================================
+%> @brief            Load of the mesh and creation of femregion structure
+%
+%> @param Setup      Simulation's setup
+%> @param Data       Struct with problem's data
+%>
+%> @retval mesh      Struct containing mesh information
+%> @retval femregion Struct containing finite element space information
+%> @retval h         Mesh size
+%>
+%==========================================================================
+
+function [mesh, femregion, h] = MeshFemregionSetup(Setup, Data)
 
     %% Load Region
     fprintf('\nLoading Region ... \n');
     
-    mesh = load(Data.meshfile);
-    
+    if contains(Data.meshfile,".mat")
+        mesh = load(Data.meshfile);
+    elseif contains(Data.meshfile,'.vtk')
+        mesh = VTKtoRegion(Data);
+    end
+
     % Compute mesh size
     h = max(sqrt((mesh.region.BBox(:,1)-mesh.region.BBox(:,2)).^2  ...
         + (mesh.region.BBox(:,3)-mesh.region.BBox(:,4)).^2));
@@ -15,10 +38,10 @@ function [mesh, femregion, h] = MeshFemregionSetup(Setup, Data, TagEl, LabelEl)
 
     % checking tags for elements
     for i = 1 : length(mesh.region.id)
-        for k = 1 : length(TagEl)
-            for j = 1 : length(TagEl{k})
-                if mesh.region.id(i) == TagEl{k}(j)
-                    mesh.region.tag(i,1) = LabelEl{k};
+        for k = 1 : length(Data.TagEl)
+            for j = 1 : length(Data.TagEl{k})
+                if mesh.region.id(i) == Data.TagEl{k}(j)
+                    mesh.region.label(i,1) = Data.LabEl{k};
                 end
             end
         end

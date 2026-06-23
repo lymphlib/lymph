@@ -1,6 +1,6 @@
 %> @file  NewmarkSchemePoroAcuEla.m
 %> @author Ilario Mazzieri, Mattia Corti
-%> @date 13 August 2024
+%> @date 5 June 2026
 %> @brief  Newmark time integration scheme
 %>
 %==========================================================================
@@ -36,10 +36,10 @@ A2 = [A-dt^2*(1/2-beta_nm)*C, dt*A - dt^2*(1/2-beta_nm)*B; ...
 
 %clear A B C
 
-Fold = [F.f_p * Data.source_up_t{1}(0)  + F.j_p * Data.source_upd_t{1}(0) + F.f_p_diri * Data.DirBCPoro_up_t{1}(0); ...
-    F.g_p * Data.source_wp_t{1}(0)  + F.h_p * Data.source_wpd_t{1}(0) + F.g_p_diri * Data.DirBCPoro_wp_t{1}(0); ...
-    F.f_a * Data.source_phi_t{1}(0) + F.f_a_diri * Data.DirBCAcu_t{1}(0); ...
-    F.f_e * Data.source_ue_t{1}(0)  + F.g_e * Data.source_ued_t{1}(0) + F.f_e_diri * Data.DirBCEla_t{1}(0)];
+Fold = [F.Poro.f_p * Data.source_up_t{1}(0)  + F.Poro.j_p * Data.source_upd_t{1}(0) + F.Poro.f_p_diri * Data.DirBCPoro_up_t{1}(0); ...
+    F.Poro.g_p * Data.source_wp_t{1}(0)  + F.Poro.h_p * Data.source_wpd_t{1}(0) + F.Poro.g_p_diri * Data.DirBCPoro_wp_t{1}(0); ...
+    F.Acu.f_a * Data.source_phi_t{1}(0) + F.Acu.f_a_diri * Data.DirBCAcu_t{1}(0); ...
+    F.Ela.f_e * Data.source_ue_t{1}(0)  + F.Ela.g_e * Data.source_ued_t{1}(0) + F.Ela.f_e_diri * Data.DirBCEla_t{1}(0)];
 
 
 t = 0;
@@ -53,10 +53,10 @@ for t = dt : dt : nts*dt
 
     disp(['time: ', num2str(t)]);
 
-    Fnew = [F.f_p * Data.source_up_t{1}(t) + F.j_p * Data.source_upd_t{1}(t) + F.f_p_diri * Data.DirBCPoro_up_t{1}(t); ...
-        F.g_p * Data.source_wp_t{1}(t) + F.h_p * Data.source_wpd_t{1}(t) + + F.g_p_diri * Data.DirBCPoro_wp_t{1}(t); ...
-        F.f_a * Data.source_phi_t{1}(t) + F.f_a_diri * Data.DirBCAcu_t{1}(t); ...
-        F.f_e * Data.source_ue_t{1}(t) + F.g_e * Data.source_ued_t{1}(t) + F.f_e_diri * Data.DirBCEla_t{1}(t)];
+    Fnew = [F.Poro.f_p * Data.source_up_t{1}(t) + F.Poro.j_p * Data.source_upd_t{1}(t) + F.Poro.f_p_diri * Data.DirBCPoro_up_t{1}(t); ...
+        F.Poro.g_p * Data.source_wp_t{1}(t) + F.Poro.h_p * Data.source_wpd_t{1}(t) + + F.Poro.g_p_diri * Data.DirBCPoro_wp_t{1}(t); ...
+        F.Acu.f_a * Data.source_phi_t{1}(t) + F.Acu.f_a_diri * Data.DirBCAcu_t{1}(t); ...
+        F.Ela.f_e * Data.source_ue_t{1}(t) + F.Ela.g_e * Data.source_ued_t{1}(t) + F.Ela.f_e_diri * Data.DirBCEla_t{1}(t)];
 
     rhs = [dt^2*beta_nm*Fnew + dt^2*(1/2-beta_nm)*Fold; ...
         gamma_nm*dt*Fnew  + dt*(1-gamma_nm)*Fold];
@@ -68,7 +68,7 @@ for t = dt : dt : nts*dt
         [Solutions] = SaveSolutionPoroAcuEla(Uh,femregion);
 
         % Postprocess solution
-        PostProcessSolution(Setup, Data, mesh, femregion, counter, Solutions,t);
+        PostProcessSolution(Setup, Data, mesh, femregion, counter, Solutions, t);
     end
 
     Uold    = Uh;

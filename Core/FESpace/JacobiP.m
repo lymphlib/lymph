@@ -1,6 +1,6 @@
 %> @file  JacobiP.m
 %> @author Mattia Corti, Paola F. Antonietti
-%> @date 20 February 2023 
+%> @date 16 September 2025 
 %> @brief The function evaluates the Jacobi polynomials
 %> 
 %> The function evaluates the Jacobi polynomial with parameters \f$\alpha\f$ and \f$\beta\f$ 
@@ -28,8 +28,11 @@ function [P] = JacobiP(x, alpha, beta, N)
     % Turn points into row if needed
     x = x(:); 
 
-    % Initialization of the matrix P
-    P = zeros(length(x), length(N));
+    % Extract maximum degree of the polinomial
+    Nmax = max(N);
+
+    % Construction of initial structure for polynomial construction
+    Ptable  = zeros(length(x), Nmax + 1);
 
     % Polynomial constants
     gamma0 = (2^(alpha+beta+1)/(alpha+beta+1)) * ... 
@@ -37,53 +40,29 @@ function [P] = JacobiP(x, alpha, beta, N)
 
     gamma1 = (alpha+1)*(beta+1)/(alpha+beta+3)*gamma0;
 
-    if any(N == 0)
-        P = P + (N == 0).*ones(size(x))/sqrt(gamma0);
-    end
-
-    if any(N == 1)
-        P = P + (N == 1).*(((alpha+beta+2)*x/2 + (alpha-beta)/2)/sqrt(gamma1));
-    end
-
-    if any(N > 1)
-        % Extraction of the list of polynomials degree larger than 7
-        N_app = N;
-        N_app(N_app<2) = [];
-        N_app = unique(N_app);
-        
-        % Starting from the last two polynomials
-        P_old  = (((alpha+beta+2)*x/2 + (alpha-beta)/2)/sqrt(gamma1));
-        P_oold = ones(size(x))/sqrt(gamma0);
-        start = 1;
-
-        % Cycle over the orders of Legendre polynomials
-        for jj = 1:length(N_app)
-            
-            c_oold = 2/(2+alpha+beta)*sqrt((alpha+1)*(beta+1)/(alpha+beta+3));
-
-            % Cycle of recursive formula reconstruction
-            for ii = start:N_app(jj)-1
-                    
-                    % Compute the constants of the recursive formula
-                    c_app = 2*ii+alpha+beta;
-                    c_new = 2/(c_app+2)*sqrt((ii+1)*(ii+1+alpha+beta)* ...
-                        (ii+1+alpha)*(ii+1+beta)/(c_app+1)/(c_app+3));
-                    c_old = - (alpha^2-beta^2)/(c_app*(c_app+2));
-
-                    % Recursive step 
-                    P_app = 1/c_new*((x-c_old).*P_old - c_oold.*P_oold);
-                    
-                    % Update of the values
-                    P_oold = P_old;
-                    P_old = P_app;
-                    c_oold = c_new;
-            end
+    % Construction of the basis for constant function
+    Ptable(:,1) = ones(length(x),1)/sqrt(gamma0);
     
-            % Update the beginning of the next recursive computation
-            start = N_app(jj);
+    % Construction of the basis for the linear function
+    Ptable(:,2) = (((alpha+beta+2)*x/2 + (alpha-beta)/2)/sqrt(gamma1));
+    
+    %% Recursive formula for computation of polynomials
+    c_oold = 2/(2+alpha+beta)*sqrt((alpha+1)*(beta+1)/(alpha+beta+3));
+    
+    for ii = 1:Nmax-1
 
-            % Update of the matrix
-            P = P + (N==N_app(jj)).*P_app;
-        end  
+        % Compute the constants of the recursive formula
+        c_app = 2*ii+alpha+beta;
+        c_new = 2/(c_app+2)*sqrt((ii+1)*(ii+1+alpha+beta)* ...
+            (ii+1+alpha)*(ii+1+beta)/(c_app+1)/(c_app+3));
+        c_old = - (alpha^2-beta^2)/(c_app*(c_app+2));
+
+        Ptable(:, ii+2)  = 1/c_new*((x-c_old).*Ptable(:, ii+1) - c_oold.*Ptable(:, ii));
+
+        c_oold = c_new;
     end
-end
+
+    % Output construction
+    P  = Ptable(:, N + 1);
+    
+  end

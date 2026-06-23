@@ -43,10 +43,10 @@ We report here for completeness a sample of the script.
 \verbatim
 %% InputData/DataTestEla.m 
 %% Elastodynamics problem in [0,1]^2 x (0,T] with Dirichlet conditions
-Data.name = 'DataTestEla';
-Data.TagElEla   = 1;         % Element tag
-Data.TagBcEla   = [2 3 4 5]; % Boundary tag
-Data.LabBcEla   = 'DDDD';    % (D)irichlet/(N)eumann/(A)bso
+Data.LabEl = {'E'};     % Element labels
+Data.TagEl = { 1 };     % Element tags
+Data.TagBc = {[2 3 4 5]};  % Boundary tags
+Data.LabBc = {'DDDD'};  % (D)irichlet/(N)eumann/(A)bsorbing
 %% Geometrical properties 
 Data.domain       = [0 1 0 1]; % domain bounds for a new mesh
 Data.N            = 100;        % number of elements for a new mesh
@@ -121,26 +121,19 @@ which calls the main algorithm, contained in \b MainFunctions/MainEla.m.
 
 \verbatim
 %% RunMainEla.m
-run("../ImportLymphPaths.m")
+%% Initial Simulation Setup
 MyPhysicsPath = pwd;
-addpath(genpath(fullfile(MyPhysicsPath,'Assembly')));
-addpath(genpath(fullfile(MyPhysicsPath,'Error')));
-addpath(genpath(fullfile(MyPhysicsPath,'InputData')));
-addpath(genpath(fullfile(MyPhysicsPath,'InputMesh')));
-addpath(genpath(fullfile(MyPhysicsPath,'MainFunctions')));
-addpath(genpath(fullfile(MyPhysicsPath,'PostProcessing')));
-addpath(genpath(fullfile(MyPhysicsPath,'TimeIntegration')));
-%% Simulation - Setup
-run("../RunSetup.m")
+run('../SimulationSetup.m');
 %% Input Data - Boundary conditions - Forcing term
 DataTestEla;
+%DataTestPhysicsEla;
 %% Mesh Generation
 if Data.MeshFromFile
     % Load existing mesh
     Data.meshfile = fullfile(Data.FolderName, Data.meshfileseq);
 else
-    % Create a new mesh with PolyMesher
-    Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','waves');
+    % Create a new mesh
+    Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','ela');
 end
 %% Main
 [Error] = MainEla(Data,Setup);
@@ -161,21 +154,20 @@ The mesh structure is saved in \b Data.meshfile.
 As the output of the run we obtain the plots in Figure 1 showing the
 computed solution (left), the analytical solution (center), and the arithmetic difference between the two (right).
 
-@image html ux_t1.png
-@image html uy_t1.png
-@image html duxdt_t1.png
-@image html duydt_t1.png "Figure 2. Left column: computed PolydG solution using a polygonal mesh with 100 elements, and polynomial degree equal to 3. Center column: analytical solution. Right column: the difference between numerical and analytical solutions."
+@image html Ux_t1.png
+@image html Uy_t1.png
+@image html dUxdt_t1.png
+@image html dUydt_t1.png "Figure 1. Left column: computed PolydG solution using a polygonal mesh with 100 elements, and polynomial degree equal to 3. Center column: analytical solution. Right column: the difference between numerical and analytical solutions."
 
 Moreover, the output structure \b Error contains the following fields: 
-    - \b nel = 100 \f$\rightarrow\f$ number of mesh elements,
-    - \b h = 0.1805 \f$\rightarrow\f$ mesh size,
+    - \b nel = 200 \f$\rightarrow\f$ number of mesh elements,
+    - \b h = 0.1332 \f$\rightarrow\f$ mesh size,
     - \b p = 3 \f$\rightarrow\f$ polynomial approximation degree \f$\ell=3\f$,
-    - \b error_L2_v = 0.0010 \f$\rightarrow\f$ \f$L^2\f$-norm of the error for the velocity, namely \f$\| \frac{\partial \mathbf{u}_{ex}}{\partial t} - \frac{\partial \mathbf{u}_{h}}{\partial t}\|_{L^2(\Omega)}\f$,
-    - \b error_L2_d = 2.7456e-04 \f$\rightarrow\f$ \f$L^2\f$-norm of the error for the displacement, namely \f$\| \mathbf{u}_{ex}- \mathbf{u}_{h} \|_{L^2(\Omega)}\f$,
-    - \b error_dG = 0.0689 \f$\rightarrow\f$ \f$dG\f$-norm of the error, namely \f$\| \mathbf{u}_{ex} - \mathbf{u}_h\|_{dG}\f$.
-    - \b error_energy = 0.0689 \f$\rightarrow\f$ \f$Energy\f$-norm of the error,  cf. \cite AM2017.
-
-
+    - \b error_L2_v = 8.9756e-04 \f$\rightarrow\f$ \f$L^2\f$-norm of the error for the velocity, namely \f$\| \frac{\partial \mathbf{u}_{ex}}{\partial t} - \frac{\partial \mathbf{u}_{h}}{\partial t}\|_{L^2(\Omega)}\f$,
+    - \b error_L2_d = 2.2991e-04 \f$\rightarrow\f$ \f$L^2\f$-norm of the error for the displacement, namely \f$\| \mathbf{u}_{ex}- \mathbf{u}_{h} \|_{L^2(\Omega)}\f$,
+    - \b error_dG = 0.0091 \f$\rightarrow\f$ \f$dG\f$-norm of the error, namely \f$\| \mathbf{u}_{ex} - \mathbf{u}_h\|_{dG}\f$.
+    - \b error_energy = 0.0092 \f$\rightarrow\f$ \f$Energy\f$-norm of the error,  cf. \cite AM2017.
+      
 Other outputs of the simulation are contained in the folder \b Ouput 
     - \b DataTestEla_50.mat, \b DataTestEla_100.mat \f$\rightarrow\f$ Matlab structure containing the simulation info and solutions at time \f$ t =0.5 \f$ and \f$ t = 1\f$. 
     - \b *.csv \f$\rightarrow\f$ solutions in .csv format at time \f$ t =0.5 \f$ and \f$ t = 1\f$.
@@ -201,9 +193,9 @@ Data.meshfileseq  = ["UnitSquare_50_el.mat","UnitSquare_100_el.mat", ...
 As the output of the aforementioned scripts we obtain the plots in Figure 2. In particular, we can observe the convergence of the PolydG solution obtained with \f$\ell_\kappa=3\f$ for any \f$\kappa \in \mathcal{T}_h\f$ with respect to the \f$L^2\f$-, \f$dG\f$-, and \f$Energy\f$-norms, confirming the theoretical results \cite AM2017.
 In Figure 3 the exponential convergence with respect to the polynomial degree \f$\ell\f$ is also shown by fixing \f$N_{el} = 50\f$.
 
-@image html convhtutorials.png "Figure 3. \b Error.error_energy, \b Error.error_dG and \b Error.error_L2_d as a function of the mesh size h by fixing the polynomial degree equal to 3, time step equal to 0.001 and  final time T=1."
+@image html ConvhTutorial.png "Figure 2. \b Error.error_energy, \b Error.error_dG and \b Error.error_L2_d as a function of the mesh size h by fixing the polynomial degree equal to 3, time step equal to 0.001 and  final time T=1."
 
-@image html convptutorials.png "Figure 4. \b Error.error_energy, \b Error.error_dG and \b Error.error_L2_d as a function of the polynomial degree by fixing the number of mesh elements equal to 50."
+@image html ConvpTutorials.png "Figure 3. \b Error.error_energy, \b Error.error_dG and \b Error.error_L2_d as a function of the polynomial degree by fixing the number of mesh elements equal to 50."
  
      
  

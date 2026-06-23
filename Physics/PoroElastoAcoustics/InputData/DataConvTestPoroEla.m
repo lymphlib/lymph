@@ -2,30 +2,24 @@
 Data.name = 'DataConvTestPoroEla';
 Data.NPhys = 2;
 
-Data.TagElPoro  = 1; % Element tag
-Data.TagBcPoro  = [3 7 8]; % Boundary tag
-Data.LabBcPoro  = 'DDD'; % (D)irichlet/(N)eumann/(A)bso
+Data.LabEl = {'P', 'E'};     % Element labels
+Data.TagEl = { 1 ,  2 };     % Element tags
 
-Data.TagElAcu   = []; % Element tag
-Data.TagBcAcu   = []; % Boundary tag
-Data.LabBcAcu   = []; % (D)irichlet/(N)eumann 
-
-Data.TagElEla   = 2; % Element tag
-Data.TagBcEla   = [4 5 6]; % Boundary tag
-Data.LabBcEla   = 'DDD'; % (D)irichlet/(N)eumann/(A)bso
+Data.TagBc = {[3 7 8], [4 5 6]};  % Boundary tags
+Data.LabBc = {'DDD'  , 'DDD'  };  % (D)irichlet/(N)eumann/(A)bsorbing
 
 %% Geometrical properties 
 Data.domain       = [-1 1, 0 1];             % domain bounds for a new mesh
 Data.N            = [50 100 200 400];       % number of elements for a new mesh
-Data.MeshFromFile = false;                  % read mesh from file
+Data.MeshFromFile = true;                  % read mesh from file
 Data.FolderName   = 'InputMesh';
 Data.VTKMeshFileName = 'Mesh.vtk';
-Data.meshfileseq  = 'SquareBidomain';       %filename for mesh 
+Data.meshfileseq  = ["SquareBidomain_50_el.mat","SquareBidomain_100_el.mat","SquareBidomain_200_el.mat","SquareBidomain_400_el.mat"];       %filename for mesh 
 
 %% Discretization properties                            
 %% Time integration
 Data.t0 = 0;
-Data.T  =  0.25;
+Data.T  =  0.025;
 Data.dt = 0.001;
 
 Data.timeint   = 'newmark';
@@ -138,12 +132,12 @@ Data.dwp_t_ex =  {@(t) -sqrt(2)*pi*sin(sqrt(2)*pi*t)};
 % du1/dx, du1/dy, du2/dx, du2/dy
 Data.grad_up_ex =  {@(x,y) 2*x.*cos((pi*x)/2).*sin(pi*x) + x.^2*pi.*cos(pi*x).*cos((pi*x)/2) - (x.^2*pi.*sin(pi*x).*sin((pi*x)/2))/2; ...
                     @(x,y) 0*x.*y; ...
-                    @(x,y) 2*x.*cos((pi*x)/2).*sin(pi*x) + x.^2*pi*cos(pi*x).*cos((pi*x)/2) - (x.^2*pi*sin(pi*x).*sin((pi*x)/2))/2; ...
+                    @(x,y) 2*x.*cos((pi*x)/2).*sin(pi*x) + x.^2*pi.*cos(pi*x).*cos((pi*x)/2) - (x.^2*pi.*sin(pi*x).*sin((pi*x)/2))/2; ...
                     @(x,y) 0*x.*y;};
 
-Data.grad_wp_ex =  {@(x,y) -(2.*x*cos((pi*x)/2).*sin(pi*x) + x.^2*pi*cos(pi*x).*cos((pi*x)/2) - (x.^2*pi*sin(pi*x).*sin((pi*x)/2))/2); ...
+Data.grad_wp_ex =  {@(x,y) -(2.*x.*cos((pi*x)/2).*sin(pi*x) + x.^2*pi.*cos(pi*x).*cos((pi*x)/2) - (x.^2*pi.*sin(pi*x).*sin((pi*x)/2))/2); ...
                     @(x,y) 0*x.*y; ...
-                    @(x,y) -(2.*x.*cos((pi*x)/2).*sin(pi*x) + x.^2*pi*cos(pi*x).*cos((pi*x)/2) - (x.^2*pi*sin(pi*x).*sin((pi*x)/2))/2); ...
+                    @(x,y) -(2.*x.*cos((pi*x)/2).*sin(pi*x) + x.^2*pi.*cos(pi*x).*cos((pi*x)/2) - (x.^2*pi.*sin(pi*x).*sin((pi*x)/2))/2); ...
                     @(x,y) 0*x.*y;};
 
 %% properties acoustic material

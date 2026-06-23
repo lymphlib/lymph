@@ -32,17 +32,18 @@ In particular, \b RunSetup.m defines the  simulation setup and contains the foll
 
 \subsection subUGH2 Input data files
 
-To define the input data for the specific simulation you can use a MATLAB script (e.g. \b InputData/Elastic/DataTestHeat.m).
+To define the input data for the specific simulation you can use a MATLAB script (e.g. \b InputData/DataTestCasePaper.m).
 You can set up the number of the element mesh, the polynomial approximation degree, the penalty constant, final time, time step, time integration scheme, 
 boundary conditions, forcing terms and analystical solution (if needed). 
 
  \verbatim
-%% InputData/DataTestHeat.m 
+%% InputData/DataTestCasePaper.m 
 %% Heat equation in double circular mesh with Dirichlet conditions
 Data.name = 'TestCase';
-Data.TagElLap = 1;         % Element tag
-Data.TagBcLap = [2 3 4 5]; % Boundary tag
-Data.LabBcLap = 'DDDD';    % Dirichlet/Neumann/Abso
+Data.LabEl = {'L'};     % Element labels
+Data.TagEl = { 1 };     % Element tags
+Data.TagBc = {[2 3 4 5]};  % Boundary tags
+Data.LabBc = {'DDDD'};  % (D)irichlet/(N)eumann/(A)bsorbing
 Data.TagApplyBCs = 1;      % Skip the assembling of BCs if not necessary
 %% Geometrical properties 
 Data.domain             = [-1.5 1.5 -1 1];
@@ -52,19 +53,21 @@ Data.FolderName         = 'Meshes';
 Data.VTKMeshFileName    = 'Mesh.vtk';
 Data.meshfileseq        = "DataTestDCLap_250_el.mat"; % Names of mesh files
 %% Material properties 
-Data.mu          = {@(x,y) 0.1+0.*x};     % Diffusion parameter
-Data.sigma       = {@(x,y) 0+0.*x};       % Reaction parameter
+Data.mu          = {@(x,y,t) 1+0.*x};     % Diffusion parameter
+Data.sigma       = {@(x,y,t) 0+0.*x};     % Reaction parameter
 % Forcing Term
-Data.homog_source_f = true;
-Data.source_f   = {@(x,y,t) 0.*x};
+Data.homog_source_f = false;
+Data.source_f       = {@(x,y,t) -(cos(pi*x).*cos(pi*y)+2).*exp(-t)+2*pi*pi*cos(pi*x).*cos(pi*y).*exp(-t)};
 % Boundary Conditions
-Data.DirBC    =  @(x,y,t) (x>=0);
+Data.DirBC        = {@(x,y,t) (cos(pi*x).*cos(pi*y)+2).*exp(-t)};
+Data.gradDirBC    = {@(x,y,t) -pi.*(sin(pi*x).*cos(pi*y)).*exp(-t) ; @(x,y,t) -pi.*(cos(pi*x).*sin(pi*y)).*exp(-t)};
 % Exact Solution (if any)
-Data.c_ex     =  @(x,y,t) (x>=0);
+Data.u_ex     =  {@(x,y,t) (cos(pi*x).*cos(pi*y)+2).*exp(-t)};
 % Gradient of the Exact Solution
-Data.dc_dx_ex =  @(x,y,t) 0.*x;
-Data.dc_dy_ex =  @(x,y,t) 0.*x;
-Data.dc_dt_ex =  @(x,y,t) 0.*x;
+Data.du_dx_ex =  {@(x,y,t) -pi*sin(pi*x).*cos(pi*y).*exp(-t)};
+Data.du_dy_ex =  {@(x,y,t) -pi*cos(pi*x).*sin(pi*y).*exp(-t)};
+Data.du_dt_ex =  {@(x,y,t) -(cos(pi*x).*cos(pi*y)+2).*exp(-t)};
+
 %% Discretization properties
 %% Time integration
 Data.t0     = 0;

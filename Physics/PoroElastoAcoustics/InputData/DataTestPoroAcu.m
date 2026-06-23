@@ -3,17 +3,11 @@
 Data.name = 'DataTestPoroAcu';
 Data.NPhys = 2;
 
-Data.TagElPoro  = 1; % Element tag
-Data.TagBcPoro  = [3 7 8]; % Boundary tag
-Data.LabBcPoro  = 'DDD'; % (D)irichlet/(N)eumann/(A)bso
+Data.LabEl = {'P', 'A'};     % Element labels
+Data.TagEl = { 1 ,  2 };     % Element tags
 
-Data.TagElAcu   = 2; % Element tag
-Data.TagBcAcu   = [4 5 6]; % Boundary tag
-Data.LabBcAcu   = 'DDD'; % (D)irichlet/(N)eumann 
-
-Data.TagElEla   = []; % Element tag
-Data.TagBcEla   = []; % Boundary tag
-Data.LabBcEla   = []; % (D)irichlet/(N)eumann/(A)bso
+Data.TagBc = {[3 7 8], [4 5 6]};  % Boundary tags
+Data.LabBc = {'DDD'  , 'DDD'  };  % (D)irichlet/(N)eumann/(A)bsorbing
 
 %% Geometrical properties 
 Data.domain       = [-1 1 -1 1]; % domain bounds for a new mesh
@@ -137,14 +131,14 @@ Data.dwp_t_ex =  {@(t) -sqrt(2)*pi*sin(sqrt(2)*pi*t)};
 
 % exact gradient --> used for the error analysis
 % du1/dx, du1/dy, du2/dx, du2/dy
-Data.grad_up_ex =  {@(x,y) 2*x.*cos((pi*x)/2).*sin(pi*x) + x.^2*pi.*cos(pi*x).*cos((pi*x)/2) - (x.^2*pi.*sin(pi*x).*sin((pi*x)/2))/2; ...
+Data.grad_up_ex =  {@(x,y) 2*x.*cos((pi*x)./2).*sin(pi*x) + x.^2*pi.*cos(pi*x).*cos((pi*x)./2) - (x.^2*pi.*sin(pi*x).*sin((pi*x)./2))./2; ...
                     @(x,y) 0*x.*y; ...
-                    @(x,y) 2*x.*cos((pi*x)/2).*sin(pi*x) + x.^2*pi*cos(pi*x).*cos((pi*x)/2) - (x.^2*pi*sin(pi*x).*sin((pi*x)/2))/2; ...
+                    @(x,y) 2*x.*cos((pi*x)./2).*sin(pi*x) + x.^2*pi.*cos(pi*x).*cos((pi*x)./2) - (x.^2*pi.*sin(pi*x).*sin((pi*x)./2))./2; ...
                     @(x,y) 0*x.*y;};
 
-Data.grad_wp_ex =  {@(x,y) -(2.*x*cos((pi*x)/2).*sin(pi*x) + x.^2*pi*cos(pi*x).*cos((pi*x)/2) - (x.^2*pi*sin(pi*x).*sin((pi*x)/2))/2); ...
+Data.grad_wp_ex =  {@(x,y) -(2.*x.*cos((pi*x)./2).*sin(pi*x) + x.^2*pi.*cos(pi*x).*cos((pi*x)/2) - (x.^2*pi.*sin(pi*x).*sin((pi*x)./2))/2); ...
                     @(x,y) 0*x.*y; ...
-                    @(x,y) -(2.*x.*cos((pi*x)/2).*sin(pi*x) + x.^2*pi*cos(pi*x).*cos((pi*x)/2) - (x.^2*pi*sin(pi*x).*sin((pi*x)/2))/2); ...
+                    @(x,y) -(2.*x.*cos((pi*x)./2).*sin(pi*x) + x.^2*pi.*cos(pi*x).*cos((pi*x)/2) - (x.^2*pi.*sin(pi*x).*sin((pi*x)./2))/2); ...
                     @(x,y) 0*x.*y;};
 
 %% properties acoustic material
@@ -162,8 +156,8 @@ Data.phi_t_ex  = {@(t) sin(pi*t*sqrt(2))};
 Data.dphi_t_ex = {@(t) sqrt(2)*pi*cos(sqrt(2)*pi*t)};
 
 % exact gradient --> used for the error analysis
-Data.grad_phi_ex =  {@(x,y) 2*x.*sin(pi*x).*sin(pi*y) + x.^2*pi*cos(pi*x).*sin(pi*y); ...
-                     @(x,y) x.^2*pi*cos(pi*y).*sin(pi*x)};
+Data.grad_phi_ex =  {@(x,y) 2*x.*sin(pi.*x).*sin(pi.*y) + x.^2*pi.*cos(pi*x).*sin(pi*y); ...
+                     @(x,y) x.^2*pi.*cos(pi*y).*sin(pi*x)};
 
 Data.DirBCAcu   = {@(x,y) x.^2.*sin(pi*x).*sin(pi*y)};
 Data.DirBCAcu_t = {@(t) sin(pi*t*sqrt(2))};

@@ -1,6 +1,6 @@
 %> @file  GradJacobiP.m
 %> @author Mattia Corti, Paola F. Antonietti
-%> @date 20 February 2023 
+%> @date 16 September 2025 
 %> @brief The function evaluates the gradient of Jacobi polynomials
 %> 
 %> The function evaluates the gradient of Jacobi polynomial with parameters \f$\alpha\f$ and \f$\beta\f$ 
@@ -26,12 +26,12 @@
 
 function [dP] = GradJacobiP(x, alpha, beta, N)
 
-    % Computation of the associated Jacobi polynomials
-    dP = sqrt(N*(N+alpha+beta+1))*JacobiP(x, alpha+1, beta+1, N-1);
+    dP = zeros(length(x),length(N));
 
-    % Derivative of the constant polynomial is equal to 0
-    if any(N == 0)
-        dP(N == 0) = 0.0;
+    N_J = N(N>0);
+        
+    if ~isempty(N_J)
+        % Computation of the associated Jacobi polynomials
+        dP(:,N > 0) = sqrt(N_J.*(N_J+alpha+beta+1)).*JacobiP(x, alpha+1, beta+1, N_J-1);
     end
-
 end

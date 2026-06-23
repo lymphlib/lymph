@@ -2528,3 +2528,51 @@ div.horizontalgap {
   height: 1px;
   width: 0px;
 }
+
+html,
+html.dark-mode,
+html:not(.light-mode) {
+    color-scheme: light !important;
+
+    --page-background-color: #ffffff !important;
+    --page-foreground-color: #000000 !important;
+    --page-secondary-foreground-color: #444444 !important;
+
+    --side-nav-background: #f7f7f7 !important;
+    --header-background: #ffffff !important;
+
+    --code-background: #f5f5f5 !important;
+    --fragment-background: #f8f8f8 !important;
+    --tablehead-background: #eeeeee !important;
+
+    --separator-color: #d0d0d0 !important;
+}
+
+/* Force light code blocks */
+html,
+html.dark-mode,
+html:not(.light-mode) {
+    --fragment-background: #f8f8f8 !important;
+    --fragment-foreground: #2f4153 !important;
+    --fragment-comment: #6a737d !important;
+    --fragment-keyword: #005cc5 !important;
+    --fragment-keywordtype: #6f42c1 !important;
+    --fragment-keywordflow: #d73a49 !important;
+    --fragment-token: #032f62 !important;
+    --fragment-link: #0366d6 !important;
+    --fragment-preprocessor: #22863a !important;
+    --fragment-linenumber-color: #6a737d !important;
+    --fragment-linenumber-background: #f1f1f1 !important;
+    --fragment-linenumber-border: #d0d0d0 !important;
+
+    --code-background: #f5f5f5 !important;
+    --code-foreground: #2f4153 !important;
+}
+
+div.fragment,
+pre.fragment,
+div.fragment .line,
+pre.fragment .line {
+    background: var(--fragment-background) !important;
+    color: var(--fragment-foreground) !important;
+}

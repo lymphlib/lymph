@@ -1,6 +1,6 @@
 %> @file  ThetaMethodSolver.m
-%> @author Mattia Corti
-%> @date 3 October 2023
+%> @author Mattia Corti, Caterina Leimer Saglio
+%> @date 15 April 2026
 %> @brief Implementation of theta-method for the heat equation.
 %>
 %==========================================================================
@@ -15,28 +15,30 @@
 %> @param Matrices          Matrices associated to the PDE
 %> @param u_old             Initial condition of the problem (t=0)
 %>
+%> @retval Solution         Struct containing the problem solution
+%> @retval IntError         Struct containing the time integrals of dG and
+%> L2 errors
+%>
 %==========================================================================
 
-function [u_h, IntError] = ThetaMethodSolver(Setup, Data, femregion, mesh, Matrices, u_old)
+function [Solution, femregion, IntError] = ThetaMethodSolver(Setup, Data, femregion, mesh, Matrices, u_old)
 
-
+    Solution.u_old = u_old;
     %% Assembling the constant component of the matrices
 
-    LHS = Matrices.M_prj + Data.dt*Data.theta*(Matrices.A+Matrices.M);
-    RHS = Matrices.M_prj - Data.dt*(1-Data.theta)*(Matrices.A+Matrices.M);
+    LHS = Matrices.Mprj + Data.dt*Data.theta*(Matrices.A+Matrices.M);
+    RHS = Matrices.Mprj - Data.dt*(1-Data.theta)*(Matrices.A+Matrices.M);
 
     %% Right-hand side assembly
-
     fprintf('\nComputing forcing terms ... \n');
 
-    [F_new] = ForcingHeat(Data, mesh.neighbor, femregion, Data.t0);
+    [F_new] = ForcingTermAssemblyHeat(Data, mesh, femregion, Data.t0, []);
 
     fprintf('\nDone\n')
     fprintf('\n------------------------------------------------------------------\n')
 
     % Initialization of the integral component of the error
     IntError = 0;
-
     counter = 1;
 
     %% Time-loop
@@ -48,29 +50,33 @@ function [u_h, IntError] = ThetaMethodSolver(Setup, Data, femregion, mesh, Matri
 
         F_old = F_new;
 
-        if ~Data.homog_source_f || Data.TagApplyBCs == 1
-            [F_new] = ForcingHeat(Data, mesh.neighbor, femregion, t);
-        end
+        [F_new] = ForcingTermAssemblyHeat(Data, mesh, femregion, t, []);
 
         %% Assembling the dynamic component of the matrices in the two treatments of nonlinear term
 
         % Construction of the complete RHS for the theta method
-        F = RHS * u_old + Data.dt*Data.theta*F_new + Data.dt*(1-Data.theta)*F_old;
+        F = RHS * Solution.u_old + Data.dt*Data.theta*F_new.F + Data.dt*(1-Data.theta)*F_old.F;
 
         % Linear system resolution
-        u_h = LHS\F;
+        Solution.u_h = LHS\F;
 
+        %% Error computation
         if Setup.isError == 1
-            [ErrJIT] = ComputeErrors(Data, Matrices, femregion, u_h, t);
-            IntError = IntError + Data.dt*ErrJIT.err_u_dG.^2;
+            [ErrJIT] = ComputeErrorsHeat(Data, mesh, femregion, Solution.u_h, t);
+            IntError = IntError + Data.dt*ErrJIT.dG.^2;
+        end
+
+        %% Compute the indicator for p-adaptivity
+        if (mod(counter,Data.AdaptivityStep)==0) && Data.Adaptivity
+            [Data, Solution, femregion, Matrices, RHS, LHS, F_new] = AdaptivityCycle(Data, mesh, femregion, Solution, Matrices, F_old, F_new, t);
         end
 
         %% Postprocess solution
         if (mod(counter,Data.VisualizationStep)==0) && (Setup.isSaveCSV || Setup.isSaveVTK || Setup.isSaveSolution || Setup.isPlotSolution)
-            PostProcessSolution(Setup, Data, mesh, femregion, counter, u_h,t);
+            PostProcessSolution(Setup, Data, mesh, femregion, counter, Solution, t);
         end
         %% Time advancement
-        u_old = u_h;
+        Solution.u_old = Solution.u_h;
 
         counter = counter + 1;
 

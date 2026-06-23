@@ -1,6 +1,6 @@
 %> @file  MainPoroAcuEla.m
 %> @author Ilario Mazzieri, Mattia Corti
-%> @date 06 August 2024
+%> @date 5 June 2026
 %> @brief Solution of the coupled poro-elasto-acoustic problem with PolydG
 %>
 %==========================================================================
@@ -22,12 +22,12 @@ fprintf('... here display some info about the simulation ... \n');
 fprintf('\n------------------------------------------------------------------\n')
 
 %% Load Region
-[mesh, femregion, Data.h] = MeshFemregionSetup(Setup, Data, {Data.TagElPoro, Data.TagElEla, Data.TagElAcu}, {'P','E','A'});
+[mesh, femregion, Data.h] = MeshFemregionSetup(Setup, Data);
 
 %%  Matrix Assembly
 fprintf('\nMatrices computation ... \n');
 tic
-[Matrices] = MatPoroAcuEla(Data, mesh.neighbor, femregion);
+[Matrices] = MatrixAssemblyPoroElastoAcoustics(Data, mesh, femregion);
 toc
 fprintf('Done \n')
 fprintf('\n------------------------------------------------------------------\n')
@@ -37,18 +37,15 @@ fprintf('\n------------------------------------------------------------------\n'
 
 fprintf('\nComputing RHS ... \n');
 tic
-[F] = ForPoroAcuEla(Data, mesh.neighbor, femregion);
+[F] = ForcingTermAssemblyPoroElastoAcoustics(Data, mesh, femregion, Data.t0);
 toc
 fprintf('Done\n')
 fprintf('\n------------------------------------------------------------------\n')
 
-
 %% Assembly of the ODE system A \ddot{x} + B\dot{x} + C x
 
 fprintf('\nAssembly ODE system matrices ... \n');
-
 [A, B, C] = AssembleODEMatricesPoroAcuEla(Data,Matrices);
-
 fprintf('\nDone\n')
 fprintf('\n------------------------------------------------------------------\n')
 
@@ -56,8 +53,7 @@ fprintf('\n------------------------------------------------------------------\n'
 
 fprintf('\nComputing initial conditions ... \n');
 
-[Uold, Solutions] = GetInitalConditionsPoroAcuEla(Data,femregion, Matrices);
-
+[Uold, Solutions] = GetInitalConditionsPoroAcuEla(Data, mesh, femregion, Matrices);
 
 %% Plot initial condition
 if Data.PlotIniCond
@@ -75,7 +71,7 @@ if strcmp(Data.timeint,'newmark')
 
     fprintf('\nNewmark time integration ... \n');
     tic
-    [Solutions] = NewmarkSchemePoroAcuEla(Setup, Data, femregion, mesh.region, A, B, C, F, Uold);
+    [Solutions] = NewmarkSchemePoroAcuEla(Setup, Data, femregion, mesh, A, B, C, F, Uold);
     toc
     fprintf('\nDone\n')
     fprintf('\n------------------------------------------------------------------\n')
@@ -99,8 +95,9 @@ end
 if Setup.isError
     fprintf('\nComputing Errors ... \n');
 
-    [Error] = ComputeErrorsPoroAcuEla(Data, mesh.neighbor, femregion, Matrices, Solutions);
-
+    [Error] = ComputeErrorsPoroAcuEla(Data, mesh, femregion, Solutions, Data.T);
+    Error.h = Data.h;
+    
     fprintf('Done\n')
     fprintf('\n------------------------------------------------------------------\n')
 else

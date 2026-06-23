@@ -3,17 +3,11 @@ ope%% Acoustic problem in [0 1]^2 with Dirichlet conditions
 Data.name = 'DataTestAcu';
 Data.NPhys = 1;
 
-Data.TagElPoro  = []; % Element tag
-Data.TagBcPoro  = []; % Boundary tag
-Data.LabBcPoro  = []; % (D)irichlet/(N)eumann/(A)bso
+Data.LabEl = {'A'};     % Element labels
+Data.TagEl = { 1 };     % Element tags
 
-Data.TagElAcu   = 1; % Element tag
-Data.TagBcAcu   = [2 3 4 5]; % Boundary tag
-Data.LabBcAcu   = 'DDDD'; % (D)irichlet/(N)eumann 
-
-Data.TagElEla   = []; % Element tag
-Data.TagBcEla   = []; % Boundary tag
-Data.LabBcEla   = []; % (D)irichlet/(N)eumann/(A)bso
+Data.TagBc = {[2 3 4 5]};  % Boundary tags
+Data.LabBc = {'DDDD'};     % (D)irichlet/(N)eumann/(A)bsorbing
 
 %% Geometrical properties 
 Data.domain       = [0 1 0 1]; % domain bounds for a new mesh

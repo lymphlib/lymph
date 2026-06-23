@@ -26,9 +26,10 @@ We report here for completeness a sample of the script.
 %% InputData/DataTestCasePaper.m 
 %% Patch test for Heat equation
 Data.name = 'TestCase';
-Data.TagElLap = 1;         % Element tag
-Data.TagBcLap = [2 3 4 5]; % Boundary tag
-Data.LabBcLap = 'DDDD';    % Dirichlet/Neumann/Abso
+Data.LabEl = {'L'};     % Element labels
+Data.TagEl = { 1 };     % Element tags
+Data.TagBc = {[2 3 4 5]};  % Boundary tags
+Data.LabBc = {'DDDD'};  % (D)irichlet/(N)eumann/(A)bsorbing
 Data.TagApplyBCs = 1;      % Skip the assembling of BCs if not necessary
 %% Geometrical properties
 Data.domain             = [-1.5 1.5 -1 1];
@@ -38,15 +39,16 @@ Data.FolderName         = 'Meshes';
 Data.VTKMeshFileName    = 'Mesh.vtk';
 Data.meshfileseq        = 'DataTestDCLap_250_el'; % Names of mesh files
 %% Material properties 
-Data.mu          = {@(x,y) 0.1+0.*x};     % Diffusion parameter
-Data.sigma       = {@(x,y) 0+0.*x};       % Reaction parameter
+Data.mu          = {@(x,y,t) 1+0.*x};     % Diffusion parameter
+Data.sigma       = {@(x,y,t) 0+0.*x};     % Reaction parameter
 % Forcing Term
-Data.homog_source_f = true;
-Data.source_f   = {@(x,y,t) 0.*x};
+Data.homog_source_f = false;
+Data.source_f       = {@(x,y,t) -(cos(pi*x).*cos(pi*y)+2).*exp(-t)+2*pi*pi*cos(pi*x).*cos(pi*y).*exp(-t)};
 % Boundary Conditions
-Data.DirBC    =  @(x,y,t) (x>=0);
+Data.DirBC        = {@(x,y,t) (cos(pi*x).*cos(pi*y)+2).*exp(-t)};
+Data.gradDirBC    = {@(x,y,t) -pi.*(sin(pi*x).*cos(pi*y)).*exp(-t) ; @(x,y,t) -pi.*(cos(pi*x).*sin(pi*y)).*exp(-t)};
 % Exact Solution (if any)
-Data.c_ex     =  @(x,y,t) (x>=0);
+Data.u_ex     =  {@(x,y,t) (cos(pi*x).*cos(pi*y)+2).*exp(-t)};
 ...
 %% Discretization properties
 %% Time integration
@@ -58,12 +60,19 @@ Data.theta  = 0.5;
 Data.degree        = 5;          % Polynomial degree
 Data.penalty_coeff = 10;         % Penalty coefficient
 ...
+%% Visualization settings
+
+Data.PlotExact          = false;
+Data.PlotIniCond        = true;
+Data.PlotGridSol        = true;
+Data.VisualizationStep  = 10;
+Data.NPtsVisualization  = 20; 
+...
 \endverbatim
 
 Nex, we define the following option in the \b RunSetup.m file.
 
 \verbatim
-
     %% RunSetup.m
     ...
     % Plot polygonal mesh y/n
@@ -76,83 +85,71 @@ Nex, we define the following option in the \b RunSetup.m file.
     Setup.isPlotSolution = 1;
     
     % Save solution y/n -> .mat file
-    Setup.isSaveSolution = 1;
+    Setup.isSaveSolution = 0;
     Setup.OutFolder = 'Output';
 
     % Additional solution output y/n -> .csv file
-    Setup.isSaveCSV = 1;
+    Setup.isSaveCSV = 0;
 
     % Additional solution output y/n -> .vtk file
     Setup.isSaveVTK = 0;
     Setup.OutFolderVTK = 'OutputVTK';
     
     % Compute errors y/n
-    Setup.isError = 1;
+    Setup.isError = 0;
 
+    % Use parallel implementation y/n
+    Setup.isParallel = 0;
+    Setup.numCores = 4;
 \endverbatim
 
- 
 \section secTutPar2 Simulation run
 
 We run the specific simulation using the script \b RunMainHeat.m, 
 which calls the main algorithm, contained in \b MainFunctions/MainHeat.m.
 
 \verbatim
-%% File RunMainHeat.m
-run("../ImportLymphPaths.m")
+%% Initial Simulation Setup
 MyPhysicsPath = pwd;
-addpath(genpath(fullfile(MyPhysicsPath,'Assembly')));
-addpath(genpath(fullfile(MyPhysicsPath,'Error')));
-addpath(genpath(fullfile(MyPhysicsPath,'InputData')));
-addpath(genpath(fullfile(MyPhysicsPath,'InputMesh')));
-addpath(genpath(fullfile(MyPhysicsPath,'MainFunctions')));
-addpath(genpath(fullfile(MyPhysicsPath,'PostProcessing')));
-addpath(genpath(fullfile(MyPhysicsPath,'TimeIntegration')));
-%% Simulation - Setup
-run("../RunSetup.m")
+run('../SimulationSetup.m');
 %% Input Data - Boundary conditions - Forcing term
+%DataTestCasepAdaptive;
 DataTestCasePaper;
 %% Mesh Generation
 if Data.MeshFromFile
     % Load an existing mesh
     Data.meshfile = fullfile(Data.FolderName, Data.meshfileseq);
 else
-    Data.meshfile = MakeMeshDoubleCircle(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'laplacian');
+    Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','laplacian');
+    %Data.meshfile = MakeMeshDoubleCircle(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'laplacian');
 end
 %% Main 
 [Error] = MainHeat(Data,Setup)
+
 \endverbatim 
  
-The script contains different calls, among which one is devoted to the mesh construction, i.e., \b MakeMeshDoubleCircles.m
+The script contains different calls, among which one is devoted to the mesh construction, i.e., \b MakeMeshDoubleCircle.m
 that is contained in \b lymph/MeshGeneration.
 \verbatim
 Data.meshfile = MakeMeshDoubleCircle(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'laplacian');
-\endverbatim 
+\endverbatim
 The function \b MakeMeshDoubleCircle.m calls the PolyMesher program \cite talischi2012polymesher to generate the polygonal mesh for the considered domain. The mesh structure is saved in \b Data.meshfile.
  
 
 \section secTutPar3 Outputs
-
-
 As the output of the run we obtain the plots in Figure 1 showing the
 constructed mesh (left), the obtained numerical solution (right).
 
-@image html MeshHeat.png "Figure 1: Constructed mesh for the resolution of the test case."
-@image html SolHeat.png "Figure 2: Obtained numerical solution of the test case."
+@image html MeshHeat.png "Figure 1: Constructed mesh for the resolution of the test case." width=300px
+@image html sol_heat.png "Figure 2: Obtained numerical solution of the test case."
 
 Moreover, the output structure \b Error contains the following fields: 
-    - \b nel = 250 \f$\rightarrow\f$ number of mesh elements,
-    - \b h = 0.2268 \f$\rightarrow\f$ mesh size,
-    - \b err_c_L2 \f$\rightarrow\f$ \f$L^2\f$-norm of the error for the velocity, namely \f$\| \frac{\partial \mathbf{u}_{ex}}{\partial t} - \frac{\partial \mathbf{u}_{h}}{\partial t}\|_{L^2(\Omega)}\f$,
-    - \b err_c_dG \f$\rightarrow\f$ \f$dG\f$-norm of the error, namely \f$\| \mathbf{u}_{ex} - \mathbf{u}_h\|_{dG}\f$.
-    - \b err_Energy \f$\rightarrow\f$ Energy-norm of the error.
-We do not report the numerical values, beacuse the absence of an exact analytical solution make the error computation not meaningful.
-
-Other outputs of the simulation are contained in the folder \b SavedSolutions 
-    - \b Solution_40.csv \f$\rightarrow\f$ csv containing the simulation solution in the quadrature nodes at final time. 
-    
-and in the folder \b OutputVTK 
-    - \b Mesh.vtk \f$\rightarrow\f$ mesh in .vtk format
+    - \b Error.nel = 250 \f$\rightarrow\f$ number of mesh elements,
+    - \b Error.h = 0.1155 \f$\rightarrow\f$ mesh size,
+    - \b Error.p = 3 \f$\rightarrow\f$ polynomial approximation degree \f$\ell=3\f$,
+    - \b Error.L2 = 1.94e-6 \f$\rightarrow\f$ \f$L^2\f$-norm of the error, namely \f$\| u_{ex} - u_h\|_{L^2(\Omega)}\f$,
+    - \b Error.dG = 7.18e-4 \f$\rightarrow\f$ \f$dG\f$-norm of the error, namely \f$\| u_{ex} - u_h\|_{dG}\f$,
+    - \b Error.err_Energy = 7.42e-4 \f$\rightarrow\f$ \f$Energy\f$-norm of the error, namely \f$\| u_{ex} - u_h\|_{Energy}\f$,
 
 \section secTutPar4 Convergence tests with respect to mesh refinement
 
@@ -169,7 +166,7 @@ Data.meshfileseq  = ["UnitSquare_30_el.mat","UnitSquare_100_el.mat", ...
 
 As the output of the aforementioned scripts we obtain the plots in Figure 3. In particular, we can observe the convergence of the PolydG solution obtained with \f$\ell_\kappa=1\f$ for any \f$\kappa \in \mathcal{T}_h\f$ with respect to the \f$L^2\f$-, \f$dG\f$-, and \f$Energy\f$-norms.
 
-@image html hConvergence.png "Figure 3. \b Error.error_energy, \b Error.error_dG and \b Error.error_L2_d as a function of the mesh size h by fixing the polynomial degree equal to 1, time step equal to 0.00001 and final time 0.0001."
+@image html hConvergenceHeat.png "Figure 3. \b Errors.error_Energy, \b Errors.error_u_dG and \b Errors.error_u_L2 as a function of the mesh size h by fixing the polynomial degree equal to 1, time step equal to 0.00001 and final time 0.0001."
  
 \section secTutParConv Convergence test with respect to the polynomial degree
 
@@ -185,7 +182,7 @@ Data.degree  = [1, 2, 3, 4, 5, 6, 7, 8];
 
 As the output of the aforementioned script we obtain the plot in Figure 4. The exponential convergence with respect to the polynomial degree \f$\ell\f$ is shown by fixing \f$N_{el} = 30\f$.
 
-@image html pConvergence.png "Figure 4. \b Error.error_energy, \b Error.error_dG and \b Error.error_L2_d as a function of the polynomial degree by fixing the number of mesh elements equal to 30."
+@image html ConvergencepHeat.png "Figure 4. \b Errors.error_Energy, \b Errors.error_u_dG and \b Errors.error_u_L2 as a function of the polynomial degree by fixing the number of mesh elements equal to 30."
  
      
 \section secTutParBC Boundary conditions
@@ -199,6 +196,81 @@ As the output of the aforementioned script we obtain the plot in Figure 4. The e
 
 where \f$\mathbf{n}\f$ is the outward pointing unit normal. The above conditions can be sselected in \c InputData/DataTest* files by using letters 'N' in the \c Data.LabBcLap field.
 
+\section secAdaptiveHeat l-adaptive framework
+The \f$\ell\f$-adaptive strategy is driven by a local a-posteriori residual indicator, computed element-wise from the discrete solution, following \cite cangiani_posteriori_2023.
+A detailed description of the estimator components is provided in \ref secpAdaptive. 
+\subsection pAdaptiveSetupHeat Setup Data 
+
+\verbatim
+%% InputData/DataTestCasepAdaptive.m 
+%% Patch test for Heat equation
+...
+%% Geometrical properties
+Data.domain             = [-1 1 -1 1];
+Data.N                  = 500;                     % Number of mesh elements
+Data.MeshFromFile       = true;
+Data.FolderName         = 'InputMesh';
+Data.VTKMeshFileName    = 'Mesh.vtk';
+Data.meshfileseq        = 'SquareCentered_500_el.mat'; % Names of mesh files
+...
+%% Material properties 
+Data.mu          = {@(x,y) 1+0.*x};     % Diffusion parameter
+Data.sigma       = {@(x,y) 0+0.*x};       % Reaction parameter
+epsilon = 0.08;
+...
+%% Discretization properties
+%% Time discretization
+Data.t0     = 0;
+Data.T      = 1;
+Data.dt     = 1e-2;
+Data.theta  = 0.5;
+...
+%% Adaptivity
+Data.Adaptivity         = true;                 % Flag of adaptivity                                             
+Data.maxDegree          = 6;                    % Maximum polynomial degree
+Data.AdaptFunc          = @(tau_r) floor(1 + 2*Data.maxDegree/pi* atan(tau_r));     % Adaptivity function
+Data.AdaptIts           = 1;                   % Maximum iterations of adaptivity
+Data.AdaptivityStep     = 10; 
+\endverbatim
+
+The parameter \b Data.AdaptivityStep defines the frequency of the adaptive update during the time integration procedure.
+
+\subsection pAdaptiveSimulationHeat Simulation Run
+
+We run the specific simulation using the script \b RunMainHeat.m, which calls the main algorithm, contained in \b MainFunctions/MainHeat.m, and the Dataset \b DataTestCasepAdaptive.m 
+\verbatim
+%% Initial Simulation Setup
+MyPhysicsPath = pwd;
+run('../SimulationSetup.m');
+%% Input Data - Boundary conditions - Forcing term
+DataTestCasepAdaptive;
+%DataTestCasePaper;
+%% Mesh Generation
+if Data.MeshFromFile
+    % Load an existing mesh
+    Data.meshfile = fullfile(Data.FolderName, Data.meshfileseq);
+else
+    Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','laplacian');
+    %Data.meshfile = MakeMeshDoubleCircle(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'laplacian');
+end
+%% Main 
+[Error] = MainHeat(Data,Setup)
+\endverbatim 
+
+As output of the run, we first obtain a set of plots associated with the polygonal mesh \f$\mathcal{T}_h\f$ and the corresponding numerical solution.
+For this particular simulation we exploited a polytopal mesh of 500 elements and \f$\ell_\text{max}=5\f$. 
+In particular, the output includes, as in Figure 5, the numerical solution \f$u_h\f$ compared with the exact solution \f$u_{\mathrm{ex}}\f$ evaluated on the same mesh and the pointwise error \f$(u_h - u_{\mathrm{ex}})\f$,
+for different time instants of the simulation. The visualization procedure is controlled through the parameter \b Data.VisualizationStep.
+
+@image html SimHeat.png "Figure 5. Numerical solution, exact solution, and difference between the two at time t=1."
+
+In Figure 6 we represent the spatial distribution of the local polynomial degrees at the end of the simulation and the complete local error indicator \f$\tau_{K}\f$.
+
+@image html SimHeatp.png "Figure 6. Spatial distribution of the local polynomial degrees at the end of the simulation for the uniform test case at time t=1."
+
+In Figure 7 we represent the spatial distribution of the local polynomial degrees \f$p_K\f$ at the end of the simulation.
+
+@image html TauHeat.png "Figure 7. Spatial distribution of the components of the local error indicator at the final time t=1."
 
 */
 

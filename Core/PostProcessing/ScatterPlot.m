@@ -1,6 +1,6 @@
 %> @file  ScatterPlot.m
-%> @author Stefano Bonetti, Mattia Corti, Ilario Mazzieri
-%> @date 27 July 2024
+%> @author Stefano Bonetti, Mattia Corti, Ilario Mazzieri, Caterina Leimer Saglio
+%> @date 12 February 2026
 %> @brief Scatter visualization of the elastic solution
 %>
 %==========================================================================
@@ -26,7 +26,17 @@
 
 function ScatterPlot(Xh, Xex, region, Data)
 
-for i = 3:length(Xh.Solution)
+if isfield(Data,"Adaptivity")
+    if Data.Adaptivity
+        len = length(Xh.Solution)-6;
+    else
+        len = length(Xh.Solution);
+    end
+else
+    len = length(Xh.Solution);
+end
+
+for i = 3:len
 
     %% Check if data is scalar or vectorial
     if Data.PlotExact
@@ -48,13 +58,14 @@ for i = 3:length(Xh.Solution)
 
             %%  dG-solution scatter plot
             subplot(1,3,1)
-            scatter(Xh.Solution{1}, Xh.Solution{2}, 15, Xh.Solution{i}, 'filled');
+            scatter(Xh.Solution{1}, Xh.Solution{2}, 1, Xh.Solution{i}, 'filled');
             title(strcat({'$'},{Xh.StrPlot{i}},{'^\mathrm{h}$'}),'Interpreter','latex','Fontsize',14);
+            colormap("jet")
             colorbar
             hold on
             if Data.PlotGridSol
                 for kk = 1:region.ne
-                    plot([region.coords_element{kk}(:,1); region.coords_element{kk}(1,1)], [region.coords_element{kk}(:,2); region.coords_element{kk}(1,2)], 'k')
+                    plot([region.coords_element{kk}(:,1); region.coords_element{kk}(1,1)], [region.coords_element{kk}(:,2); region.coords_element{kk}(1,2)], 'k', "LineWidth", 1)
                 end
             end
             axis equal
@@ -63,13 +74,14 @@ for i = 3:length(Xh.Solution)
 
             %% Exact-solution scatter plot
             subplot(1,3,2)
-            scatter(Xh.Solution{1}, Xh.Solution{2}, 15, Xex.Solution{i}, 'filled');
+            scatter(Xh.Solution{1}, Xh.Solution{2}, 1, Xex.Solution{i}, 'filled');
             title(strcat({'$'},{Xh.StrPlot{i}},{'^\mathrm{ex}$'}),'Interpreter','latex','Fontsize',14);
+            colormap("jet")
             colorbar
             hold on
             if Data.PlotGridSol
                 for kk = 1:region.ne
-                    plot([region.coords_element{kk}(:,1); region.coords_element{kk}(1,1)], [region.coords_element{kk}(:,2); region.coords_element{kk}(1,2)], 'k')
+                    plot([region.coords_element{kk}(:,1); region.coords_element{kk}(1,1)], [region.coords_element{kk}(:,2); region.coords_element{kk}(1,2)], 'k', "LineWidth", 1)
                 end
             end
             axis equal
@@ -78,13 +90,13 @@ for i = 3:length(Xh.Solution)
             
             %% Error between exact and numerical solution scatter plot
             subplot(1,3,3)
-            scatter(Xh.Solution{1}, Xh.Solution{2}, 15, Xh.Solution{i}-Xex.Solution{i}, 'filled');
+            scatter(Xh.Solution{1}, Xh.Solution{2}, 1, Xh.Solution{i}-Xex.Solution{i}, 'filled');
             title(strcat({'$'},{Xh.StrPlot{i}},{'^\mathrm{h}-'},{Xh.StrPlot{i}},{'^\mathrm{ex}$'}),'Interpreter','latex','Fontsize',14);
             colorbar
             hold on
             if Data.PlotGridSol
                 for kk = 1:region.ne
-                    plot([region.coords_element{kk}(:,1); region.coords_element{kk}(1,1)], [region.coords_element{kk}(:,2); region.coords_element{kk}(1,2)], 'k')
+                    plot([region.coords_element{kk}(:,1); region.coords_element{kk}(1,1)], [region.coords_element{kk}(:,2); region.coords_element{kk}(1,2)], 'k', "LineWidth", 1)
                 end
             end
             axis equal
@@ -94,13 +106,14 @@ for i = 3:length(Xh.Solution)
         else
 
             %%  dG-solution scatter plot
-            scatter(Xh.Solution{1}, Xh.Solution{2}, 15, Xh.Solution{i}, 'filled');
+            scatter(Xh.Solution{1}, Xh.Solution{2}, 1, Xh.Solution{i}, 'filled');
             title(strcat({'$'},{Xh.StrPlot{i}},{'^\mathrm{h}$'}),'Interpreter','latex','Fontsize',14);
+            colormap("jet")
             colorbar
             hold on
             if Data.PlotGridSol
                 for kk = 1:region.ne
-                    plot([region.coords_element{kk}(:,1); region.coords_element{kk}(1,1)], [region.coords_element{kk}(:,2); region.coords_element{kk}(1,2)], 'k')
+                    plot([region.coords_element{kk}(:,1); region.coords_element{kk}(1,1)], [region.coords_element{kk}(:,2); region.coords_element{kk}(1,2)], 'k', "LineWidth", 1)
                 end
             end
             axis equal
@@ -121,17 +134,17 @@ for i = 3:length(Xh.Solution)
                 %%  DG-solution scatter plot
                 subplot(1,3,1)
                 if Comp == 1
-                    scatter(Xh.Solution{1}, Xh.Solution{2}, 15, Xh.Solution{i}(:,1), 'filled');
+                    scatter(Xh.Solution{1}, Xh.Solution{2}, 1, Xh.Solution{i}(:,1), 'filled');
                     title(strcat({'$('},{Xh.StrPlot{i}},{'^\mathrm{h})_x$'}),'Interpreter','latex','Fontsize',14);
                 else
-                    scatter(Xh.Solution{1}, Xh.Solution{2}, 15, Xh.Solution{i}(:,2), 'filled');
+                    scatter(Xh.Solution{1}, Xh.Solution{2}, 1, Xh.Solution{i}(:,2), 'filled');
                     title(strcat({'$('},{Xh.StrPlot{i}},{'^\mathrm{h})_y$'}),'Interpreter','latex','Fontsize',14);
                 end
                 colorbar
                 hold on
                 if Data.PlotGridSol
                     for kk = 1:region.ne
-                        plot([region.coords_element{kk}(:,1); region.coords_element{kk}(1,1)], [region.coords_element{kk}(:,2); region.coords_element{kk}(1,2)], 'k')
+                        plot([region.coords_element{kk}(:,1); region.coords_element{kk}(1,1)], [region.coords_element{kk}(:,2); region.coords_element{kk}(1,2)], 'k', "LineWidth", 1)
                     end
                 end
                 axis equal
@@ -141,17 +154,17 @@ for i = 3:length(Xh.Solution)
                 %% Exact-solution scatter plot
                 subplot(1,3,2)
                 if Comp == 1
-                    scatter(Xh.Solution{1}, Xh.Solution{2}, 15, Xex.Solution{i}(:,1), 'filled');
+                    scatter(Xh.Solution{1}, Xh.Solution{2}, 1, Xex.Solution{i}(:,1), 'filled');
                     title(strcat({'$('},{Xh.StrPlot{i}},{'^\mathrm{ex})_x$'}),'Interpreter','latex','Fontsize',14);
                 else
-                    scatter(Xh.Solution{1}, Xh.Solution{2}, 15, Xex.Solution{i}(:,2), 'filled');
+                    scatter(Xh.Solution{1}, Xh.Solution{2}, 1, Xex.Solution{i}(:,2), 'filled');
                     title(strcat({'$('},{Xh.StrPlot{i}},{'^\mathrm{ex})_y$'}),'Interpreter','latex','Fontsize',14);
                 end
                 colorbar
                 hold on
                 if Data.PlotGridSol
                     for kk = 1:region.ne
-                        plot([region.coords_element{kk}(:,1); region.coords_element{kk}(1,1)], [region.coords_element{kk}(:,2); region.coords_element{kk}(1,2)], 'k')
+                        plot([region.coords_element{kk}(:,1); region.coords_element{kk}(1,1)], [region.coords_element{kk}(:,2); region.coords_element{kk}(1,2)], 'k', "LineWidth", 1)
                     end
                 end
                 axis equal
@@ -161,17 +174,17 @@ for i = 3:length(Xh.Solution)
                 %% Error between exact and numerical solution scatter plot
                 subplot(1,3,3)
                 if Comp == 1
-                    scatter(Xh.Solution{1}, Xh.Solution{2}, 15, Xh.Solution{i}(:,1) - Xex.Solution{i}(:,1), 'filled');
+                    scatter(Xh.Solution{1}, Xh.Solution{2}, 1, Xh.Solution{i}(:,1) - Xex.Solution{i}(:,1), 'filled');
                     title(strcat({'$('},{Xh.StrPlot{i}},{'^\mathrm{h})_x-('},{Xh.StrPlot{i}},{'^\mathrm{ex})_x$'}),'Interpreter','latex','Fontsize',14);
                 else
-                    scatter(Xh.Solution{1}, Xh.Solution{2}, 15, Xh.Solution{i}(:,2) - Xex.Solution{i}(:,2), 'filled');
+                    scatter(Xh.Solution{1}, Xh.Solution{2}, 1, Xh.Solution{i}(:,2) - Xex.Solution{i}(:,2), 'filled');
                     title(strcat({'$('},{Xh.StrPlot{i}},{'^\mathrm{h})_y-('},{Xh.StrPlot{i}},{'^\mathrm{ex})_y$'}),'Interpreter','latex','Fontsize',14);
                 end
                 colorbar
                 hold on
                 if Data.PlotGridSol
                     for kk = 1:region.ne
-                        plot([region.coords_element{kk}(:,1); region.coords_element{kk}(1,1)], [region.coords_element{kk}(:,2); region.coords_element{kk}(1,2)], 'k')
+                        plot([region.coords_element{kk}(:,1); region.coords_element{kk}(1,1)], [region.coords_element{kk}(:,2); region.coords_element{kk}(1,2)], 'k', "LineWidth", 1)
                     end
                 end
                 axis equal
@@ -182,17 +195,17 @@ for i = 3:length(Xh.Solution)
 
                  %%  DG-solution scatter plot
                 if Comp == 1
-                    scatter(Xh.Solution{1}, Xh.Solution{2}, 15, Xh.Solution{i}(:,1), 'filled');
+                    scatter(Xh.Solution{1}, Xh.Solution{2}, 1, Xh.Solution{i}(:,1), 'filled');
                     title(strcat({'$('},{Xh.StrPlot{i}},{'^\mathrm{h})_x$'}),'Interpreter','latex','Fontsize',14);
                 else
-                    scatter(Xh.Solution{1}, Xh.Solution{2}, 15, Xh.Solution{i}(:,2), 'filled');
+                    scatter(Xh.Solution{1}, Xh.Solution{2}, 1, Xh.Solution{i}(:,2), 'filled');
                     title(strcat({'$('},{Xh.StrPlot{i}},{'^\mathrm{h})_y$'}),'Interpreter','latex','Fontsize',14);
                 end
                 colorbar
                 hold on
                 if Data.PlotGridSol
                     for kk = 1:region.ne
-                        plot([region.coords_element{kk}(:,1); region.coords_element{kk}(1,1)], [region.coords_element{kk}(:,2); region.coords_element{kk}(1,2)], 'k')
+                        plot([region.coords_element{kk}(:,1); region.coords_element{kk}(1,1)], [region.coords_element{kk}(:,2); region.coords_element{kk}(1,2)], 'k', "LineWidth", 1)
                     end
                 end
                 axis equal

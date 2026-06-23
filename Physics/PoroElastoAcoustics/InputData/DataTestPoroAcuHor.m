@@ -3,17 +3,11 @@
 Data.name = 'DataTestPoroAcuHor';
 Data.NPhys = 2;
 
-Data.TagElPoro  = 1; % Element tag
-Data.TagBcPoro  = [3 4 5]; % Boundary tag
-Data.LabBcPoro  = 'DND'; % (D)irichlet/(N)eumann/(A)bso
+Data.LabEl = {'P', 'A'};     % Element labels
+Data.TagEl = { 1 ,  2 };     % Element tags
 
-Data.TagElAcu   = 2; % Element tag
-Data.TagBcAcu   = [6 7 8]; % Boundary tag
-Data.LabBcAcu   = 'DNN'; % (D)irichlet/(N)eumann 
-
-Data.TagElEla   = []; % Element tag
-Data.TagBcEla   = []; % Boundary tag
-Data.LabBcEla   = []; % (D)irichlet/(N)eumann/(A)bso
+Data.TagBc = {[3 4 5], [6 7 8]};  % Boundary tags
+Data.LabBc = {'DND'  , 'DNN'  };  % (D)irichlet/(N)eumann/(A)bsorbing
 
 %% Geometrical properties 
 Data.domain       = [-1 1 -1 1]; % domain bounds for a new mesh

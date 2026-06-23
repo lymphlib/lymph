@@ -20,7 +20,7 @@
 Setup.isPlotMesh = 0;
 
 % Save VTK polygonal mesh y/n
-Setup.isSaveVTKMesh = 0;
+Setup.isSaveVTKMesh = 1;
 
 % Plot solution y/n
 Setup.isPlotSolution = 0;
@@ -38,3 +38,7 @@ Setup.OutFolderVTK = 'OutputVTK';
 
 % Compute errors y/n
 Setup.isError = 1;
+
+% Use parallel implementation y/n
+Setup.isParallel = 0;
+Setup.numCores = 4;

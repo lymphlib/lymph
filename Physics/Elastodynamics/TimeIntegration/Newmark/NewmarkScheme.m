@@ -1,6 +1,6 @@
 %> @file  NewmarkScheme.m
 %> @author Ilario Mazzieri, Stefano Bonetti
-%> @date 24 July 2024
+%> @date 12 May 2026
 %> @brief  Newmark time integration scheme
 %>
 %==========================================================================
@@ -34,11 +34,16 @@ A1 = [A + dt^2*beta_nm*C, dt^2*beta_nm*B; ...
 A2 = [A-dt^2*(1/2-beta_nm)*C, dt*A - dt^2*(1/2-beta_nm)*B; ...
       -dt*(1-gamma_nm)*C,     A - dt*(1-gamma_nm)*B];
 
+if Setup.isParallel
+	A1 = distributed(A1);
+	A2 = distributed(A2);
+	U_old = distributed(U_old);
+end
 clear A B C
-
+tic
 % Right-hand side assembly
-[F_old, G_old] = ForEla(Data, mesh.neighbor, femregion, Data.t0);
-
+[F_old] = ForcingTermAssemblyElastodynamics(Data, mesh, femregion, Data.t0);
+toc
 t = 0;
 disp(['Starting time: ', num2str(t)]);
 disp('------------------------------------------------------')
@@ -50,20 +55,27 @@ for t = dt : dt : nts*dt
     
     disp(['time: ', num2str(t)]);
     
-    [F_new, G_new] = ForEla(Data, mesh.neighbor, femregion, t);
+    [F_new] = ForcingTermAssemblyElastodynamics(Data, mesh, femregion, t);
     
-    rhs = [dt^2*beta_nm*(F_new + G_new) + dt^2*(1/2-beta_nm)*(F_old + G_old); ...
-           gamma_nm*dt*(F_new + G_new)  + dt*(1-gamma_nm)*(F_old + G_old)];
+    rhs = [dt^2*beta_nm*(F_new.F + F_new.G) + dt^2*(1/2-beta_nm)*(F_old.F + F_old.G); ...
+           gamma_nm*dt*(F_new.F + F_new.G)  + dt*(1-gamma_nm)*(F_old.F + F_old.G)];
 
+    if Setup.isParallel
+	    rhs = distributed(rhs);
+    end
+
+    tic
     U_h = A1\(A2*U_old + rhs);
+    toc 
     
     if (mod(counter,Data.VisualizationStep)==0) && (Setup.isSaveCSV || Setup.isSaveVTK || Setup.isSaveSolution || Setup.isPlotSolution)
-          PostProcessSolution(Setup, Data, mesh, femregion, counter, U_h,t);
+          PostProcessSolution(Setup, Data, mesh, femregion, counter, gather(U_h), t);
     end
     
     U_old   = U_h;
     F_old   = F_new;
-    G_old   = G_new;
     counter = counter + 1;
 
 end
+
+U_h = gather(U_h);

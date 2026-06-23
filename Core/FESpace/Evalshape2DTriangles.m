@@ -1,6 +1,6 @@
 %> @file  Evalshape2DTriangles.m
-%> @author Mattia Corti, Paola F. Antonietti
-%> @date 26 March 2023 
+%> @author Mattia Corti, Paola F. Antonietti, Caterina Leimer Saglio
+%> @date 19 October 2025 
 %> @brief Construction of the the structures for the Jacobi basis functions for
 %> triangular elements.
 %> 
@@ -26,7 +26,7 @@
 function [dphiq, Grad]= Evalshape2DTriangles(femregion, ElemIdx, Nodes)
 
     % Extraction of the degree of discretization
-    N = femregion.degree;
+    N = femregion.degree(ElemIdx);
 
     loc_coord = femregion.coord(femregion.connectivity{ElemIdx},:);
 
@@ -48,37 +48,30 @@ function [dphiq, Grad]= Evalshape2DTriangles(femregion, ElemIdx, Nodes)
     s = NodesPhys(:,2);
 
     % Transfer of triangle coordinate from (r,s) to (a,b)
-    %a = (s ~= 1).*(2*r./(1-s)-1) - (s == 1);
     a = zeros(size(s));
     a(s ~= 1) = (2*r(s ~= 1)./(1-s(s ~= 1))-1);
     a(s == 1) = - s(s == 1);
     b = 2*s-1;
 
-    % Basis functions reconstruction
-    sk = 1;
+    % Preallocation of the gradients
+    Grad  = zeros(length(a),2,(N+1)*(N+2)/2);
 
-    dphiq = zeros(length(a),(N+1)*(N+2)/2);
-    dpsi  = zeros(length(a),(N+1)*(N+2)/2,2);
+    % First indexes vector
+    idx1 = reshape(tril((1:N+1).*ones(N+1,N+1)),[1 (N+1)^2]);
+    idx1(idx1==0) = [];
+    idx1 = idx1 - 1;
+
+    % Second indexes vector 
+    idx2 = reshape(flip(triu((N+1:-1:1).*ones(N+1,N+1)),2)',[1 (N+1)^2]);
+    idx2(idx2==0) = [];
+    idx2 = idx2 - 1;
+
+    if nargout == 1
+            dphiq = FullSimplex2DP(a,b,idx1,idx2);
+    else
+            [dphiq, Grad(:,1,:), Grad(:,2,:)] = FullSimplex2DP(a,b,idx1,idx2);
+
+            Grad = pagemtimes(Grad,BJ_inv);
+    end
     
-    for i=0:N
-
-        for j=0:N - i
-
-            dphiq(:,sk) = Simplex2DP(a,b,i,j);
-            [dpsi(:,sk,1), dpsi(:,sk,2)] = GradSimplex2DP(a,b,i,j);
-            sk = sk + 1;
-
-        end
-        
-    end
-
-    % Gradient basis functions
-    Grad(:,1,:) = dpsi(:,:,1);
-    Grad(:,2,:) = dpsi(:,:,2);
-
-    for j = 1:size(Grad,3)
-        Grad(:,:,j) = Grad(:,:,j)*BJ_inv;
-    end
-
-
-
+end

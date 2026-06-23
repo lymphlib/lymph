@@ -6,7 +6,7 @@
 %==========================================================================
 %> @section classJacobiEval Class description
 %==========================================================================
-%> @brief Evaluates Jacobi polynomial \f$P_n^{(\alpha,\beta)}\f$ at \f$x
+%> @brief Evaluates Jacobi polynomial \f$P_n^{(a,b)}\f$ at \f$x
 %> \in(-1,1)\f$ (formula (2.5.3) page 92, \cite CHQZ2).
 %>
 %> @param x        Scalar or one-dimensional array of length (m)
@@ -14,13 +14,13 @@
 %> @param alpha    First parameter of the Jacobi polynomial
 %> @param beta     Second parameter of the Jacobi polynomial
 %>
-%> @retval p       p = [P_n^{(\alpha,\beta)}(x),
-%                       P_(n-1)^{(\alpha,\beta)}(x),
-%                       P_(n-2)^{(\alpha,\beta)}(x)];
+%> @retval p       p = [P_n^{(a,b)}(x),
+%                       P_(n-1)^{(a,b)}(x),
+%                       P_(n-2)^{(a,b)}(x)];
 %
-%  @retval pd      pd = [(P_n^{(\alpha,\beta)})'(x),
-%                        (P_(n-1)^{(\alpha,\beta)})'(x),
-%                        (P_(n-2)^{(\alpha,\beta)})'(x)];
+%  @retval pd      pd = [(P_n^{(a,b)})'(x),
+%                        (P_(n-1)^{(a,b)})'(x),
+%                        (P_(n-2)^{(a,b)})'(x)];
 %>
 %==========================================================================
 

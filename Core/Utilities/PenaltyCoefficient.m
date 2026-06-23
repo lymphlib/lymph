@@ -1,6 +1,7 @@
 %> @file  PenaltyCoefficient.m
-%> @author Stefano Bonetti, Mattia Corti, Ivan Fumagalli, Ilario Mazzieri
-%> @date 03 October 2024
+%> @author Stefano Bonetti, Mattia Corti, Ivan Fumagalli, Ilario Mazzieri,
+%> Caterina Leimer Saglio
+%> @date 10 April 2026
 %> @brief Construction of the penalty coefficients for all the faces of an
 %> element.
 %> 
@@ -23,98 +24,51 @@
 %> to the enumeration of the neighboring element.
 %> @param neigh_ie       ID of the neighboring elements.
 %> @param meshsize       Diameters of the faces of the element (length).
-%> @param penalty_policy [max,min,harm] (optional: default=max) Choice for
-%>                       penalty coefficient, that can be based on either
-%>                       max \cite cangiani2017,
-%>                       min \cite antonietti2022stability,
-%>                       or harmonic average \cite dryja2007bddc
-%>                       between current and neighboring element.
 %>
-%> @retval penalty     Array containing the geometrical part of the penalty
+%> @retval penalty     Struct containing the arrays with the geometrical part of the penalty
 %> coefficient for all the faces of an element (on all the boundary faces the 
-%> penalty coefficient is defined as in the Dirichlet case).
+%> penalty coefficient is defined as in the Dirichlet case). The
+%> implemented policies are:
+%>   \c max \cite cangiani2017,
+%>   \c min \cite antonietti2022stability,
+%>   or harmonic average - \c harm - \cite dryja2007bddc between the elements.
 %======================================================================
 
-function [penalty] = PenaltyCoefficient(femregion, Data, ie, neighedges_ie, neigh_ie, meshsize, penalty_policy)
+function [penalty] = PenaltyCoefficient(femregion, Data, ie, neighedges_ie, neigh_ie, meshsize)
+    
+    %% Creation of the mask of internal edges
+    neigh_app = neigh_ie(neigh_ie>0);
+    neighedges_app = neighedges_ie(neigh_ie>0);
+    mask = diag(neigh_ie>0);
+    mask = mask(any(mask==1),:);
 
-    if ~exist('penalty_policy','var')
-        penalty_policy = 'max';
-    end
+    %% Construction of penalty part dependent on the femregion degree
+    deg = femregion.degree.*(femregion.degree>0)+(femregion.degree==0);
 
-    % Treatment of the degree 0 case
-    if femregion.degree == 0 
-        penalty_coeff = Data.penalty_coeff;
-    else
-        if strcmp(penalty_policy,'max')
-            penalty_coeff = Data.penalty_coeff.*(femregion.degree^2);
-        elseif strcmp(penalty_policy,'min')
-            penalty_coeff = Data.penalty_coeff./femregion.degree;
-        elseif strcmp(penalty_policy,'harm')
-            %> @TODO check dependency on degree in the harm case
-            penalty_coeff = Data.penalty_coeff.*femregion.degree.^2;
-        else
-            error(strcat('Unknown penalty policy: ', penalty_policy))
-        end
-    end
-
-    % Construction of inverse trace constant
+    %% Construction of inverse trace constant
     Cinv = femregion.area(ie)./femregion.max_kb{ie};
+
+    %% External Cinv computation
+    Cinv_ext = zeros(size(neigh_app))';
     
-    % Dirichlet boundary face
-    penalty_dir = [];
-    if strcmp(penalty_policy,'max')
-        penalty_dir = penalty_coeff * Cinv .* (meshsize/femregion.area(ie));
-    elseif strcmp(penalty_policy,'min')
-        penalty_dir = penalty_coeff * (femregion.area(ie)/meshsize);
-    elseif strcmp(penalty_policy,'harm')
-        penalty_dir = penalty_coeff .* Cinv .* (meshsize/femregion.area(ie));
-    else
-        error(strcat('Unknown penalty policy: ', penalty_policy))
-    end
-
-    % Internal face: value of the penalty for the element itself
-    p_ie = zeros(size(neigh_ie))';
-
-    % Internal face: value of the penalty for the neighboring element
-    Cinv_ext = zeros(size(neigh_ie));
-    p_ie_n = zeros(size(neigh_ie))';
-    
-    for ii = 1:length(neigh_ie)
-        % Computation for the neighbor elements
-        if neigh_ie(ii) > 0
-            if strcmp(penalty_policy,'max')
-                Cinv_ext(ii) = femregion.area(neigh_ie(ii))./femregion.max_kb{neigh_ie(ii)}(neighedges_ie(ii));
-                p_ie(ii) = penalty_coeff * Cinv(ii) .* (meshsize(ii)/femregion.area(ie));
-                p_ie_n(ii) = penalty_coeff * Cinv_ext(ii) * (meshsize(ii)/femregion.area(neigh_ie(ii)));
-            elseif strcmp(penalty_policy,'min')
-                p_ie(ii) = penalty_coeff * femregion.area(ie)/meshsize(ii);
-                p_ie_n(ii) = penalty_coeff * femregion.area(neigh_ie(ii))/meshsize(ii);
-            elseif strcmp(penalty_policy,'harm')
-                Cinv_ext(ii) = femregion.area(neigh_ie(ii))./femregion.max_kb{neigh_ie(ii)}(neighedges_ie(ii));
-                p_ie(ii)     = penalty_coeff * Cinv(ii) .* (meshsize(ii)/femregion.area(ie));
-                p_ie_n(ii)   = penalty_coeff * Cinv_ext(ii) * (meshsize(ii)/femregion.area(neigh_ie(ii)));
-            else
-                error(strcat('Unknown penalty policy: ', penalty_policy))
-            end
-        end
-
+    for ii = 1:length(neigh_app)
+        Cinv_ext(ii) = femregion.area(neigh_app(ii))./femregion.max_kb{neigh_app(ii)}(neighedges_app(ii));
     end
     
-    % Computation of the penalty for all the faces of the element
-    if strcmp(penalty_policy,'max')
-        penalty = max([p_ie p_ie_n],[],2);
-    elseif strcmp(penalty_policy,'min')
-        penalty = penalty_coeff.*min([p_ie p_ie_n],[],2);
-    elseif strcmp(penalty_policy,'harm')
-        % Note that in \cite dryja2007bddc , l_ij=2 is there because the sum in (6) is
-        % over the faces of an element, thus containing only half of the contribution.
-        % On the other hand, here we do not need l_ij.
-        penalty = (p_ie + p_ie_n)/2;
-    else
-        error(strcat('Unknown penalty policy: ', penalty_policy))
-    end
+    %% Penalty max construction
+    p_max   = (Data.penalty_coeff.* deg(ie)^2 .* Cinv .* meshsize/femregion.area(ie))';
+    p_max_n = (Data.penalty_coeff.* ((deg(neigh_app).^2.*Cinv_ext./femregion.area(neigh_app))'*mask)' .* meshsize)';
+    penalty.max = max(p_max, p_max_n);
 
-    penalty = (neigh_ie > 0)'.*penalty + (neigh_ie < 0)'.*penalty_dir;
+    %% Penalty min construction
+    p_min   = (Data.penalty_coeff./deg(ie) .* femregion.area(ie)./meshsize)';
+    p_min_n = (Data.penalty_coeff .* ((femregion.area(neigh_app)./deg(neigh_app))'*mask)'./meshsize)';
+    penalty.min = (neigh_ie>0).*min(p_min,p_min_n) + (neigh_ie<0).*p_min;
+
+    %% Penalty harmonic construction
+    p_harm   = (Data.penalty_coeff.* deg(ie)^2 .* Cinv .* meshsize/femregion.area(ie))';
+    p_harm_n = (Data.penalty_coeff.* ((deg(neigh_app).^2.*Cinv_ext./femregion.area(neigh_app))'*mask)' .* meshsize)';
+    penalty.harm = (neigh_ie>0).*mean([p_harm; p_harm_n]) + (neigh_ie<0).*p_harm;
 
 end
 

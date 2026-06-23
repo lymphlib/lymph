@@ -1,6 +1,6 @@
 %> @file  MakeMeshBidomainHor.m
 %> @author Ilario Mazzieri
-%> @date 8 March 2023
+%> @date 5 June 2026
 %> @brief Construction of a polygonal mesh for a rectangular domain.
 %>
 %> Creation of a polygonal mesh for a rectangular domain
@@ -30,13 +30,12 @@
 %> @param FileName                File name for saving
 %> @param MeshType                String 'C' for cartesian grid, 'P' for
 %polygonal grid
-%> @param SimType                 Simulation type
 %>
 %> @retval FileNameOut            File name of the *.mat structure
 %>                                containing mesh info
 %>
 %======================================================================
-function [FileNameOut] = MakeMeshBidomainHor(Data,N,DomainLimits,FolderName,FileName,MeshType,SimType)
+function [FileNameOut] = MakeMeshBidomainHor(Data,N,DomainLimits,FolderName,FileName,MeshType)
 %% SET DIRECTORIES AND NAMES
 
 if ~exist(FolderName,'dir')
@@ -45,13 +44,6 @@ end
 
 %% RECTANGULAR DOMAIN
 global Dati
-
-if nargin < 7
-    SimType = 'laplacian';
-    Data.TagBcLap = [3, 4, 5, 6, 7, 8];
-    Data.LabBcLap = 'DDDDDD';
-end
-
 
 Dati.domain = DomainLimits;
 if (strcmp(MeshType,'P')==1)
@@ -76,7 +68,7 @@ elseif (strcmp(MeshType,'C')==1)
 end
 
 %% Compute the neighbor structure
-[region,neighbor] = MakeNeighborBidomainHor(Data,region,SimType);
+[region,neighbor] = MakeNeighborBidomainHor(Data,region);
 
 %% Otuput 
 FileNameOut = [FolderName,'/',FileName,'_',num2str(region.ne),'_el.mat'];

@@ -2,8 +2,10 @@
 
 Tutorials on how to solve differential problems in <tt>lymph</tt>:
 
-- \subpage page_TutorialHeat
 - \subpage page_TutorialLaplacian
+- \subpage page_TutorialHeat
+- \subpage page_TutorialFHN
+- \subpage page_TutorialFKPP
 - \subpage page_TutorialElastodynamics
 - \subpage page_TutorialMultiWaves
 

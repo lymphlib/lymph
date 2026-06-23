@@ -1,6 +1,6 @@
 %> @file  MakeNeighborBoundary.m
 %> @author Ilario Mazzieri
-%> @date 16 April 2023
+%> @date 29 May 2026
 %> @brief Construction of the neighbor structure for boundary edges.
 %>
 %==========================================================================
@@ -13,7 +13,6 @@
 %> @param Data        Struct with problem's data
 %> @param region      Struct for mesh elements
 %> @param neighbor    Struct with nighbor data
-%> @param SimType     String simulation type, used for boundary tag
 %>
 %> @retval neighbor   Neigbor struct having fields
 %>                     - nedges(i) num of edges for el. i
@@ -21,28 +20,10 @@
 %>                     - neighedges{i}(j) edge-id for neigh. of el. i edge j
 %>
 %==========================================================================
-function [neighbor] = MakeNeighborBoundary(Data,region,neighbor,SimType)
+function [neighbor] = MakeNeighborBoundary(Data, region, neighbor)
 
-%% Array with boundary tags --> to be fixed for multiphysics
-
-if strcmp(SimType,'laplacian')
-    TagBoundary(Data.TagBcLap)   = Data.LabBcLap;
-elseif strcmp(SimType,'ela')
-    TagBoundary(Data.TagBcEla)   = Data.LabBcEla;
-elseif strcmp(SimType,'waves')
-    TagBoundary(Data.TagBcPoro)  = Data.LabBcPoro;
-    TagBoundary(Data.TagBcAcu)   = Data.LabBcAcu;
-    TagBoundary(Data.TagBcEla)   = Data.LabBcEla;
-elseif strcmp(SimType,'poro-stokes')
-    TagBoundary(Data.TagBcPoro)  = Data.LabBcPoro;
-    TagBoundary(Data.TagBcFluid) = Data.LabBcFluid;
-elseif strcmp(SimType,'stokes')
-    TagBoundary(Data.TagBcFluid) = Data.LabBcFluid;
-elseif strcmp(SimType,'poro') 
-    TagBoundary(Data.TagBcPoro) = Data.LabBcPoro;
-
-else
-    error('Simulation type unknown!')
+for ii = 1:length(Data.TagBc)
+    TagBoundary(Data.TagBc{ii}) = Data.LabBc{ii};
 end
 
 counter = 0;

@@ -1,6 +1,6 @@
 %> @file  MainHeat.m
 %> @author Mattia Corti
-%> @date 26 July 2024
+%> @date 5 June 2026
 %> @brief Solution of the heat equation with PolydG
 %>
 %==========================================================================
@@ -21,34 +21,40 @@ function [Error] = MainHeat(Data, Setup)
     fprintf('... here display some info about the simulation ... \n');
     fprintf('\n------------------------------------------------------------------\n')
 
-    [mesh, femregion, Data.h] = MeshFemregionSetup(Setup, Data, {Data.TagElLap}, {'L'});
+    [mesh, femregion, Data.h] = MeshFemregionSetup(Setup, Data);
 
     %% Matrix Assembly
 
     fprintf('\nMatrices computation ... \n');
     tic
-    switch Data.quadrature
-        case "QF"
-            [Matrices] = MatrixHeatQF(Data, mesh.neighbor, femregion);
-        case "ST"
-            [Matrices] = MatrixHeatST(Data, mesh.neighbor, femregion);
-    end
+    [Matrices] = MatrixAssemblyHeat(Data, mesh, femregion, []);
     toc
     fprintf('\nDone\n')
     fprintf('\n------------------------------------------------------------------\n')
 
     %% Initial condition
     fprintf('\nComputing initial conditions ... \n');
-    [u_old] = GetInitalConditions(Data, femregion, Matrices);
+    [u_h] = ComputeModalSolutionHeat(Data, mesh, femregion, Data.t0);
+    Solution.u_h = Matrices.Mprj\u_h;
+    [u_old] = ComputeModalSolutionHeat(Data, mesh, femregion, Data.t0-Data.dt);
+    Solution.u_old = Matrices.Mprj\u_old;
     fprintf('\nDone\n')
     fprintf('\n------------------------------------------------------------------\n')
 
+    %% Compute the indicator for p-adaptivity
+    if Data.Adaptivity
+        fprintf('\nComputing adaptive indicator ... ');
+        tic
+        [Solution.Indicator] = ComputeAdaptiveIndicatorHeat(Data, mesh, femregion, Solution, Data.t0);
+        toc
+        fprintf('\nDone\n')
+        fprintf('\n------------------------------------------------------------------\n')
+    end
 
     %% Plot of initial condition
-
     if Data.PlotIniCond
         fprintf('\nPlot initial conditions ... \n');
-        PostProcessSolution(Setup, Data, mesh, femregion, 0, u_old, Data.t0);
+        PostProcessSolution(Setup, Data, mesh, femregion, 0, Solution, Data.t0);
         fprintf('\nDone\n')
         fprintf('\n------------------------------------------------------------------\n')
     end
@@ -60,23 +66,19 @@ function [Error] = MainHeat(Data, Setup)
     fprintf(['\nStarting Time: ', num2str(Data.t0)]);
     fprintf('\n------------------------------------------------------------------\n')
 
-    [u_h, IntError] = ThetaMethodSolver(Setup, Data, femregion, mesh, Matrices, u_old);
-
-
-    %% Post-processing final time
-
-    if Setup.isSaveCSV || Setup.isSaveVTK || Setup.isSaveSolution || Setup.isPlotSolution
-        PostProcessSolution(Setup, Data, mesh, femregion, floor(Data.T/Data.dt)+1, u_h, Data.T);
-    end
+    [Solution, femregion, IntError] = ThetaMethodSolver(Setup, Data, femregion, mesh, Matrices, Solution.u_h);
 
     %% Computation of numerical errors
-
     if Setup.isError == 1
 
         fprintf('\nError computations...');
         fprintf('\n------------------------------------------------------------------\n')
-        [Error] = ComputeErrors(Data, Matrices, femregion, u_h, Data.T);
-        Error.err_Energy = sqrt(Error.err_u_L2.^2 + IntError);
+        [Error] = ComputeErrorsHeat(Data, mesh, femregion, Solution.u_h, Data.T);
+        Error.err_Energy = sqrt(Error.L2.^2 + IntError);
+
+        Error.nel = femregion.nel;
+        Error.h   = Data.h;
+        Error.p   = Data.degree;
     else
         Error = [];
     end

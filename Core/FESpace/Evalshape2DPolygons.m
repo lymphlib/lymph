@@ -1,12 +1,12 @@
 %> @file  Evalshape2DPolygons.m
-%> @author Mattia Corti, Paola F. Antonietti
-%> @date 25 February 2023 
+%> @author Mattia Corti, Paola F. Antonietti, Caterina Leimer Saglio
+%> @date 15 October 2025 
 %> @brief Construction of the the structures for the Legendre basis functions for
 %> polygonal elements.
 %> 
-%> The function constructs the Legendre basis functions \f$\varphi_j(x)\f$ and the 
-%> corresponding gradients \f$\nabla\varphi_j(x)\f$, evaluated at the nodes of quadrature for
-%> polygonal elements.
+%> The function constructs the Legendre basis functions \f$\varphi_j(x)\f$, the 
+%> corresponding gradients \f$\nabla\varphi_j(x)\f$, and laplacians \f$\Delta\varphi_j(x)\f$
+%> evaluated at the nodes of quadrature for polygonal elements.
 %> 
 %======================================================================
 %> @section classEvalshape2DPolygons Class description
@@ -21,12 +21,13 @@
 %>
 %> @retval dphiq        Basis functions evaluated at the quadrature nodes.
 %> @retval Grad         Gradient of basis functions evaluated at the quadrature nodes.
+%> @retval Lap          Laplacian of basis functions evaluated at the quadrature nodes.
 %======================================================================
 
-function [dphiq, Grad] = Evalshape2DPolygons(femregion, ElemIdx, Nodes)
+function [dphiq, Grad, Lap] = Evalshape2DPolygons(femregion, ElemIdx, Nodes)
 
     % Extraction of the degree of discretization
-    N = femregion.degree;
+    N = femregion.degree(ElemIdx);
 
     BBox = femregion.bbox(ElemIdx,:);
 
@@ -56,20 +57,35 @@ function [dphiq, Grad] = Evalshape2DPolygons(femregion, ElemIdx, Nodes)
     idx2(idx2==0) = [];
     idx2 = idx2 - 1;
 
-    if nargout == 1
+    switch nargout 
+        case 1
 
-        % Basis functions reconstruction
-        dphiq = FullHypercube2DP(a,b,idx1,idx2);
+            % Basis functions reconstruction
+            dphiq = FullHypercube2DP(a,b,idx1,idx2);
 
-    else
-       
-        % Basis functions reconstruction
-        [dphiq, Grad(:,1,:), Grad(:,2,:)] = FullHypercube2DP(a,b,idx1,idx2);
-        
-        for j = 1:size(Grad,3)
-            Grad(:,:,j)= Grad(:,:,j)*BJ_inv;
-        end
+        case 2
 
+            % Basis functions reconstruction
+            [dphiq, Grad(:,1,:), Grad(:,2,:)] = FullHypercube2DP(a,b,idx1,idx2);
+
+            Grad = pagemtimes(Grad,BJ_inv);
+
+        case 3
+
+            % Basis functions reconstruction
+            [dphiq, Grad(:,1,:), Grad(:,2,:), Lap(:,1,:), Lap(:,4,:), Lap(:,2,:)] = FullHypercube2DP(a,b,idx1,idx2);
+
+            Grad = pagemtimes(Grad,BJ_inv);
+
+            % Equivalence of mixed derivatives
+            Lap(:,3,:) = Lap(:,2,:);
+
+            % Laplacian scaling (considering no box rotation allowed)
+            Lap(:,1,:) = Lap(:,1,:)*BJ_inv(1,1)^2;
+            Lap(:,2,:) = Lap(:,2,:)*BJ_inv(1,1)*BJ_inv(2,2);
+            Lap(:,3,:) = Lap(:,3,:)*BJ_inv(1,1)*BJ_inv(2,2);
+            Lap(:,4,:) = Lap(:,4,:)*BJ_inv(2,2)^2;
+            
     end
 
 end

@@ -1,6 +1,6 @@
 %> @file  RunMainLaplacian.m
 %> @author The Lymph Team
-%> @date 16 April 2023
+%> @date 5 June 2026
 %> @brief Run of MainLaplacian for the solution of the Poisson problem
 %>
 %==========================================================================
@@ -14,20 +14,13 @@
 %>
 %==========================================================================
 
-%% Import lymph and paths of folders related to this problem
-run("../ImportLymphPaths.m")
+%% Initial Simulation Setup
 MyPhysicsPath = pwd;
-addpath(genpath(fullfile(MyPhysicsPath,'Assembly')));
-addpath(genpath(fullfile(MyPhysicsPath,'InputData')));
-addpath(genpath(fullfile(MyPhysicsPath,'MainFunctions')));
-addpath(genpath(fullfile(MyPhysicsPath,'Error')));
-addpath(genpath(fullfile(MyPhysicsPath,'PostProcessing')));
-
-%% Simulation - Setup
-run("../RunSetup.m")
+run('../SimulationSetup.m');
 
 %% Input Data - Boundary conditions - Forcing term
-DataTestLap;
+DataTestTanh;
+%DataTestLap;
 
 %% Mesh Generation
 
@@ -36,8 +29,8 @@ if Data.MeshFromFile
     Data.meshfile = fullfile(Data.FolderName, Data.meshfileseq);
 else
     % Create a new mesh
-    Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P','laplacian');
+    Data.meshfile = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P');
 end
 
 %% Main
-[Error] = MainLaplacian(Data,Setup);
+[Error] = MainLaplacian(Data,Setup)

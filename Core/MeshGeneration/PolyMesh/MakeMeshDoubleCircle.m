@@ -1,6 +1,6 @@
 %> @file  MakeMeshDoubleCircle.m
 %> @author Ilario Mazzieri
-%> @date 8 March 2023 
+%> @date 5 June 2026
 %> @brief Construction of a polygonal mesh for a circular domain.
 %>  
 %> Creation of a polygonal mesh for a circular domain
@@ -26,10 +26,9 @@
 %> @param DomainLimits            Domain limits
 %> @param FolderName              Directory name for saving
 %> @param FileName                File name for saving
-%> @param SimType                 String simulation type, used for boundary tag       
 %>
 %==========================================================================
-function [FileNameOut] = MakeMeshDoubleCircle(Data,N,DomainLimits,FolderName,FileName,SimType) 
+function [FileNameOut] = MakeMeshDoubleCircle(Data,N,DomainLimits,FolderName,FileName) 
 
 %% Set directories and names
 
@@ -55,7 +54,7 @@ Dati.Circle2.Center = [0.5 0];
 
 
 %% Compute the neighbor structure
-[region,neighbor] = MakeNeighbor(Data,region,SimType);
+[region,neighbor] = MakeNeighbor(Data,region);
 
 %% Otuput 
 FileNameOut = [FolderName,'/',FileName];

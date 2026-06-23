@@ -1,6 +1,6 @@
 %> @file  RunpConvergenceElastodynamics.m
 %> @author The Lymph Team
-%> @date 24 July 2024
+%> @date 5 June 2026
 %> @brief Convergence analysis for the Elastodynamics problem (polynomial refinements)
 %>
 %==========================================================================
@@ -14,19 +14,9 @@
 %>
 %==========================================================================
 
-%% Import lymph and paths of folders related to this problem
-run("../ImportLymphPaths.m")
+%% Initial Simulation Setup
 MyPhysicsPath = pwd;
-addpath(genpath(fullfile(MyPhysicsPath,'Assembly')));
-addpath(genpath(fullfile(MyPhysicsPath,'Error')));
-addpath(genpath(fullfile(MyPhysicsPath,'InputData')));
-addpath(genpath(fullfile(MyPhysicsPath,'InputMesh')));
-addpath(genpath(fullfile(MyPhysicsPath,'MainFunctions')));
-addpath(genpath(fullfile(MyPhysicsPath,'PostProcessing')));
-addpath(genpath(fullfile(MyPhysicsPath,'TimeIntegration')));
-
-%% Simulation - Setup
-run("../RunSetup.m")
+run('../SimulationSetup.m');
 
 %% Input Data - Boundary conditions - Forcing term
 DataConvpTestEla;
@@ -46,14 +36,15 @@ for ii = 1:length(degree_vector)
 
     if Data.MeshFromFile
         % Load an existing mesh
-        Data.meshfile = fullfile(Data.FolderName,Data.meshfileseq(1));
+        Data.meshfile = fullfile(Data.FolderName,Data.meshfileseq);
     else
         % Create a new mesh
-        [Data.meshfile] = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfile,'P','ela');
+        [Data.meshfile] = MakeMeshMonodomain(Data,Data.N,Data.domain,Data.FolderName,Data.meshfileseq,'P');
     end
     
     
     %% Main     
+
     [Error] = MainEla(Data,Setup);
     Errors.err_u_L2   = [Errors.err_u_L2,   Error.err_u_L2];
     Errors.err_u_dG   = [Errors.err_u_dG,   Error.err_u_dG];
@@ -69,5 +60,19 @@ semilogy(degree_vector,Errors.err_u_L2,'g')
 hold on
 semilogy(degree_vector,Errors.err_u_dG,'r')
 semilogy(degree_vector,Errors.err_energy,'b')
+legend("Error $L^2$-norm", "Error DG-norm", "Error energy-norm","Interpreter","latex")
+grid on
+
+%% Plot of the errors
+figure
+cols = lines(3);
+leg = strings(0);
+light = @(c,a) c + a*(1-c); 
+c_i= cols(1,:);
+
+semilogy(degree_vector,Errors.err_u_L2,'-o', 'LineWidth',1.4,'Color',cols(1,:),'MarkerFaceColor',cols(1,:))
+hold on
+semilogy(degree_vector,Errors.err_u_dG,'-o', 'LineWidth',1.4,'Color',cols(2,:),'MarkerFaceColor',cols(2,:))
+semilogy(degree_vector,Errors.err_energy,'-o', 'LineWidth',1.4,'Color',cols(3,:),'MarkerFaceColor',cols(3,:))
 legend("Error $L^2$-norm", "Error DG-norm", "Error energy-norm","Interpreter","latex")
 grid on

@@ -1,173 +1,458 @@
-%> @file  ComputeErrorsPoroAcuEla.m
-%> @author Ilario Mazzieri
-%> @date 28 June 2024
-%> @brief  Compute errors for the poro-elasto-acoustic problem
+%> @file ComputeErrorsPoroAcuEla.m
+%> @author Mattia Corti
+%> @date 5 June 2026
+%> @brief Compute errors for convergence analysis
 %>
 %==========================================================================
-%> @section classComputeErrorsPoroAcuEla Class description
-%> @brief  Compute errors for waves's problem
+%> @section classComputeErrorsPoroAcuEla description
+%==========================================================================
+%> @brief Compute modal coefficient of the exact solution
 %
-%> @param Data       Struct with problem's data
-%> @param neighbor   Neighbor struct (see MakeNeighbor.m)
-%> @param femregion  Finite Element struct (see CreateDOF.m)
-%> @param Matrices   Struct with problem's matrices 
-%> @param Solutions  Struct with solution vectors 
-%
-%> @retval Error     Struct with computed errors
+%> @param Data        Struct with problem's data
+%> @param mesh	      Struct containing mesh information (region+neighbor)	
+%> @param femregion   Struct containing all the information 
+%>                    about the finite element approximation
+%> @param Solution    Problem's solution structure
+%> @param time        Current time
 %>
+%> @retval Error      Structure with computed errors 
+%>                   
 %==========================================================================
 
-function [Error] = ComputeErrorsPoroAcuEla(Data, neighbor, femregion, Matrices, Solutions)
-
-%% Compute modal coefficient of the exact solution
-[up0,wp0,phi0,ue0] = ComputeModalSolutionPoroAcuEla(Data,femregion);
-
-T = Data.T;
-
-% compute exact solution U at final time
-up_ex   = up0   * Data.up_t_ex{1}(T);
-wp_ex   = wp0   * Data.wp_t_ex{1}(T);
-phi_ex  = phi0  * Data.phi_t_ex{1}(T);
-ue_ex   = ue0   * Data.ue_t_ex{1}(T);
-
-% Derivative
-dot_up_ex   = up0   * Data.dup_t_ex{1}(T);
-dot_wp_ex   = wp0   * Data.dwp_t_ex{1}(T);
-dot_phi_ex  = phi0  * Data.dphi_t_ex{1}(T);
-dot_ue_ex   = ue0   * Data.due_t_ex{1}(T);
-
-%% Switch from nodal to modal representation of the solution coefficients
-up_ex    = Matrices.Poro.MPrjP\up_ex;
-wp_ex    = Matrices.Poro.MPrjP\wp_ex;
-phi_ex   = Matrices.Acu.MPrjA\phi_ex;
-ue_ex    = Matrices.Ela.MPrjP\ue_ex;
-
-dot_up_ex   = Matrices.Poro.MPrjP\dot_up_ex;
-dot_wp_ex   = Matrices.Poro.MPrjP\dot_wp_ex;
-dot_phi_ex  = Matrices.Acu.MPrjA\dot_phi_ex;
-dot_ue_ex   = Matrices.Ela.MPrjP\dot_ue_ex;
-
-%% Definition of error vector
-error_up       = up_ex  - Solutions.up_h;
-error_wp       = wp_ex  - Solutions.wp_h;
-error_phi      = phi_ex - Solutions.phi_h;
-error_ue       = ue_ex  - Solutions.ue_h;
-
-error_dot_up   = dot_up_ex  - Solutions.dot_up_h;
-error_dot_wp   = dot_wp_ex  - Solutions.dot_wp_h;
-error_dot_phi  = dot_phi_ex - Solutions.dot_phi_h;
-error_dot_ue   = dot_ue_ex  - Solutions.dot_ue_h;
-
-%% DG errors
-
-error_dGep   = error_up'    * Matrices.Poro.DGe * error_up;
-error_dGp    = error_up'    * Matrices.Poro.DGp_beta * error_up + error_wp' * Matrices.Poro.DGp * error_wp;
-error_dGa    = error_phi'   * Matrices.Acu.DGa * error_phi;
-error_dGp_w  = error_wp'    * Matrices.Poro.DGp * error_wp;
-error_dGe    = error_ue'    * Matrices.Ela.DGe * error_ue;
-
-if isempty(error_dGep); error_dGep = 0; end
-if isempty(error_dGp);  error_dGp = 0;  end
-if isempty(error_dGa);  error_dGa = 0;  end
-if isempty(error_dGe);  error_dGe = 0;  end
+function [Error] = ComputeErrorsPoroAcuEla(Data, mesh, femregion, Solution, time)
     
-error_dG     = error_dGep + error_dGp + error_dGa + error_dGe;
+    Funcs.Preallocation    = @ErrorPreallocationElastodynamics;
+    Funcs.VolumeAssemblyST = @VolumeErrorAssemblyElastodynamics;
+    Funcs.FacesAssembly    = @FacesErrorAssemblyElastodynamics; 
+    Funcs.FinalMatrices    = @ErrorElastodynamics;
 
-%% L2 velocity errors
-error_L2_dot_up   = error_dot_up'   * (    Matrices.Poro.M_P_rho     ) * error_dot_up;
-error_L2_dot_wp   = error_dot_wp'   * (    Matrices.Poro.M_P_rhow    ) * error_dot_wp;
-error_L2_dot_uwp  = error_dot_wp'   * (2 * Matrices.Poro.M_P_rhof    ) * error_dot_up;
-error_L2_dot_phi  = error_dot_phi'  * (    Matrices.Acu.M_A           ) * error_dot_phi;
-error_L2_dot_ue   = error_dot_ue'   * (    Matrices.Ela.M_P_rho       ) * error_dot_ue;
+    AssembInfo.quadrature              = "ST";
+    AssembInfo.assemblyvolume          = true;
+    AssembInfo.assemblyfaces           = true;
+    AssembInfo.assemblyinternalfaces   = true;
+    AssembInfo.assemblytrilinearforms  = false;
 
-if isempty(error_L2_dot_up);  error_L2_dot_up = 0;  end
-if isempty(error_L2_dot_wp);  error_L2_dot_wp = 0;  end
-if isempty(error_L2_dot_uwp); error_L2_dot_uwp = 0; end
-if isempty(error_L2_dot_phi); error_L2_dot_phi = 0; end
-if isempty(error_L2_dot_ue);  error_L2_dot_ue = 0;  end
+    AssembInfo.computegradients        = true;
+    AssembInfo.computelaplacian        = false;
+    AssembInfo.computefacegradients    = false;
 
-error_L2_vel = error_L2_dot_up + error_L2_dot_wp + error_L2_dot_uwp ...
-                    + error_L2_dot_phi + error_L2_dot_ue;
+    AssembInfo.ass_vol_vec  = ones(femregion.nel,1);
+    AssembInfo.ass_face_vec = ones(femregion.nel,1);
+    
+    AssembInfo.Solutions = Solution;
+    AssembInfo.t = time;
+    AssembInfo.label = femregion.label;
+    AssembInfo.nbases = femregion.nbases;
 
-%% L2 displacement errors                
-                
-error_L2_up   = error_up'   * Matrices.Poro.MPrjP * error_up;
-error_L2_wp   = error_wp'   * Matrices.Poro.MPrjP * error_wp;
-error_L2_phi  = error_phi'  * Matrices.Acu.MPrjA  * error_phi;
-error_L2_ue   = error_ue'   * Matrices.Ela.MPrjP  * error_ue;
-
-if isempty(error_L2_up);  error_L2_up = 0;  end
-if isempty(error_L2_wp);  error_L2_wp = 0;  end
-if isempty(error_L2_phi); error_L2_phi = 0; end
-if isempty(error_L2_ue);  error_L2_ue = 0;  end
-
-error_L2  = error_L2_up + error_L2_wp + error_L2_phi + error_L2_ue;
-
-%% interface errors for poroacoustics
-error_B_wp = error_wp' * (Matrices.Poro.M_P_eta_kper) * error_wp;
-if (Data.tau ~= 0 && Data.tau ~= 1)
-    error_B_interface = ComputeErrorInterfacePA(Data,femregion,neighbor,Solutions.wp_h,T,Data.tau);
-else
-    error_B_interface = 0;
+    [Error] = Assembly(Data, mesh.neighbor, femregion, AssembInfo, Funcs);
+   
 end
-error_B   = error_B_wp + error_B_interface;
-if isempty(error_B); error_B = 0; end
 
-%% Total errors 
-% Energy error
-error_Energy = sqrt(error_L2_vel + error_dG + error_B);
-error_L2_v   = sqrt(error_L2_vel);
-error_L2_d   = sqrt(error_L2);
 
-% compute poroelastic pressure
-u_h1 = Solutions.up_h(1:femregion.ndof_p);
-u_h2 = Solutions.up_h(femregion.ndof_p+1:2*femregion.ndof_p);
-w_h1 = Solutions.wp_h(1:femregion.ndof_p);
-w_h2 = Solutions.wp_h(femregion.ndof_p+1:2*femregion.ndof_p);
+%% Preallocation function
+function [Error] = ErrorPreallocationElastodynamics(GenMatrices)
+    Error.Volume.err_ue_L2_loc   = GenMatrices.CellVector;
+    Error.Volume.err_up_L2_loc   = GenMatrices.CellVector;
+    Error.Volume.err_wp_L2_loc   = GenMatrices.CellVector;
+    Error.Volume.err_phi_L2_loc  = GenMatrices.CellVector;
+    Error.Volume.err_p_L2_loc    = GenMatrices.CellVector;
 
-if isempty(u_h1)
-    p_h = 0;
-else
-    p_h = Matrices.Poro.MPrjP_1\(Matrices.Poro.P1_beta*u_h1 + Matrices.Poro.P2_beta*u_h2 + Matrices.Poro.P1*w_h1 + Matrices.Poro.P2*w_h2);
+    Error.Volume.err_B_loc       = GenMatrices.CellVector;
+
+    Error.Volume.err_dot_ue_L2_loc   = GenMatrices.CellVector;
+    Error.Volume.err_dot_up_L2_loc   = GenMatrices.CellVector;
+    Error.Volume.err_dot_wp_L2_loc   = GenMatrices.CellVector;
+    Error.Volume.err_dot_uwp_L2_loc  = GenMatrices.CellVector;
+    Error.Volume.err_dot_phi_L2_loc  = GenMatrices.CellVector;
+    
+    Error.Volume.err_dGep_loc     = GenMatrices.CellVector;
+    Error.Volume.err_dGp_w_loc    = GenMatrices.CellVector;
+    Error.Volume.err_dGp_beta_loc = GenMatrices.CellVector;
+    Error.Volume.err_dGe_loc      = GenMatrices.CellVector;
+    Error.Volume.err_dGa_loc      = GenMatrices.CellVector;
+
+    Error.Faces.err_dGep_jumps_loc      = GenMatrices.CellVector;
+    Error.Faces.err_dGp_w_jumps_loc     = GenMatrices.CellVector;
+    Error.Faces.err_dGp_beta_jumps_loc  = GenMatrices.CellVector;
+    Error.Faces.err_dGe_jumps_loc       = GenMatrices.CellVector;
+    Error.Faces.err_dGa_jumps_loc       = GenMatrices.CellVector;
+
+    Error.Faces.err_interf_PA_loc       = GenMatrices.CellVector;
 end
-% if exact poroelastic pressure = 0
-error_L2_p_h = p_h' * Matrices.Poro.MPrjP_1 * p_h;
-error_L2_pressure = sqrt(error_L2_p_h + error_L2_dot_phi);
 
 
+%% Error assembly functions
+function [Error] = VolumeErrorAssemblyElastodynamics(Data, Error, elem, ie, id, ~, AssembInfo)
+         
+    idx_in = AssembInfo.nbases(1:ie-1)'*(AssembInfo.label(1:ie-1) == AssembInfo.label(ie))+1;
+    idx_end = idx_in+AssembInfo.nbases(ie)-1;
+    elem.index = idx_in:idx_end;
+    if AssembInfo.label(ie) == 'P' 
+        
+        % Evaluation of physical parameters
+        lam     =  Data.lam{id}(elem.xq,elem.yq);
+        mu       = Data.mu{id}(elem.xq,elem.yq);
+        rho      = Data.rho{id}(elem.xq,elem.yq);
+        rho_w    = Data.rho_w{id}(elem.xq,elem.yq);
+        rho_f    = Data.rho_f{id}(elem.xq,elem.yq);
+        m        = Data.m{id}(elem.xq,elem.yq);
+        beta     = Data.beta{id}(elem.xq,elem.yq);
+        eta_kper = Data.eta{id}(elem.xq,elem.yq)./Data.k_per{id}(elem.xq,elem.yq);
+        
+        % Exact solution evaluation
+        up1ex_loc = Data.up_ex{1}(elem.xq,elem.yq).*Data.up_t_ex{1}(AssembInfo.t);
+        up2ex_loc = Data.up_ex{2}(elem.xq,elem.yq).*Data.up_t_ex{1}(AssembInfo.t);
+        dot_up1ex_loc = Data.up_ex{2}(elem.xq,elem.yq).*Data.dup_t_ex{1}(AssembInfo.t);
+        dot_up2ex_loc = Data.up_ex{2}(elem.xq,elem.yq).*Data.dup_t_ex{1}(AssembInfo.t);
+ 
+        gradx_up1ex_loc = Data.grad_up_ex{1}(elem.xq,elem.yq).*Data.up_t_ex{1}(AssembInfo.t);
+        grady_up1ex_loc = Data.grad_up_ex{2}(elem.xq,elem.yq).*Data.up_t_ex{1}(AssembInfo.t);
+        gradx_up2ex_loc = Data.grad_up_ex{3}(elem.xq,elem.yq).*Data.up_t_ex{1}(AssembInfo.t);
+        grady_up2ex_loc = Data.grad_up_ex{4}(elem.xq,elem.yq).*Data.up_t_ex{1}(AssembInfo.t);
 
-%% Savings
+        wp1ex_loc = Data.wp_ex{1}(elem.xq,elem.yq).*Data.wp_t_ex{1}(AssembInfo.t);
+        wp2ex_loc = Data.wp_ex{2}(elem.xq,elem.yq).*Data.wp_t_ex{1}(AssembInfo.t);
+        dot_wp1ex_loc = Data.wp_ex{2}(elem.xq,elem.yq).*Data.dwp_t_ex{1}(AssembInfo.t);
+        dot_wp2ex_loc = Data.wp_ex{2}(elem.xq,elem.yq).*Data.dwp_t_ex{1}(AssembInfo.t);
+ 
+        gradx_wp1ex_loc = Data.grad_wp_ex{1}(elem.xq,elem.yq).*Data.wp_t_ex{1}(AssembInfo.t);
+        grady_wp1ex_loc = Data.grad_wp_ex{2}(elem.xq,elem.yq).*Data.wp_t_ex{1}(AssembInfo.t);
+        gradx_wp2ex_loc = Data.grad_wp_ex{3}(elem.xq,elem.yq).*Data.wp_t_ex{1}(AssembInfo.t);
+        grady_wp2ex_loc = Data.grad_wp_ex{4}(elem.xq,elem.yq).*Data.wp_t_ex{1}(AssembInfo.t);
 
-%% Outputs
-Error.nel = femregion.nel;
-Error.h   = Data.h;
-Error.p   = Data.degree;
+        % Numerical solution evaluation
+        up1h_loc     = elem.phiq * AssembInfo.Solutions.up_h(elem.index);
+        up2h_loc     = elem.phiq * AssembInfo.Solutions.up_h(end/2+elem.index);
+        dot_up1h_loc = elem.phiq * AssembInfo.Solutions.dot_up_h(elem.index);
+        dot_up2h_loc = elem.phiq * AssembInfo.Solutions.dot_up_h(end/2+elem.index);
+        
+        gradx_up1h_loc = elem.gradqx * AssembInfo.Solutions.up_h(elem.index);
+        grady_up1h_loc = elem.gradqy * AssembInfo.Solutions.up_h(end/2+elem.index);
+        gradx_up2h_loc = elem.gradqx * AssembInfo.Solutions.up_h(elem.index);
+        grady_up2h_loc = elem.gradqy * AssembInfo.Solutions.up_h(end/2+elem.index);
+        
+        wp1h_loc     = elem.phiq * AssembInfo.Solutions.wp_h(elem.index);
+        wp2h_loc     = elem.phiq * AssembInfo.Solutions.wp_h(end/2+elem.index);
+        dot_wp1h_loc = elem.phiq * AssembInfo.Solutions.dot_wp_h(elem.index);
+        dot_wp2h_loc = elem.phiq * AssembInfo.Solutions.dot_wp_h(end/2+elem.index);
+        
+        gradx_wp1h_loc = elem.gradqx * AssembInfo.Solutions.wp_h(elem.index);
+        grady_wp1h_loc = elem.gradqy * AssembInfo.Solutions.wp_h(end/2+elem.index);
+        gradx_wp2h_loc = elem.gradqx * AssembInfo.Solutions.wp_h(elem.index);
+        grady_wp2h_loc = elem.gradqy * AssembInfo.Solutions.wp_h(end/2+elem.index);
+        
+        ph_loc = m .* (gradx_wp1h_loc + grady_wp2h_loc + beta .* (gradx_up1h_loc + grady_up2h_loc));
 
-Error.error_L2_d        = error_L2_d;
-Error.error_L2_v        = error_L2_v;
-Error.error_Energy      = error_Energy;
-Error.error_dG          = sqrt(error_dG);
+        % Local error integral assembly
+        Error.err_up_L2_loc = (elem.dx .* (up1h_loc - up1ex_loc))' * (up1h_loc - up1ex_loc) ...
+                            + (elem.dx .* (up2h_loc - up2ex_loc))' * (up2h_loc - up2ex_loc); 
+       
+        Error.err_dot_up_L2_loc = (elem.dx .* rho .* (dot_up1h_loc - dot_up1ex_loc))' * (dot_up1h_loc - dot_up1ex_loc) ...
+                                + (elem.dx .* rho .* (dot_up2h_loc - dot_up2ex_loc))' * (dot_up2h_loc - dot_up2ex_loc); 
+        
+        Error.err_B_loc = (elem.dx .* eta_kper .* (wp1h_loc - wp1ex_loc))' * (wp1h_loc - wp1ex_loc) ...
+                        + (elem.dx .* eta_kper .* (wp2h_loc - wp2ex_loc))' * (wp2h_loc - wp2ex_loc); 
+       
+        Error.err_wp_L2_loc = (elem.dx .* (wp1h_loc - wp1ex_loc))' * (wp1h_loc - wp1ex_loc) ...
+                            + (elem.dx .* (wp2h_loc - wp2ex_loc))' * (wp2h_loc - wp2ex_loc); 
 
-% Error.error_L2          = error_L2;
-% Error.error_L2_vel      = error_L2_vel;
+        Error.err_dot_wp_L2_loc = (elem.dx .* rho_w .* (dot_wp1h_loc - dot_wp1ex_loc))' * (dot_wp1h_loc - dot_wp1ex_loc) ...
+                                + (elem.dx .* rho_w .* (dot_wp2h_loc - dot_wp2ex_loc))' * (dot_wp2h_loc - dot_wp2ex_loc); 
+        
+        Error.err_dot_uwp_L2_loc = (elem.dx .* rho_f .* (dot_wp1h_loc - dot_wp1ex_loc))' * (dot_wp1h_loc - dot_wp1ex_loc) ...
+                                 + (elem.dx .* rho_f .* (dot_wp2h_loc - dot_wp2ex_loc))' * (dot_wp2h_loc - dot_wp2ex_loc); 
 
-Error.error_L2_p_h      = sqrt(error_L2_p_h);
-Error.error_L2_pressure = error_L2_pressure;
-Error.error_B           = error_B;
-Error.error_B_interface = error_B_interface;
-Error.error_L2_dot_phi  = sqrt(error_L2_dot_phi);
-Error.error_L2_dot_uwp  = sqrt(error_L2_dot_uwp);
-Error.error_L2_dot_wp   = sqrt(error_L2_dot_wp);
-Error.error_L2_dot_up   = sqrt(error_L2_dot_up);
-Error.error_L2_dot_ue   = sqrt(error_L2_dot_ue);
-Error.error_dGp_w       = sqrt(error_dGp_w);
-Error.error_dGa         = sqrt(error_dGa);
-Error.error_dGp         = sqrt(error_dGp);
-Error.error_dGep        = sqrt(error_dGep);
-Error.error_dGe         = sqrt(error_dGe);
-Error.error_L2_phi      = sqrt(error_L2_phi);
-Error.error_L2_wp       = sqrt(error_L2_wp);
-Error.error_L2_up       = sqrt(error_L2_up);
-Error.error_L2_ue       = sqrt(error_L2_ue);
+        Error.err_p_L2_loc = (elem.dx .* ph_loc)' * ph_loc;
 
+        Error.err_dGep_loc  = (elem.dx .* (lam+2*mu) .* (gradx_up1h_loc - gradx_up1ex_loc))' * (gradx_up1h_loc - gradx_up1ex_loc) ...
+                            + (elem.dx .* mu  .* (grady_up1h_loc - grady_up1ex_loc))' * (grady_up1h_loc - grady_up1ex_loc) ...
+                            + (elem.dx .* lam .* (gradx_up1h_loc - gradx_up1ex_loc))' * (grady_up2h_loc - grady_up2ex_loc) ...
+                            + (elem.dx .* mu  .* (grady_up1h_loc - grady_up1ex_loc))' * (gradx_up2h_loc - gradx_up2ex_loc) ...
+                            + (elem.dx .* lam .* (grady_up2h_loc - grady_up2ex_loc))' * (gradx_up1h_loc - gradx_up1ex_loc) ...
+                            + (elem.dx .* mu  .* (gradx_up2h_loc - gradx_up2ex_loc))' * (grady_up1h_loc - grady_up1ex_loc) ...
+                            + (elem.dx .* (lam+2*mu) .* (grady_up2h_loc - grady_up2ex_loc))' * (grady_up2h_loc - grady_up2ex_loc) ...
+                            + (elem.dx .* mu  .* (gradx_up2h_loc - gradx_up2ex_loc))' * (gradx_up2h_loc - gradx_up2ex_loc);
 
+        Error.err_dGp_w_loc = (elem.dx .* m .* (gradx_wp1h_loc - gradx_wp1ex_loc))' * (gradx_wp1h_loc - gradx_wp1ex_loc) ...
+                            + (elem.dx .* m .* (grady_wp1h_loc - grady_wp1ex_loc))' * (grady_wp1h_loc - grady_wp1ex_loc) ...
+                            + (elem.dx .* m .* (gradx_wp1h_loc - gradx_wp1ex_loc))' * (grady_wp2h_loc - grady_wp2ex_loc) ...
+                            + (elem.dx .* m .* (grady_wp1h_loc - grady_wp1ex_loc))' * (gradx_wp2h_loc - gradx_wp2ex_loc) ...
+                            + (elem.dx .* m .* (grady_wp2h_loc - grady_wp2ex_loc))' * (gradx_wp1h_loc - gradx_wp1ex_loc) ...
+                            + (elem.dx .* m .* (gradx_wp2h_loc - gradx_wp2ex_loc))' * (grady_wp1h_loc - grady_wp1ex_loc) ...
+                            + (elem.dx .* m .* (grady_wp2h_loc - grady_wp2ex_loc))' * (grady_wp2h_loc - grady_wp2ex_loc) ...
+                            + (elem.dx .* m .* (gradx_wp2h_loc - gradx_wp2ex_loc))' * (gradx_wp2h_loc - gradx_wp2ex_loc);
+
+        Error.err_dGp_beta_loc  = (elem.dx .* (m .* beta) .* (gradx_up1h_loc - gradx_up1ex_loc))' * (gradx_up1h_loc - gradx_up1ex_loc) ...
+                                + (elem.dx .* (m .* beta) .* (grady_up1h_loc - grady_up1ex_loc))' * (grady_up1h_loc - grady_up1ex_loc) ...
+                                + (elem.dx .* (m .* beta) .* (gradx_up1h_loc - gradx_up1ex_loc))' * (grady_up2h_loc - grady_up2ex_loc) ...
+                                + (elem.dx .* (m .* beta) .* (grady_up1h_loc - grady_up1ex_loc))' * (gradx_up2h_loc - gradx_up2ex_loc) ...
+                                + (elem.dx .* (m .* beta) .* (grady_up2h_loc - grady_up2ex_loc))' * (gradx_up1h_loc - gradx_up1ex_loc) ...
+                                + (elem.dx .* (m .* beta) .* (gradx_up2h_loc - gradx_up2ex_loc))' * (grady_up1h_loc - grady_up1ex_loc) ...
+                                + (elem.dx .* (m .* beta) .* (grady_up2h_loc - grady_up2ex_loc))' * (grady_up2h_loc - grady_up2ex_loc) ...
+                                + (elem.dx .* (m .* beta) .* (gradx_up2h_loc - gradx_up2ex_loc))' * (gradx_up2h_loc - gradx_up2ex_loc);
+
+    elseif AssembInfo.label(ie) == 'E'
+        % Evaluation of physical parameters
+        rho_el = Data.rho_el{id}(elem.xq,elem.yq);
+        lam    = Data.lam_el{id}(elem.xq,elem.yq);
+        mu     = Data.mu_el{id}(elem.xq,elem.yq);
+
+        % Exact solution evaluation
+        ue1ex_loc = Data.ue_ex{1}(elem.xq,elem.yq).*Data.ue_t_ex{1}(AssembInfo.t);
+        ue2ex_loc = Data.ue_ex{2}(elem.xq,elem.yq).*Data.ue_t_ex{1}(AssembInfo.t);
+        dot_ue1ex_loc = Data.ue_ex{2}(elem.xq,elem.yq).*Data.due_t_ex{1}(AssembInfo.t);
+        dot_ue2ex_loc = Data.ue_ex{2}(elem.xq,elem.yq).*Data.due_t_ex{1}(AssembInfo.t);
+        
+        gradx_ue1ex_loc = Data.grad_ue_ex{1}(elem.xq,elem.yq).*Data.ue_t_ex{1}(AssembInfo.t);
+        grady_ue1ex_loc = Data.grad_ue_ex{2}(elem.xq,elem.yq).*Data.ue_t_ex{1}(AssembInfo.t);
+        gradx_ue2ex_loc = Data.grad_ue_ex{3}(elem.xq,elem.yq).*Data.ue_t_ex{1}(AssembInfo.t);
+        grady_ue2ex_loc = Data.grad_ue_ex{4}(elem.xq,elem.yq).*Data.ue_t_ex{1}(AssembInfo.t);
+    
+        % Numerical solution evaluation
+        ue1h_loc     = elem.phiq * AssembInfo.Solutions.ue_h(elem.index);
+        ue2h_loc     = elem.phiq * AssembInfo.Solutions.ue_h(end/2+elem.index);
+        dot_ue1h_loc = elem.phiq * AssembInfo.Solutions.dot_ue_h(elem.index);
+        dot_ue2h_loc = elem.phiq * AssembInfo.Solutions.dot_ue_h(end/2+elem.index);
+        
+        gradx_ue1h_loc = elem.gradqx * AssembInfo.Solutions.ue_h(elem.index);
+        grady_ue1h_loc = elem.gradqy * AssembInfo.Solutions.ue_h(end/2+elem.index);
+        gradx_ue2h_loc = elem.gradqx * AssembInfo.Solutions.ue_h(elem.index);
+        grady_ue2h_loc = elem.gradqy * AssembInfo.Solutions.ue_h(end/2+elem.index);
+        
+        % Local error integral assembly
+        Error.err_ue_L2_loc = (elem.dx .* (ue1h_loc - ue1ex_loc))' * (ue1h_loc - ue1ex_loc) ...
+                            + (elem.dx .* (ue2h_loc - ue2ex_loc))' * (ue2h_loc - ue2ex_loc); 
+       
+        Error.err_dot_ue_L2_loc = (elem.dx .* rho_el .* (dot_ue1h_loc - dot_ue1ex_loc))' * (dot_ue1h_loc - dot_ue1ex_loc) ...
+                                + (elem.dx .* rho_el .* (dot_ue2h_loc - dot_ue2ex_loc))' * (dot_ue2h_loc - dot_ue2ex_loc); 
+              
+        Error.err_dGe_loc  = (elem.dx .* (lam+2*mu) .* (gradx_ue1h_loc - gradx_ue1ex_loc))' * (gradx_ue1h_loc - gradx_ue1ex_loc) ...
+                           + (elem.dx .* mu  .* (grady_ue1h_loc - grady_ue1ex_loc))' * (grady_ue1h_loc - grady_ue1ex_loc) ...
+                           + (elem.dx .* lam .* (gradx_ue1h_loc - gradx_ue1ex_loc))' * (grady_ue2h_loc - grady_ue2ex_loc) ...
+                           + (elem.dx .* mu  .* (grady_ue1h_loc - grady_ue1ex_loc))' * (gradx_ue2h_loc - gradx_ue2ex_loc) ...
+                           + (elem.dx .* lam .* (grady_ue2h_loc - grady_ue2ex_loc))' * (gradx_ue1h_loc - gradx_ue1ex_loc) ...
+                           + (elem.dx .* mu  .* (gradx_ue2h_loc - gradx_ue2ex_loc))' * (grady_ue1h_loc - grady_ue1ex_loc) ...
+                           + (elem.dx .* (lam+2*mu) .* (grady_ue2h_loc - grady_ue2ex_loc))' * (grady_ue2h_loc - grady_ue2ex_loc) ...
+                           + (elem.dx .* mu  .* (gradx_ue2h_loc - gradx_ue2ex_loc))' * (gradx_ue2h_loc - gradx_ue2ex_loc);
+
+    elseif AssembInfo.label(ie) == 'A'
+
+        rho_a   = Data.rho_a{id}(elem.xq,elem.yq);
+        c       = Data.c{id}(elem.xq,elem.yq);
+
+        % Exact solution evaluation
+        phiex_loc     = Data.phi_ex{1}(elem.xq,elem.yq).*Data.phi_t_ex{1}(AssembInfo.t);
+        dot_phiex_loc = Data.phi_ex{1}(elem.xq,elem.yq).*Data.dphi_t_ex{1}(AssembInfo.t);
+        gradx_phiex_loc  = Data.grad_phi_ex{1}(elem.xq,elem.yq).*Data.phi_t_ex{1}(AssembInfo.t);
+        grady_phiex_loc  = Data.grad_phi_ex{2}(elem.xq,elem.yq).*Data.phi_t_ex{1}(AssembInfo.t);
+        
+        % Numerical solution evaluation
+        phih_loc     = elem.phiq * AssembInfo.Solutions.phi_h(elem.index);
+        dot_phih_loc = elem.phiq * AssembInfo.Solutions.dot_phi_h(elem.index);
+        gradx_phih_loc  = elem.gradqx * AssembInfo.Solutions.phi_h(elem.index);
+        grady_phih_loc  = elem.gradqy * AssembInfo.Solutions.phi_h(elem.index);
+        
+        % Local error integral assembly
+        Error.err_phi_L2_loc = (elem.dx .* (phih_loc - phiex_loc))' * (phih_loc - phiex_loc);
+        Error.err_dot_phi_L2_loc = (elem.dx .* (c.^(-2) .* rho_a) .* (dot_phih_loc - dot_phiex_loc))' * (dot_phih_loc - dot_phiex_loc);
+        Error.err_dGa_loc = (elem.dx .* rho_a .* (gradx_phih_loc - gradx_phiex_loc))' * (gradx_phih_loc - gradx_phiex_loc) ...
+                          + (elem.dx .* rho_a .* (grady_phih_loc - grady_phiex_loc))' * (grady_phih_loc - grady_phiex_loc);
+        
+    end
+end
+
+function [Error] = FacesErrorAssemblyElastodynamics(Data, femregion, Error, face, AssembInfo)
+   
+    ie   = face.ie;
+    iedg = face.iedg;
+    
+    idx_in = AssembInfo.nbases(1:ie-1)'*(AssembInfo.label(1:ie-1) == AssembInfo.label(ie))+1;
+    idx_end = idx_in+AssembInfo.nbases(ie)-1;
+    index_self = idx_in:idx_end;
+    
+    if face.neigh_ie > 0
+        if femregion.label(ie) == femregion.label(face.neigh_ie)
+        idx_in = AssembInfo.nbases(1:face.neigh_ie-1)'*(AssembInfo.label(1:face.neigh_ie-1) == AssembInfo.label(face.neigh_ie))+1;
+            idx_end = idx_in+AssembInfo.nbases(face.neigh_ie)-1;
+            index_neigh = idx_in:idx_end;
+        end
+    end
+
+    if AssembInfo.label(ie) == 'P'
+
+        mu   = Data.mu{femregion.id_phys(ie)}(face.xq,face.yq);
+        lam  = Data.lam{femregion.id_phys(ie)}(face.xq,face.yq);
+        m    = Data.m{femregion.id_phys(ie)}(face.xq,face.yq);
+        beta = Data.beta{femregion.id_phys(ie)}(face.xq,face.yq);
+        
+        %Evaluation solution
+        up1h_self = face.phiedgeq * AssembInfo.Solutions.up_h(index_self);
+        up2h_self = face.phiedgeq * AssembInfo.Solutions.up_h(end/2+index_self);
+        wp1h_self = face.phiedgeq * AssembInfo.Solutions.wp_h(index_self);
+        wp2h_self = face.phiedgeq * AssembInfo.Solutions.wp_h(end/2+index_self);
+            
+        %% Dirichlet boundary faces
+        if face.neigh_ie == -1
+    
+            up1_ex = Data.up_ex{1}(face.xq,face.yq).*Data.up_t_ex{1}(AssembInfo.t);
+            up2_ex = Data.up_ex{2}(face.xq,face.yq).*Data.up_t_ex{1}(AssembInfo.t);
+            wp1_ex = Data.wp_ex{1}(face.xq,face.yq).*Data.wp_t_ex{1}(AssembInfo.t);
+            wp2_ex = Data.wp_ex{2}(face.xq,face.yq).*Data.wp_t_ex{1}(AssembInfo.t);
+            
+            Error.err_dGep_jumps_loc = Error.err_dGep_jumps_loc ...
+                                     + face.ds' * (face.penalty_geom.harm(iedg) * (lam + 2*mu) .*(up1h_self-up1_ex).^2) ...
+                                     + face.ds' * (face.penalty_geom.harm(iedg) * (lam + 2*mu) .*(up2h_self-up2_ex).^2);
+    
+            Error.err_dGp_w_jumps_loc = Error.err_dGp_w_jumps_loc ...
+                                      + face.ds' * (face.penalty_geom.harm(iedg) * m .*(wp1h_self-wp1_ex).^2) ...
+                                      + face.ds' * (face.penalty_geom.harm(iedg) * m .*(wp2h_self-wp2_ex).^2);
+           
+            Error.err_dGp_beta_jumps_loc = Error.err_dGp_beta_jumps_loc ...
+                                      + face.ds' * (face.penalty_geom.harm(iedg) * m .* beta .*(up1h_self-up1_ex).^2) ...
+                                      + face.ds' * (face.penalty_geom.harm(iedg) * m .* beta .*(up2h_self-up2_ex).^2);
+        
+        %% Internal faces
+        elseif face.neigh_ie > ie && AssembInfo.label(face.neigh_ie) == 'P'
+    
+            mu_n   = Data.mu{femregion.id_phys(face.neigh_ie)}(face.xq,face.yq);
+            lam_n  = Data.lam{femregion.id_phys(face.neigh_ie)}(face.xq,face.yq);
+            m_n    = Data.m{femregion.id_phys(face.neigh_ie)}(face.xq,face.yq);
+            beta_n = Data.beta{femregion.id_phys(face.neigh_ie)}(face.xq,face.yq);
+            
+            lambda_ave = 2*lam .* lam_n ./ (lam + lam_n);
+            mu_ave     = 2*mu .* mu_n ./ (mu + mu_n);
+            m_ave      = 2*m .* m_n ./ (m + m_n);
+            beta_ave   = 2*beta .* beta_n ./ (beta + beta_n);
+             
+            up1h_neigh = face.phiedgeqneigh * AssembInfo.Solutions.up_h(index_neigh);
+            up2h_neigh = face.phiedgeqneigh * AssembInfo.Solutions.up_h(end/2+index_neigh);
+            wp1h_neigh = face.phiedgeqneigh * AssembInfo.Solutions.wp_h(index_neigh);
+            wp2h_neigh = face.phiedgeqneigh * AssembInfo.Solutions.wp_h(end/2+index_neigh);
+             
+            Error.err_dGep_jumps_loc = Error.err_dGe_jumps_loc ...
+                                     + face.ds' * (face.penalty_geom.harm(iedg) * (lambda_ave + 2*mu_ave) .* (up1h_self-up1h_neigh).^2) ...
+                                     + face.ds' * (face.penalty_geom.harm(iedg) * (lambda_ave + 2*mu_ave) .* (up2h_self-up2h_neigh).^2);
+            
+            Error.err_dGp_w_jumps_loc = Error.err_dGp_w_jumps_loc ...
+                                      + face.ds' * (face.penalty_geom.harm(iedg) * m_ave .* (wp1h_self-wp1h_neigh).^2) ...
+                                      + face.ds' * (face.penalty_geom.harm(iedg) * m_ave .* (wp2h_self-wp2h_neigh).^2);
+
+            Error.err_dGp_beta_jumps_loc = Error.err_dGp_beta_jumps_loc ...
+                                      + face.ds' * (face.penalty_geom.harm(iedg) * m_ave .* beta_ave .* (up1h_self-up1h_neigh).^2) ...
+                                      + face.ds' * (face.penalty_geom.harm(iedg) * m_ave .* beta_ave .* (up2h_self-up2h_neigh).^2);
+
+        elseif face.neigh_ie > ie && AssembInfo.label(face.neigh_ie) == 'A'
+    
+            tau = Data.tau;
+            
+            if tau ~= 0
+                wp1_ex = Data.wp_ex{1}(face.xq,face.yq).*Data.wp_t_ex{1}(AssembInfo.t);
+                wp2_ex = Data.wp_ex{2}(face.xq,face.yq).*Data.wp_t_ex{1}(AssembInfo.t);
+    
+                Error.err_interf_PA_loc = Error.err_interf_PA_loc ...
+                                         + face.ds' * ((1-tau)/tau .* ((wp1h_self-wp1_ex) * face.nx + (wp2h_self-wp2_ex) * face.ny).^2);
+            end
+        end
+
+    elseif AssembInfo.label(ie) == 'E'
+        
+        mu  = Data.mu_el{femregion.id_phys(ie)}(face.xq,face.yq);
+        lam = Data.lam_el{femregion.id_phys(ie)}(face.xq,face.yq);
+    
+        %Evaluation solution
+        ue1h_self = face.phiedgeq * AssembInfo.Solutions.ue_h(index_self);
+        ue2h_self = face.phiedgeq * AssembInfo.Solutions.ue_h(end/2+index_self);
+            
+        %% Dirichlet boundary faces
+        if face.neigh_ie == -1
+    
+            ue1_ex = Data.ue_ex{1}(face.xq,face.yq).*Data.ue_t_ex{1}(AssembInfo.t);
+            ue2_ex = Data.ue_ex{2}(face.xq,face.yq).*Data.ue_t_ex{1}(AssembInfo.t);
+            
+            Error.err_dGe_jumps_loc = Error.err_dGe_jumps_loc ...
+                                   + face.ds' * (face.penalty_geom.harm(iedg) * (lam + 2*mu) .*(ue1h_self-ue1_ex).^2) ...
+                                   + face.ds' * (face.penalty_geom.harm(iedg) * (lam + 2*mu) .*(ue2h_self-ue2_ex).^2);
+    
+        %% Internal faces
+        elseif face.neigh_ie > ie && AssembInfo.label(face.neigh_ie) == 'E'
+    
+            mu_n  = Data.mu_el{femregion.id_phys(face.neigh_ie)}(face.xq,face.yq);
+            lam_n = Data.lam_el{femregion.id_phys(face.neigh_ie)}(face.xq,face.yq);
+     
+            lambda_ave = 2*lam .* lam_n ./ (lam + lam_n);
+            mu_ave     = 2*mu .* mu_n ./ (mu + mu_n);
+             
+            ue1h_neigh = face.phiedgeqneigh * AssembInfo.Solutions.ue_h(index_neigh);
+            ue2h_neigh = face.phiedgeqneigh * AssembInfo.Solutions.ue_h(end/2+index_neigh);
+             
+            Error.err_dGe_jumps_loc = Error.err_dGe_jumps_loc ...
+                                    + face.ds' * (face.penalty_geom.harm(iedg) * (lambda_ave + 2*mu_ave) .* (ue1h_self-ue1h_neigh).^2) ...
+                                    + face.ds' * (face.penalty_geom.harm(iedg) * (lambda_ave + 2*mu_ave) .* (ue2h_self-ue2h_neigh).^2);
+        
+        end
+
+    elseif AssembInfo.label(ie) == 'A'
+        
+        
+        rho_a = Data.rho_a{femregion.id_phys(ie)}(face.xq,face.yq);
+ 
+        %Evaluation solution
+        phih_self = face.phiedgeq * AssembInfo.Solutions.phi_h(index_self);
+       
+        %% Dirichlet boundary faces
+        if face.neigh_ie == -1
+
+            phiex_loc = Data.phi_ex{1}(face.xq,face.yq).*Data.phi_t_ex{1}(AssembInfo.t);
+            
+            Error.err_dGa_jumps_loc = Error.err_dGa_jumps_loc ...
+                                    + face.ds' * (face.penalty_geom.harm(iedg) * rho_a .*(phih_self-phiex_loc).^2);
+
+            %% Internal faces
+        elseif face.neigh_ie > ie && AssembInfo.label(face.neigh_ie) == 'A'
+
+            rho_a_n   = Data.rho_a{femregion.id_phys(ie)}(face.xq,face.yq);
+            rho_a_ave = 2*rho_a .* rho_a_n ./ (rho_a + rho_a_n);
+            
+            phih_neigh = face.phiedgeqneigh * AssembInfo.Solutions.phi_h(index_neigh);
+            
+            Error.err_dGa_jumps_loc = Error.err_dGa_jumps_loc ...
+                                    + face.ds' * (face.penalty_geom.harm(iedg) * rho_a_ave .* (phih_self-phih_neigh).^2);
+        end
+    end
+
+end
+
+%% Final error construction function
+function [Error] = ErrorElastodynamics(Error_loc)
+    Error.error_L2_ue  = sqrt(sum(Error_loc.Volume.err_ue_L2_loc));
+    Error.error_L2_up  = sqrt(sum(Error_loc.Volume.err_up_L2_loc));
+    Error.error_L2_wp  = sqrt(sum(Error_loc.Volume.err_wp_L2_loc));
+    Error.error_L2_phi = sqrt(sum(Error_loc.Volume.err_phi_L2_loc));
+    
+    Error.error_L2_d        = sqrt(Error.error_L2_ue^2 + Error.error_L2_up^2 + Error.error_L2_wp^2 + Error.error_L2_phi^2);
+    Error.error_L2_p        = sqrt(sum(Error_loc.Volume.err_p_L2_loc));
+    Error.error_L2_pressure = sqrt(sum(Error_loc.Volume.err_p_L2_loc + Error_loc.Volume.err_dot_phi_L2_loc));
+
+    Error.error_L2_dot_ue  = sqrt(sum(Error_loc.Volume.err_dot_ue_L2_loc));
+    Error.error_L2_dot_up  = sqrt(sum(Error_loc.Volume.err_dot_up_L2_loc));
+    Error.error_L2_dot_wp  = sqrt(sum(Error_loc.Volume.err_dot_wp_L2_loc));
+    Error.error_L2_dot_uwp = sqrt(sum(Error_loc.Volume.err_dot_uwp_L2_loc));
+    Error.error_L2_dot_phi = sqrt(sum(Error_loc.Volume.err_dot_phi_L2_loc));
+    
+    Error.error_L2_v = sqrt(Error.error_L2_dot_ue^2 + Error.error_L2_dot_up^2 + Error.error_L2_dot_wp^2 + Error.error_L2_dot_uwp^2 + Error.error_L2_dot_phi^2);
+    
+    Error.error_dGep  = sqrt(sum(Error_loc.Volume.err_dGep_loc+Error_loc.Faces.err_dGe_jumps_loc));
+    Error.error_dGp_w = sqrt(sum(Error_loc.Volume.err_dGp_w_loc+Error_loc.Faces.err_dGp_w_jumps_loc));
+    Error.error_dGp   = sqrt(sum(Error_loc.Volume.err_dGp_w_loc+Error_loc.Faces.err_dGp_w_jumps_loc ... 
+                               + Error_loc.Volume.err_dGp_beta_loc+Error_loc.Faces.err_dGp_beta_jumps_loc));
+    Error.error_dGe   = sqrt(sum(Error_loc.Volume.err_dGe_loc+Error_loc.Faces.err_dGe_jumps_loc));
+    Error.error_dGa   = sqrt(sum(Error_loc.Volume.err_dGa_loc+Error_loc.Faces.err_dGa_jumps_loc));
+    
+    Error.error_dG    = sqrt(Error.error_dGep^2 + Error.error_dGp^2 + Error.error_dGa^2 + Error.error_dGe^2);
+    
+    Error.error_B_interface = sqrt(sum(Error_loc.Faces.err_interf_PA_loc));
+    Error.error_B = sqrt(sum(Error_loc.Volume.err_B_loc+Error_loc.Faces.err_interf_PA_loc));
+
+    Error.error_Energy = sqrt(Error.error_L2_v^2 + Error.error_dG^2 + Error.error_B^2);
+
+end

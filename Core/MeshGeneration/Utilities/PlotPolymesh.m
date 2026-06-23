@@ -93,7 +93,7 @@ function [fig_id] = PlotPolymesh(neighbor, femregion)
 
             %% Plot of interface boundaries
 
-            if neighbor.neigh{i}(j)>0 && femregion.tag(neighbor.neigh{i}(j)) ~= femregion.tag(i)
+            if neighbor.neigh{i}(j)>0 && femregion.label(neighbor.neigh{i}(j)) ~= femregion.label(i)
                 if j < size(femregion.connectivity{i},2)
                     plot([femregion.coords_element{i}(j,1),femregion.coords_element{i}(j+1,1)],[femregion.coords_element{i}(j,2),femregion.coords_element{i}(j+1,2)],'Color','y','LineWidth',1.5)
                 elseif j == size(femregion.connectivity{i},2)

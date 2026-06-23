@@ -2,21 +2,15 @@
 Data.name = 'DataConvTestPoroAcuEla';
 Data.NPhys = 3;
 
-Data.TagElPoro  = 1; % Element tag
-Data.TagBcPoro  = [12 5]; % Boundary tag
-Data.LabBcPoro  = 'DD'; % (D)irichlet/(N)eumann/(A)bso
+Data.LabEl = {'P', 'E'  , 'A'};     % Element labels
+Data.TagEl = { 1 , [2 3],  4 };     % Element tags
 
-Data.TagElAcu   = [2 3]; % Element tag
-Data.TagBcAcu   = [8 9 10 11]; % Boundary tag
-Data.LabBcAcu   = 'DDDD'; % (D)irichlet/(N)eumann 
-
-Data.TagElEla   = 4; % Element tag
-Data.TagBcEla   = [6 7]; % Boundary tag
-Data.LabBcEla   = 'DD'; % (D)irichlet/(N)eumann/(A)bso
+Data.TagBc = {[12 5], [8 9 10 11], [6 7]};  % Boundary tags
+Data.LabBc = {'DD'  , 'DDDD'     , 'DD' };  % (D)irichlet/(N)eumann/(A)bsorbing
 
 %% Geometrical properties 
 Data.domain       = [-1 1 -1 1]; % domain bounds for a new mesh
-Data.N            = 2000;        % number of elements for a new mesh
+Data.N            = 100;       % number of elements for a new mesh
 Data.MeshFromFile = false;      % read mesh from file
 Data.FolderName   = 'InputMesh';
 Data.VTKMeshFileName = 'Mesh.vtk';
@@ -25,7 +19,7 @@ Data.meshfileseq  = 'Quadridomain'; %filename for mesh
 %% Discretization properties                            
 %% Time integration
 Data.t0 = 0;
-Data.T  =  0.001;
+Data.T  =  0.010;
 Data.dt = 0.001;
 
 Data.timeint   = 'newmark';
@@ -37,17 +31,17 @@ Data.degree  = 3;   % Polynomial degree
 Data.penalty_coeff = 10; % Penalty coefficient
 
 %% Quadrature settings
-Data.quadrature = "QF";       % Quadrature type: ST/QF
+Data.quadrature = "ST";       % Quadrature type: ST/QF
 
 %% Visualization settings
 Data.PlotExact         = false;
 Data.PlotGridSol       = true;
 Data.VisualizationStep = 0.1;
-Data.PlotIniCond       = false;
-Data.NPtsVisualization = 3;
+Data.PlotIniCond       = true;
+Data.NPtsVisualization = 20;
 
 %% Save Solution settings
-Data.VisualizationStep  = 1100;
+Data.VisualizationStep  = 100;
 
 
 %% properties porous-materials
@@ -169,15 +163,15 @@ Data.dphi_t_ex = {@(t) sqrt(2)*pi*cos(sqrt(2)*pi*t)};
 %                      @(x,y) x.^2*pi*cos(pi*y).*sin(pi*x)};
 
 
+%% Physics: Elasticity
+%% Properties of the elastic material
+Data.rho_el    = {@(x,y) 1 + 0*x, @(x,y) 1 + 0*x};
+Data.vs_el     = {@(x,y) 1 + 0*x, @(x,y) 1 + 0*x};
+Data.vp_el     = {@(x,y) 2 + 0*x, @(x,y) 2 + 0*x};
+Data.zeta      = {@(x,y) 0 + 0*x, @(x,y) 0 + 0*x};
 
-%% Properties elastic material
-Data.rho_el    = {@(x,y) 1 + 0.*x.*y};
-Data.vs_el     = {@(x,y) 1 + 0.*x.*y};
-Data.vp_el     = {@(x,y) 2 + 0.*x.*y};
-Data.zeta      = {@(x,y) 0 + 0.*x.*y};
-
-Data.mu_el     = {@(x,y) 1 + 0.*x.*y}; % Data.vs_el^2 * Data.rho_el;
-Data.lam_el    = {@(x,y) 2 + 0.*x.*y}; % Data.vp_el^2 * Data.rho_el - 2*Data.mu_el;
+Data.mu_el     = {@(x,y) 1 + 0*x, @(x,y) 1 + 0*x}; % Data.vs_el^2 * Data.rho_el;
+Data.lam_el    = {@(x,y) 2 + 0*x, @(x,y) 2 + 0*x}; % Data.vp_el^2 * Data.rho_el - 2*Data.mu_el;
 
 % forcing term elastic media
 Data.source_ue   = {@(x,y) -2*(x.^2.*sin(2*pi*x) + 4*y.^2.*sin(2*pi*x) + 12.*x.*y.*cos(2*pi*x).*sin(2*pi*x) + 16*x.*y.^2*pi.*cos(2*pi*x) + 12*x.^2.*y*pi.*(2*cos(2*pi*x).^2 - 1)); ...
@@ -209,7 +203,7 @@ Data.due_t_ex =  {@(t) -4*pi*sin(4*pi*t)};
 
 % exact gradient --> used for the error analysis
 % du1/dx, du1/dy, du2/dx, du2/dy
-% Data.grad_ue_ex =  {@(x,y) 2*x.*sin(2*pi*x) + 2*x.^2*pi.*cos(2*pi*x); ...
-%                     @(x,y) 0.*x.*y; ...
-%                     @(x,y) 2*x.*sin(2*pi*x) + 2*x.^2*pi.*cos(2*pi*x); ...
-%                     @(x,y) 0.*x.*y};
+Data.grad_ue_ex =  {@(x,y) 2*x.*sin(2*pi*x) + 2*x.^2*pi.*cos(2*pi*x); ...
+                    @(x,y) 0.*x.*y; ...
+                    @(x,y) 2*x.*sin(2*pi*x) + 2*x.^2*pi.*cos(2*pi*x); ...
+                    @(x,y) 0.*x.*y};
