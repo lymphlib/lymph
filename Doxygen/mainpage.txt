@@ -7,13 +7,14 @@ The development of <tt>lymph</tt> is part of the activities of the project <a hr
 - Paola F. Antonietti (P.I.) <paola.antonietti@polimi.it>
 - Stefano Bonetti <stefano.bonetti@polimi.it>
 - Michele Botti <michele.botti@polimi.it>
+- Alessandra Cancrini <alessandra.cancrini@polimi.it>
 - Mattia Corti <mattia.corti@polimi.it>
 - Ivan Fumagalli <ivan.fumagalli@polimi.it>
-- Ilario Mazzieri <ilario.mazzieri@polimi.it>
 - Caterina B. Leimer Saglio <caterinabeatrice.leimer@polimi.it>
+- Ilario Mazzieri <ilario.mazzieri@polimi.it>
 - Stefano Pagani <stefano.pagani@polimi.it>
 - Valentina Pederzoli <valentina.pederzoli@polimi.it>
-- Alessandra Cancrini <alessandra.cancrini@polimi.it>
+
 
 
 \tableofcontents
@@ -23,12 +24,12 @@ The development of <tt>lymph</tt> is part of the activities of the project <a hr
 
 - Stefano Bonetti <stefano.bonetti@polimi.it>
 - Michele Botti <michele.botti@polimi.it>
+- Alessandra Cancrini <alessandra.cancrini@polimi.it>
 - Mattia Corti <mattia.corti@polimi.it>
 - Ivan Fumagalli <ivan.fumagalli@polimi.it>
-- Ilario Mazzieri <ilario.mazzieri@polimi.it>
 - Caterina B. Leimer Saglio <caterinabeatrice.leimer@polimi.it>
+- Ilario Mazzieri <ilario.mazzieri@polimi.it>
 - Valentina Pederzoli <valentina.pederzoli@polimi.it>
-- Alessandra Cancrini <alessandra.cancrini@polimi.it>
 
 
 \section sec1 Installation
@@ -50,13 +51,13 @@ The source code and additional information can be found <a href="https://bitbuck
 
 - \c Core
     Contains common tools for discontinuous Galerkin methods on polygonal grids.
-    - \c Adaptivity 
+    - \c Adaptivity
             Common adaptive utilities, for the update of the element-wise polynomial approximation degree.
-    - \c Assembly 
+    - \c Assembly
             Common assembly including routines for local volume and face contributions, quadrature-free preprocessing, and reconstruction of the final global matrices.
     - \c FEspace
             Dof maps and evaluation of basis functions on quadrature points.
-    - \c MainFunction Collection of high-level routines driving the setup and execution of the mesh setup. 
+    - \c MainFunction Collection of high-level routines driving the setup and execution of the mesh setup.
     - \c MeshGeneration
         - \c PolyMesh
             Generation of a polytopal mesh based on <a href="http://paulino.princeton.edu/software.html">PolyMesher</a> and functions to compute neigboring elements/faces.
@@ -102,11 +103,12 @@ The source code and additional information can be found <a href="https://bitbuck
 \section sec1000 License and Funding
     <ul style="padding-bottom:20px">
     <li>
-    You can cite <tt>lymph</tt> by this documentation site (https://lymph.bitbucket.io/) and the following preprint:
+    You can cite <tt>lymph</tt> by this documentation site (https://lymph.bitbucket.io/) and the following paper:
 
     P.F. Antonietti, S. Bonetti, M. Botti, M. Corti, I. Fumagalli, I. Mazzieri (2025).
     <em>lymph: discontinuous poLYtopal methods for Multi-PHysics differential problems.</em>
-    ACM Transactions on Mathematical Software, 51(1), pages 3:1-3:22. [https://doi.org/10.1145/3716310](https://doi.org/10.1145/3716310)
+    ACM Transactions on Mathematical Software, 51(1), pages 3:1-3:22.
+    [https://doi.org/10.1145/3716310](https://doi.org/10.1145/3716310)
 
     <tt>lymph</tt> is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. <tt>lymph</tt> is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with <tt>lymph</tt>. If not, see http://www.gnu.org/licenses/.
 

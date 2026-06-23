@@ -19,20 +19,22 @@
 
 # Author: Ivan Fumagalli <ivan.fumagalli@polimi.it>.
 
-image: greenbone/doxygen
-
 pipelines:
   default:
-    - parallel:
-      - step:
-          name: 'Generate documentation'
-          script:
-            - doxygen
-
-    # The following deployment steps will be executed for each pipeline run. To configure your steps and conditionally deploy see https://support.atlassian.com/bitbucket-cloud/docs/configure-bitbucket-pipelinesyml/
     - step:
-        name: 'Deployment to Production'
-        deployment: production
-        trigger: 'manual'
+        name: Sync GitHub Mirror
+        image: alpine/git:latest
+        clone:
+          enabled: false
         script:
-          - echo "Your deployment to production script goes here..."
+          # Get an oauth access token using the client credentials, parsing out the token with jq.
+          - apt-get update && apt-get install -y curl jq
+          - >
+            export access_token=$(curl -s -X POST -u "${CLIENT_ID}:${CLIENT_SECRET}" \
+              https://bitbucket.org/site/oauth2/access_token \
+              -d grant_type=client_credentials -d scopes="repository"| jq --raw-output '.access_token')
+
+          # Clone through the oauth token.
+          - git clone --bare "https://x-token-auth:${access_token}@bitbucket.org/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}"
+          - cd lymph.git
+          - git push --mirror git@github.com:lymphlib/lymph.git

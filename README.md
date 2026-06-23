@@ -11,17 +11,24 @@ The development of **lymph** is part of the activities of the project **NEMESIS*
 - Paola F. Antonietti (P.I.) <paola.antonietti@polimi.it>
 - Stefano Bonetti <stefano.bonetti@polimi.it>
 - Michele Botti <michele.botti@polimi.it>
+- Alessandra Cancrini <alessandra.cancrini@polimi.it>
 - Mattia Corti <mattia.corti@polimi.it>
 - Ivan Fumagalli <ivan.fumagalli@polimi.it>
+- Caterina B. Leimer Saglio <caterinabeatrice.leimer@polimi.it>
 - Ilario Mazzieri <ilario.mazzieri@polimi.it>
+- Stefano Pagani <stefano.pagani@polimi.it>
+- Valentina Pederzoli <valentina.pederzoli@polimi.it>
 
 ### Maintainers ###
 
-* Stefano Bonetti <stefano.bonetti@polimi.it>
-* Michele Botti <michele.botti@polimi.it>
-* Mattia Corti <mattia.corti@polimi.it>
-* Ivan Fumagalli <ivan.fumagalli@polimi.it>
-* Ilario Mazzieri <ilario.mazzieri@polimi.it>
+- Stefano Bonetti <stefano.bonetti@polimi.it>
+- Michele Botti <michele.botti@polimi.it>
+- Alessandra Cancrini <alessandra.cancrini@polimi.it>
+- Mattia Corti <mattia.corti@polimi.it>
+- Ivan Fumagalli <ivan.fumagalli@polimi.it>
+- Caterina B. Leimer Saglio <caterinabeatrice.leimer@polimi.it>
+- Ilario Mazzieri <ilario.mazzieri@polimi.it>
+- Valentina Pederzoli <valentina.pederzoli@polimi.it>
 
 ### How to include lymph in your code ###
 
@@ -76,6 +83,10 @@ The submodule is itself a git repository: in ``OUTER_REPO/lymph`` you can code, 
 ### License ###
 
 **lymph** is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License (see [LICENSE.md](LICENSE.md)), or (at your option) any later version. **lymph** is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. For more details, see the GNU Lesser General Public License included in this repository as [LICENSE.md](LICENSE.md) or visit the website [http://www.gnu.org/licenses/](http://www.gnu.org/licenses/).
+
+### Citing ###
+
+If you use **lymph** in your work, please cite [this release paper](https://doi.org/10.1145/3716310).
 
 ### Contribution guidelines ###
 

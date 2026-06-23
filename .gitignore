@@ -53,3 +53,7 @@ Thumbs.db
 *.xml
 *.dat
 *.vtk
+*.csv
+
+# Polymesher distributed software
+SMO_12_PolyMesher_matlabcode_v1.1/
