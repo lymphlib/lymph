@@ -103,12 +103,16 @@ The source code and additional information can be found <a href="https://bitbuck
 \section sec1000 License and Funding
     <ul style="padding-bottom:20px">
     <li>
-    You can cite <tt>lymph</tt> by this documentation site (https://lymph.bitbucket.io/) and the following paper:
+    You can cite <tt>lymph</tt> by this documentation site (https://lymph.bitbucket.io/) and the following works:
 
     P.F. Antonietti, S. Bonetti, M. Botti, M. Corti, I. Fumagalli, I. Mazzieri (2025).
     <em>lymph: discontinuous poLYtopal methods for Multi-PHysics differential problems.</em>
     ACM Transactions on Mathematical Software, 51(1), pages 3:1-3:22.
     [https://doi.org/10.1145/3716310](https://doi.org/10.1145/3716310)
+
+    P.F. Antonietti, M. Corti, C.B. Leimer Saglio, S. Pagani (2026).
+    <em>The lymph 2.0 library: p-adaptive algorithms and parallel assembly strategies for polytopal DG methods.</em>
+    ArXiv Preprint [https://doi.org/10.48550/arXiv.2606.24646](https://doi.org/10.48550/arXiv.2606.24646)
 
     <tt>lymph</tt> is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. <tt>lymph</tt> is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with <tt>lymph</tt>. If not, see http://www.gnu.org/licenses/.
 
